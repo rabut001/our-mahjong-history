@@ -82,9 +82,9 @@
 
 | ファイル | 役割 |
 |----------|------|
-| `Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI |
-| `docker-compose.yml` | ホストからの CLI 起動。`docker.sock` とポート 3000 |
-| `.devcontainer/devcontainer.json` | Cursor 用。`Dockerfile` を直指定 |
+| `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI |
+| `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
+| `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
 
 Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3。本番は Vercel + Supabase Cloud。
 
@@ -133,9 +133,10 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 ├── AGENTS.md
 ├── docs/
 ├── .cursor/rules/
-├── .devcontainer/devcontainer.json
-├── Dockerfile
-├── docker-compose.yml
+├── .devcontainer/
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── devcontainer.json
 ├── web/                      # Next.js アプリ（Phase 0-2）
 │   ├── app/
 │   ├── components/

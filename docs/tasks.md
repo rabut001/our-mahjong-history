@@ -4,16 +4,14 @@
 
 ## Phase 0: プロジェクト土台
 
-前提は [development.md](development.md) / [tech-stack.md](tech-stack.md) に記録済み。コンテナ作成は未着手。
-
 ### 0-1 開発コンテナ
 
-- [ ] `Dockerfile`（Node 24、git、Docker CLI、supabase CLI）
-- [ ] `docker-compose.yml`（`/workspace` bind mount、ポート 3000、`docker.sock`、polling）
-- [ ] `.devcontainer/devcontainer.json`（Dockerfile 直指定）
-- [ ] `supabase init`（`start` はしない）
-- [ ] Cursor で Reopen in Container
-- [ ] コンテナ内で `node` / `npm` / `supabase` / `docker` が使えること
+- [x] `.devcontainer/Dockerfile`（Node 24、git、Docker CLI、supabase CLI）
+- [x] `.devcontainer/docker-compose.yml`（`/workspace` bind mount、`docker.sock`、`network_mode: host`、polling）
+- [x] `.devcontainer/devcontainer.json`（compose の `app` サービスを参照）
+- [x] `supabase init`（`start` はしない）
+- [x] Cursor で Reopen in Container（ユーザー確認）
+- [x] コンテナ内で `node` / `npm` / `supabase` / `docker` が使えること
 
 ### 0-2 Next.js 雛形（`web/`）
 

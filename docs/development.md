@@ -35,7 +35,7 @@ Phase 6: 拡張（MVP 後）
 
 | 作業 | 内容 |
 |------|------|
-| 0-1 開発環境 | Docker Compose + Dev Container（同じ `Dockerfile` を共有）。Node 24。supabase CLI + Docker CLI + `docker.sock`。`supabase init` |
+| 0-1 開発環境 | `.devcontainer/` の Compose + Dev Container（ひな形: ci-cd-study）。Node 24。supabase CLI + Docker CLI + `docker.sock`。`supabase init` |
 | 0-2 初期化 | コンテナ内の `web/` に Next.js（App Router）+ TypeScript + Tailwind CSS |
 | 設定 | ESLint / Prettier、環境変数テンプレート |
 | プロジェクト名 | `web/package.json` の `name` は `our-mahjong-history`。UI 表示名は「俺たちの雀歴」 |
@@ -183,7 +183,7 @@ Phase 6: 拡張（MVP 後）
 3. **ドキュメントを参照させる**: `@docs/overview.md` 等を明示的に指定する
 4. **生成後は必ず動作確認**: エラーが出たら同セッション内で修正を依頼する
 5. **DB 変更は migration で**: テーブル追加時は SQL ファイル化を明示する
-6. **npm はコンテナ内で**: ホストに Node はない。Dev Container 内、または `docker compose exec app`
+6. **npm はコンテナ内で**: ホストに Node はない。Dev Container 内、または `docker compose -f .devcontainer/docker-compose.yml exec app`
 
 ---
 
@@ -209,9 +209,9 @@ Phase 6: 拡張（MVP 後）
 | 方法 | 使い方 |
 |------|--------|
 | **Dev Container（主）** | Cursor で「Reopen in Container」。以降の `npm` / `supabase` はそのまま実行 |
-| **docker compose（副）** | `docker compose up -d` のあと `docker compose exec app bash` |
+| **docker compose（副）** | `docker compose -f .devcontainer/docker-compose.yml up -d` のあと `docker compose -f .devcontainer/docker-compose.yml exec app bash` |
 
-Dev Container は Cursor 側の compose 連携が不安定なことがあるため、**同じ `Dockerfile` を直指定**する。`docker-compose.yml` はホストからの CLI 用。
+Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-study](https://github.com/rabut001/ci-cd-study) のひな形に合わせる）。`network_mode: host` のため、Next.js はホストの `localhost:3000` で直接届く。
 
 コンテナの作業ディレクトリは `/workspace`（リポジトリルートを bind mount）。Next.js は `/workspace/web`。ホットリロード用に polling を有効化する。`node_modules` 用の名前付き volume は作らない。コンテナユーザーは root。
 

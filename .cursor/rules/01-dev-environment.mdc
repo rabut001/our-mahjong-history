@@ -6,7 +6,7 @@ alwaysApply: true
 # 開発環境
 
 - ホストに Node.js / npm は置かない
-- 実行は Dev Container 内、または `docker compose exec app`
+- 実行は Dev Container 内、または `docker compose -f .devcontainer/docker-compose.yml exec app`
 - ホストで `npm` / `npx` / `node` を直接呼ばない
 - Next.js はリポジトリの `web/`（コンテナ内 `/workspace/web`）
 - 本番デプロイは Vercel（コンテナ化しない）

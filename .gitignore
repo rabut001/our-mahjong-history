@@ -38,6 +38,7 @@ playwright-report/
 # supabase
 .branches
 .temp
+.supabase
 
 # ide
 .idea/
