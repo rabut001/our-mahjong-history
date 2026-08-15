@@ -1,8 +1,8 @@
 # 俺たちの雀歴 — ER 詳細
 
-Phase 1-4。Phase 3 の migration の前提。SQL は書かない。
+Phase 1-4 / 1-5。Phase 3 の migration の前提。SQL は書かない。
 
-用語・保存方針・多重度の正は [overview.md](overview.md)。役割・招待・RLS の書き込み粒度は 1-5。
+用語・保存方針・多重度・権限の正は [overview.md](overview.md)。SELECT / INSERT / UPDATE / DELETE の条件は本ファイルの [RLS 方針](#rls-方針)。
 
 ---
 
@@ -16,7 +16,7 @@ Phase 1-4。Phase 3 の migration の前提。SQL は書かない。
 | **点数** | 整数（例: 25000） |
 | **ポイント**・レート・大会修正ポイント | 小数（符号あり。PostgreSQL `numeric`。表示は小数第 1 位を想定するが、DB で桁は切らない） |
 | 未使用の名称・タイトル | 空文字・空白のみは未使用（null と同じ）。`is_used` は持たない |
-| 認証 | `auth.users` は Supabase Auth。アプリ側のユーザー実体は `profiles`（`id` = `auth.users.id`） |
+| 認証 | `auth.users` は Supabase Auth。アプリ側のユーザー実体は `profiles`。`profiles.id` は Auth と同一視しない。結びは `auth_user_id`（退会後は NULL） |
 
 | エンティティ | テーブル識別子 |
 |--------------|----------------|
@@ -30,6 +30,8 @@ Phase 1-4。Phase 3 の migration の前提。SQL は書かない。
 | 大会修正ポイント | `tournament_point_adjustments` |
 | 試合 | `matches` |
 | 試合結果 | `match_results` |
+| 招待コード | `community_invite_codes` |
+| 操作ログ（監査。UI 非表示） | `activity_logs` |
 
 ---
 
@@ -39,7 +41,9 @@ Phase 1-4。Phase 3 の migration の前提。SQL は書かない。
 erDiagram
     profiles |o--o{ tournament_participants : member
     profiles ||--o{ community_memberships : belongs
+    profiles ||--o{ activity_logs : acts
     communities ||--o{ community_memberships : has
+    communities ||--o| community_invite_codes : has
     communities ||--o{ community_rules : has
     communities ||--o{ tournaments : has
     tournaments ||--o{ tournament_rules : has
@@ -57,8 +61,15 @@ erDiagram
 
 | 属性 | 識別子 | 型 | 必須 | 制約・備考 |
 |------|--------|----|------|------------|
-| ID | `id` | UUID | ✓ | `auth.users.id` と同一 |
-| 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。コミュニティ別ニックネームは MVP 外 |
+| ID | `id` | UUID | ✓ | アプリ側の人の ID。生涯不変。`auth.users.id` とは別 |
+| Auth | `auth_user_id` | UUID | 条件 | ログイン中のみ。UNIQUE。Auth 削除時は NULL（墓石）。出鱈目な値は使わない |
+| 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。退会後は「退会済みユーザ」。コミュニティ別ニックネームは MVP 外 |
+| 退会日時 | `withdrawn_at` | timestamptz | — | 入っていれば墓石。ログイン不可 |
+
+- 利用中: `auth_user_id` ありかつ `withdrawn_at` は空
+- 退会（墓石）: 行は残す。`auth_user_id` を NULL、`withdrawn_at` を入れる、表示名を「退会済みユーザ」にする。`auth.users` は消す（Auth 削除で profiles を CASCADE しない）
+- 再登録は新しい `profiles`（別人）。墓石とはつなげない
+- Auth への FK を張るなら `auth_user_id` → `auth.users` の ON DELETE SET NULL。`id` には張らない
 
 ## コミュニティ `communities`
 
@@ -77,7 +88,8 @@ erDiagram
 | 参加日時 | `joined_at` | timestamptz | ✓ | |
 
 - UNIQUE (`community_id`, `user_id`)
-- **役割カラムは持たない**（1-5）
+- **役割カラムは持たない**（全員同等。Phase 1-5）
+- 退会・離脱・除名でこの行は消える。`profiles` は消さない（墓石または利用中のまま）
 
 ## ルール共通属性
 
@@ -132,7 +144,8 @@ erDiagram
 - XOR: `user_id` と `guest_display_name` のどちらか一方のみ
 - UNIQUE (`tournament_id`, `user_id`) WHERE `user_id` IS NOT NULL
 - UNIQUE (`tournament_id`, `guest_display_name`) WHERE `guest_display_name` IS NOT NULL
-- メンバーの `user_id` は、その大会のコミュニティのメンバーであること（アプリ制約）
+- **新たに** メンバーとして載せるとき、その `user_id` は当該コミュニティの **現メンバー**（墓石でない）であること
+- 既存行は、離脱・除名・退会後も `user_id` を残してよい。ゲストへ載せ替えない。離脱・除名後の表示は現行の `profiles.display_name`。退会後は墓石の「退会済みユーザ」
 - 試合に出すには、先にこのリストへ載せる
 
 ## 大会修正ポイント `tournament_point_adjustments`
@@ -184,6 +197,44 @@ erDiagram
 
 ---
 
+## 招待コード `community_invite_codes`
+
+| 属性 | 識別子 | 型 | 必須 | 制約・備考 |
+|------|--------|----|------|------------|
+| ID | `id` | UUID | ✓ | |
+| コミュニティ | `community_id` | UUID | ✓ | FK → `communities`。UNIQUE（コミュニティあたり最大 1 行） |
+| コード | `code` | 文字列 | ✓ | コミュニティ横断で UNIQUE。参加時の入力値 |
+| 有効期限 | `expires_at` | timestamptz | ✓ | この時点以降は参加に使えない |
+| 作成者 | `created_by` | UUID | ✓ | 発行したメンバー（`profiles.id`）。所有関係ではないので図には描かない。退会後も墓石を指したまま |
+| 作成日時 | `created_at` | timestamptz | ✓ | 再発行したら作り直す |
+
+- 所有はコミュニティ（`community_id`）のみ。`created_by` は属性であり、ER 図のリレーションにはしない
+- 再発行は旧行を消して新しい行を入れる（または同等の差し替え）。旧コードは無効
+- 期限切れまで何度でも使える。使用回数の上限は持たない
+- 未所属者はこの表を SELECT できない
+- 参加はコードを引数にする関数（Phase 3）。未所属者が `community_memberships` へ直接 INSERT することは許可しない
+- コードの文字種・長さは Phase 3
+
+## 操作ログ `activity_logs`
+
+アプリの UI には出さない。万が一のときに開発者が確認する監査テーブル。
+
+| 属性 | 識別子 | 型 | 必須 | 制約・備考 |
+|------|--------|----|------|------------|
+| ID | `id` | UUID | ✓ | |
+| 対象種別 | `entity_type` | 列挙 | ✓ | `community` / `tournament` / `match` |
+| 対象 ID | `entity_id` | UUID | ✓ | 対象行の PK。ポリモーフィック（FK は張らない）。削除後も値は残す |
+| 操作 | `action` | 列挙 | ✓ | `insert` / `update` / `delete` |
+| 操作者 | `actor_user_id` | UUID | ✓ | FK → `profiles`。図上のリレーションはここだけ。退会後も墓石を指す（SET NULL しない） |
+| 記録日時 | `created_at` | timestamptz | ✓ | |
+
+- `community_id` は持たない（コミュニティとの FK なし。対象は `entity_type` + `entity_id`）
+- 値の差分（変更前/後）は持たない
+- 子の変更は親キーに寄せる。既定ルール・招待・メンバーシップ → コミュニティ ID。大会ルール・参加者・修正ポイント → 大会 ID。試合結果 → 試合 ID
+- RLS: 認証済みユーザーは **INSERT のみ**。SELECT / UPDATE / DELETE は不可。開発者の確認は service role 等（RLS 外）
+- コミュニティや対象行を消してもログは残す（CASCADE しない）
+- `updated_at` は持たない（追記のみ）
+
 ## 削除方針（Phase 3 の FK 用）
 
 基本は **RESTRICT**（参照が残っている間は親を消さない）。例外だけ CASCADE。
@@ -194,15 +245,50 @@ erDiagram
 | 大会参加者を消す | 試合結果がある間は RESTRICT。修正ポイント行は CASCADE |
 | 大会ルールを消す | 試合が紐づいている間は RESTRICT |
 | 大会を消す | 試合・参加者が残っている間は RESTRICT。アプリが子から消す |
-| コミュニティを消す | 大会・既定ルール・メンバーシップが残っている間は RESTRICT。詳細な権限は 1-5 |
+| コミュニティの明示削除 | **空のときだけ**（大会 0 件かつ既定ルール 0 件）。そうでなければ RESTRICT。メンバーシップ・招待コードは CASCADE。操作ログは残す |
+| 最後の 1 人の離脱 | コミュニティごと消す。大会・既定ルールが残っていても CASCADE（試合・参加者等も含む）。孤児を残さない |
+| ユーザー退会 | `profiles` は消さない（墓石）。メンバーシップは全コミュニティ分削除（最後の 1 人なら上の離脱と同じ）。`auth.users` は消す |
 
 ---
 
-## 1-5 に送るもの
+## RLS 方針
 
-- メンバーの役割（作成者・管理者を置くか）
-- 招待のデータの持ち方
-- RLS（誰が何を読める / 書けるか。コミュニティ配下への伝播）
+Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](overview.md#権限モデルphase-1-5)。
+
+コミュニティ配下は **`community_memberships` まで辿って**、呼び出し人の **利用中** プロフィール（`withdrawn_at` 空、`auth_user_id` あり）の行があるかで判定する。`user_id` を持たない表も同じ。大会に出ていなくても、所属していれば配下は読める・書ける。
+
+**直接**: ユーザーセッションの Supabase クライアントによる `select` / `insert` / `update` / `delete`。
+
+**関数**: Server Action から `supabase.rpc`（Postgres の SECURITY DEFINER 関数）。独自 REST は使わない。
+
+「可」は、判定経路を満たせば直接操作してよい、の意味。追加条件があれば同じセルに書く。未ログインはすべて不可。墓石はログインできないので「呼び出し人のメンバーシップ」にはならない。
+
+| テーブル | 判定経路 | SELECT | INSERT | UPDATE | DELETE |
+|----------|----------|--------|--------|--------|--------|
+| `profiles` | SELECT は次のいずれか。（1）この行の `auth_user_id` が呼び出し人。（2）`community_memberships` を共有する。（3）`tournament_participants.user_id` = この行の `id` かつ、その大会の `community_id` について呼び出し人のメンバーシップがある。UPDATE は (1) のみ | 可。所属メンバーは (2)。離脱・退会後の墓石は (3) のみ | 不可（Auth 登録時の trigger 等） | 可（表示名など）。墓石化は退会関数 | 不可（退会は墓石。行は残す） |
+| `communities` | `community_memberships`（`community_id` = この行の `id`） | 可（所属しているコミュニティだけ） | 不可（作成関数が、コミュニティと自分のメンバーシップをまとめて作る） | 可 | 可、かつ **空**（大会 0 かつ既定ルール 0） |
+| `community_memberships` | 同じ表（この行の `community_id` について、呼び出し人のメンバーシップがある） | 可（同じコミュニティのメンバー一覧。抜けた人の行は無い） | 不可（参加関数または作成関数） | 不可 | 可（自分の離脱・他人の除名）。**最後の 1 人**のときはコミュニティごと消す（関数または trigger。空でないコミュニティの直接 DELETE は使わない） |
+| `community_rules` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可 |
+| `community_invite_codes` | `community_memberships`（この行の `community_id`） | 可。**未所属者は不可**（参加はコードを渡す関数） | 可 | 可（再発行は差し替え） | 可 |
+| `tournaments` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可。試合・参加者が残っている間は FK で RESTRICT（子から消す） |
+| `tournament_rules` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可 | 可。**試合が 1 件でも紐づいていれば不可**（trigger 等） | 可。試合が紐づいている間は RESTRICT |
+| `tournament_participants` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可。`user_id` を付けるならその人は当該コミュニティの **現メンバー**（墓石不可）。ゲストは表示名 | 可。`user_id` を付ける／変える場合も現メンバーであること | 可。試合結果がある間は RESTRICT |
+| `tournament_point_adjustments` | `tournament_participants` → `tournaments` → `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可 |
+| `matches` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可（試合結果は CASCADE） |
+| `match_results` | `matches` → `tournaments` → `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可 |
+| `activity_logs` | コミュニティは見ない。INSERT は認証済み。SELECT はアプリロールでは不可 | **不可**。開発者は service role 等（RLS 外） | 可。`actor_user_id` は呼び出し人のプロフィール | 不可 | 不可 |
+
+`profiles` の SELECT (3) は、所属が切れたあとも対局の名前を出すため。
+
+関数にまとめる操作:
+
+| 関数（名前は Phase 3） | 内容 |
+|------------------------|------|
+| コミュニティ作成 | `communities` INSERT + 自分の `community_memberships` INSERT |
+| コミュニティ参加 | 招待コードを検証し、自分の `community_memberships` INSERT。既所属なら何もしない |
+| アプリ退会 | 墓石（匿名化、`auth_user_id` NULL、`withdrawn_at`）。全コミュニティから離脱（最後の 1 人ならコミュニティ削除）。続けて Auth Admin で `auth.users` 削除 |
+
+---
 
 ## 扱わないもの（MVP）
 

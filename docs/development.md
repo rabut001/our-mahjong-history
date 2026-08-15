@@ -226,4 +226,6 @@ Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-st
 - データ API は Supabase（PostgREST + RLS）
 - **読み取り**: React Server Components から Supabase クライアント
 - **更新**: Server Action 内で Supabase クライアントを呼ぶ（薄いラッパー）
+- RLS だけでは循環する更新（コミュニティ参加・作成、退会など）は、同じ経路で **`supabase.rpc`（Postgres 関数）** を呼ぶ。独自 REST ではない
 - 認証セッション: `@supabase/ssr`（cookie）
+- 利用者の Auth 削除だけは Supabase Auth Admin（Server Action から service role）

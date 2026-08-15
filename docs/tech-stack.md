@@ -35,8 +35,8 @@
 - **React Server Components** を基本とし、インタラクティブな部分のみ Client Component
 - 配置: リポジトリの `web/`（コンテナ内は `/workspace/web`）
 - ルーティング: `web/src/app/` ディレクトリ配下（`src/` あり）
-- データ更新: Server Actions を優先。中身は Supabase クライアント呼び出し（薄いラッパー）
-- 独自 REST / Route Handler の CRUD は作らない。データ API は Supabase（PostgREST + RLS）
+- データ更新: Server Actions を優先。中身は Supabase クライアント呼び出し（薄いラッパー）。RLS で循環する操作は `supabase.rpc`
+- 独自 REST / Route Handler の CRUD は作らない。データ API は Supabase（PostgREST + RLS。関数は RPC）
 
 ### TypeScript
 
