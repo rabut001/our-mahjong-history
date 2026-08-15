@@ -11,9 +11,11 @@ alwaysApply: true
 
 ## スタック
 
-- Next.js（App Router）、TypeScript、Tailwind CSS
-- Supabase（PostgreSQL + Auth + RLS）
-- デプロイ: Vercel
+- Next.js（App Router）、TypeScript、Tailwind CSS。アプリ本体は `web/`
+- Supabase（PostgreSQL + Auth + RLS）。データ API は Supabase。独自 REST は作らない
+- 読み取りは RSC→Supabase、更新は Server Action 内で Supabase を呼ぶ
+- ローカル開発: Docker（Dev Container + docker compose）。ホストに Node は置かない
+- デプロイ: Vercel（本番はコンテナ化しない）
 - UI: 日本語のみ、モバイルファースト
 
 ## ドメイン用語（厳守）

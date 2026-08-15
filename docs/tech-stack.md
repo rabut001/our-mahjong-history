@@ -22,7 +22,8 @@
 | 言語 | TypeScript | フロント・サーバー共通 |
 | スタイリング | Tailwind CSS | モバイルファースト |
 | BaaS / DB | Supabase | PostgreSQL + Auth + RLS |
-| デプロイ | Vercel | フロントエンドホスティング |
+| デプロイ | Vercel | フロントエンドホスティング（本番はコンテナ化しない） |
+| ローカル開発 | Docker | Dev Container + docker compose。Node 24。ホストに Node は置かない |
 | UI 言語 | 日本語 | 日本語のみ |
 
 ---
@@ -32,8 +33,10 @@
 ### Next.js（App Router）
 
 - **React Server Components** を基本とし、インタラクティブな部分のみ Client Component
-- ルーティング: `app/` ディレクトリ配下
-- データ更新: Server Actions を優先（方針は Phase 0 で確定）
+- 配置: リポジトリの `web/`（コンテナ内は `/workspace/web`）
+- ルーティング: `web/app/` ディレクトリ配下
+- データ更新: Server Actions を優先。中身は Supabase クライアント呼び出し（薄いラッパー）
+- 独自 REST / Route Handler の CRUD は作らない。データ API は Supabase（PostgREST + RLS）
 
 ### TypeScript
 
@@ -73,13 +76,28 @@
 
 ---
 
+## ローカル開発（Docker）
+
+ホストに Node.js / npm は置かない。起動方法は [development.md](development.md#ローカル開発環境) を参照。
+
+| ファイル | 役割 |
+|----------|------|
+| `Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI |
+| `docker-compose.yml` | ホストからの CLI 起動。`docker.sock` とポート 3000 |
+| `.devcontainer/devcontainer.json` | Cursor 用。`Dockerfile` を直指定 |
+
+Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3。本番は Vercel + Supabase Cloud。
+
+---
+
 ## デプロイ / インフラ
 
 | サービス | 役割 |
 |----------|------|
-| Vercel | Next.js アプリのホスティング |
-| Supabase Cloud | DB・Auth・RLS |
+| Vercel | Next.js アプリのホスティング（本番。コンテナ化しない） |
+| Supabase Cloud | 本番の DB・Auth・RLS |
 | GitHub | ソースコード管理 |
+| Docker | ローカル開発のみ |
 
 ### 環境変数（予定）
 
@@ -90,7 +108,7 @@
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー |
 
-`.env.example` は Phase 0 で作成する。
+`.env.example` は Phase 0-2 で `web/` に作成する。
 
 ---
 
@@ -108,25 +126,22 @@
 
 ## ディレクトリ構成（予定）
 
-Phase 0 完了後に確定。想定:
+Phase 0 の前提として確定:
 
 ```
 our-mahjong-history/            # リポジトリ名（Our Mahjong History）
-├── AGENTS.md                 # AI エージェント入口
-├── docs/                     # プロジェクトドキュメント
-│   ├── status.md             # 進捗（動的）
-│   ├── overview.md
-│   ├── development.md
-│   ├── tech-stack.md
-│   ├── tasks.md              # 具体タスク（Phase 0 以降）
-│   └── ui-spec.md            # Phase 2 以降
-├── .cursor/
-│   └── rules/                # Cursor ルール
-├── app/                      # Next.js App Router
-├── components/               # 共通 UI コンポーネント
-├── lib/                      # ユーティリティ・Supabase クライアント等
-└── supabase/
-    └── migrations/           # DB マイグレーション
+├── AGENTS.md
+├── docs/
+├── .cursor/rules/
+├── .devcontainer/devcontainer.json
+├── Dockerfile
+├── docker-compose.yml
+├── web/                      # Next.js アプリ（Phase 0-2）
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   └── package.json
+└── supabase/                 # Phase 0-1 で init。migrations は Phase 3
 ```
 
 ---

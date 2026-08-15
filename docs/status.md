@@ -10,10 +10,10 @@
 
 | 項目 | 状態 |
 |------|------|
-| フェーズ | **Phase 0 前**（要件・開発計画のドキュメント化済み） |
+| フェーズ | **Phase 0**（前提確認完了。コンテナ未作成） |
 | コード | 未着手 |
 | Git | 初期化済み（`main`、初回コミット済み） |
-| 次のアクション | Phase 0: Next.js + Supabase 雛形の作成 |
+| 次のアクション | Phase 0-1: 開発コンテナの作成（Dockerfile / compose / Dev Container / `supabase init`） |
 
 ## ブロッカー
 
@@ -25,12 +25,12 @@
 
 | フェーズ | 状態 | 備考 |
 |----------|------|------|
-| Phase 0: プロジェクト土台 | 未着手 | |
+| Phase 0: プロジェクト土台 | 前提確認済み | 次は 0-1 コンテナ作成。0-2 は `web/` に Next.js |
 | Phase 1: ドメイン設計 | 未着手 | |
 | Phase 2: モック作成 | 未着手 | |
-| Phase 3: Supabase スキーマ + 認証 | 未着手 | |
+| Phase 3: Supabase スキーマ + 認証 | 未着手 | `supabase start` はここ |
 | Phase 4: MVP 実装 | 未着手 | |
-| Phase 5: デプロイ | 未着手 | |
+| Phase 5: デプロイ | 未着手 | 本番は Vercel（コンテナ化しない） |
 | Phase 6: 拡張 | 未着手 | MVP 後 |
 
 フェーズの定義・成果物は [development.md](development.md) を参照。
@@ -39,7 +39,7 @@
 
 ## 詳細タスク
 
-Phase 0 着手時に `docs/tasks.md` を作成予定（未作成）。
+→ [docs/tasks.md](tasks.md)
 
 ---
 

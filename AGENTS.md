@@ -36,7 +36,7 @@
 | アプリ概要・ドメイン・MVP 範囲 | [docs/overview.md](docs/overview.md) |
 | 開発フェーズの定義・進め方 | [docs/development.md](docs/development.md) |
 | 技術スタック・言語・プラットフォーム | [docs/tech-stack.md](docs/tech-stack.md) |
-| 具体タスク（Phase 0 以降） | `docs/tasks.md`（未作成） |
+| 具体タスク（Phase 0 以降） | [docs/tasks.md](docs/tasks.md) |
 | UI 仕様（モックフェーズ後） | `docs/ui-spec.md`（未作成） |
 | コア方針（Cursor 常時適用） | [.cursor/rules/00-core.mdc](.cursor/rules/00-core.mdc) |
 
@@ -54,6 +54,8 @@
 6. **セキュリティ**: Supabase RLS を必ず使用。コミュニティメンバーのみデータにアクセス可能
 7. **開発スタイル**: 小さく区切って確認しながら進める（1 機能 = 1 セッション推奨）
 8. **スコープ管理**: MVP 外（写真、統計、PC 最適化等）は明示的に依頼されるまで着手しない
+9. **開発実行環境**: ホストに Node は置かない。Dev Container 内、または `docker compose exec app`
+10. **データアクセス**: 独自 REST は作らない。読み取りは RSC→Supabase、更新は Server Action 内の Supabase 呼び出し
 
 ## エージェント向け作業指針
 
@@ -63,3 +65,4 @@
 - フェーズや作業が進んだら [docs/status.md](docs/status.md) を更新する
 - ドメイン用語に変更があれば [docs/overview.md](docs/overview.md) を更新する
 - コミット・PR はユーザーが明示的に依頼した場合のみ作成する
+- Node / npm はホストで実行しない。Dev Container 内、または `docker compose exec app`

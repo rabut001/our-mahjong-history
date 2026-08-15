@@ -31,15 +31,22 @@ Phase 6: 拡張（MVP 後）
 
 **目的**: Cursor が一貫したコードを生成できる環境を整える
 
+ホストに Node.js は置かない。実行は Docker（Dev Container または `docker compose`）上で行う。フェーズ番号は 0〜6 のまま、作業だけ 0-1 / 0-2 に分ける。
+
 | 作業 | 内容 |
 |------|------|
-| 初期化 | Next.js（App Router）+ TypeScript + Tailwind CSS |
+| 0-1 開発環境 | Docker Compose + Dev Container（同じ `Dockerfile` を共有）。Node 24。supabase CLI + Docker CLI + `docker.sock`。`supabase init` |
+| 0-2 初期化 | コンテナ内の `web/` に Next.js（App Router）+ TypeScript + Tailwind CSS |
 | 設定 | ESLint / Prettier、環境変数テンプレート |
-| プロジェクト名 | `package.json` の `name` は `our-mahjong-history`。UI 表示名は「俺たちの雀歴」 |
+| プロジェクト名 | `web/package.json` の `name` は `our-mahjong-history`。UI 表示名は「俺たちの雀歴」 |
 | Cursor Rules | `.cursor/rules/` にコーディング規約を配置 |
 | ドキュメント | 本ドキュメント群のメンテナンス |
 
-**成果物**: `npm run dev` で起動する空アプリ（ブラウザタイトル等に「俺たちの雀歴」を表示）
+**成果物**:
+
+- Dev Container（Reopen in Container）で開発できること
+- `supabase/` が init 済みであること（`start` は Phase 3）
+- コンテナ内の `web/` で `npm run dev` し、空アプリのタイトル等に「俺たちの雀歴」を表示
 
 ---
 
@@ -105,10 +112,13 @@ Phase 6: 拡張（MVP 後）
 
 | 作業 | 内容 |
 |------|------|
+| ローカル実行 | Dev Container 内で `supabase start`（公式ローカルスタック。ホスト Docker を `docker.sock` 経由で使用） |
 | Migration | Phase 1 の ER を SQL 化 |
 | RLS | コミュニティメンバーのみアクセス |
 | Auth | Supabase Auth（メール + OAuth） |
 | 型生成 | `supabase gen types` → TypeScript 型 |
+
+本番の DB / Auth は Phase 5 で Supabase Cloud を使う。
 
 **成果物**: マイグレーション SQL、ログイン〜コミュニティ一覧までの骨格
 
@@ -138,6 +148,8 @@ Phase 6: 拡張（MVP 後）
 - Supabase Redirect URL を本番 URL に追加
 - 本番 smoke test
 
+本番はコンテナ化しない。Docker はローカル開発専用。
+
 ---
 
 ### Phase 6: 拡張（MVP 後）
@@ -153,13 +165,14 @@ Phase 6: 拡張（MVP 後）
 
 | # | フェーズ | 内容 | 確認方法 |
 |---|----------|------|----------|
-| 1 | Phase 0 | プロジェクト初期化 | `npm run dev` |
-| 2 | Phase 1 | ドメイン設計・ER 図 | ドキュメントレビュー |
-| 3 | Phase 2 | モック（主要画面） | スマホ幅でスクロール確認 |
-| 4 | Phase 2 | モック（試合入力・ルール） | 入力フロー walkthrough |
-| 5 | Phase 3 | DB + 認証 | ログイン動作 |
-| 6 | Phase 4 | 大会・試合 CRUD | 実データで記録 |
-| 7 | Phase 5 | デプロイ | 本番 URL で確認 |
+| 1 | Phase 0-1 | Docker + Dev Container + `supabase init` | Reopen in Container。`node` / `npm` / `supabase` / `docker` が使える |
+| 2 | Phase 0-2 | `web/` に Next.js 初期化 | コンテナ内 `npm run dev` |
+| 3 | Phase 1 | ドメイン設計・ER 図 | ドキュメントレビュー |
+| 4 | Phase 2 | モック（主要画面） | スマホ幅でスクロール確認 |
+| 5 | Phase 2 | モック（試合入力・ルール） | 入力フロー walkthrough |
+| 6 | Phase 3 | DB + 認証（`supabase start`） | ログイン動作 |
+| 7 | Phase 4 | 大会・試合 CRUD | 実データで記録 |
+| 8 | Phase 5 | デプロイ | 本番 URL で確認 |
 
 ---
 
@@ -170,6 +183,7 @@ Phase 6: 拡張（MVP 後）
 3. **ドキュメントを参照させる**: `@docs/overview.md` 等を明示的に指定する
 4. **生成後は必ず動作確認**: エラーが出たら同セッション内で修正を依頼する
 5. **DB 変更は migration で**: テーブル追加時は SQL ファイル化を明示する
+6. **npm はコンテナ内で**: ホストに Node はない。Dev Container 内、または `docker compose exec app`
 
 ---
 
@@ -185,3 +199,30 @@ Phase 6: 拡張（MVP 後）
 | コーディング規約追加時 | `.cursor/rules/` |
 
 進捗の正は [docs/status.md](status.md)。本ファイルはフェーズの定義（静的）のみを記載する。
+
+---
+
+## ローカル開発環境
+
+ホストに Node.js / npm は不要。実行は Docker 上で行う。
+
+| 方法 | 使い方 |
+|------|--------|
+| **Dev Container（主）** | Cursor で「Reopen in Container」。以降の `npm` / `supabase` はそのまま実行 |
+| **docker compose（副）** | `docker compose up -d` のあと `docker compose exec app bash` |
+
+Dev Container は Cursor 側の compose 連携が不安定なことがあるため、**同じ `Dockerfile` を直指定**する。`docker-compose.yml` はホストからの CLI 用。
+
+コンテナの作業ディレクトリは `/workspace`（リポジトリルートを bind mount）。Next.js は `/workspace/web`。ホットリロード用に polling を有効化する。`node_modules` 用の名前付き volume は作らない。コンテナユーザーは root。
+
+`docker.sock` をマウントし、コンテナからホスト Docker を操作する（個人のローカル開発用）。`supabase start` は Phase 3。
+
+---
+
+## データアクセス方針
+
+- 独自の REST / Route Handler による CRUD API は作らない
+- データ API は Supabase（PostgREST + RLS）
+- **読み取り**: React Server Components から Supabase クライアント
+- **更新**: Server Action 内で Supabase クライアントを呼ぶ（薄いラッパー）
+- 認証セッション: `@supabase/ssr`（cookie）
