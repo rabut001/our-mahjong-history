@@ -15,9 +15,9 @@
 
 ### 0-2 Next.js 雛形（`web/`）
 
-- [ ] コンテナ内で `web/` に Next.js（App Router）+ TypeScript + Tailwind を初期化
-- [ ] ESLint / Prettier
-- [ ] `web/.env.example`（`NEXT_PUBLIC_SUPABASE_*`）
-- [ ] Supabase クライアント雛形（`@supabase/ssr`。実プロジェクトの start は Phase 3）
-- [ ] metadata に「俺たちの雀歴」
-- [ ] コンテナ内 `npm run dev` で空アプリ起動
+- [x] コンテナ内で `web/` に Next.js（App Router）+ TypeScript + Tailwind を初期化（`src/` あり）
+- [x] ESLint / Prettier
+- [x] `web/.env.example`（`NEXT_PUBLIC_SUPABASE_*`）
+- [x] Supabase クライアント雛形（`@supabase/ssr`。実プロジェクトの start は Phase 3）
+- [x] metadata に「俺たちの雀歴」
+- [x] コンテナ内 `npm run dev` で空アプリ起動（http://localhost:3000。ブラウザ確認済み）

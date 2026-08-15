@@ -18,9 +18,9 @@
 
 | レイヤ | 技術 | 備考 |
 |--------|------|------|
-| フロントエンド | Next.js + React | App Router |
+| フロントエンド | Next.js 16 + React 19 | App Router。`web/src/` |
 | 言語 | TypeScript | フロント・サーバー共通 |
-| スタイリング | Tailwind CSS | モバイルファースト |
+| スタイリング | Tailwind CSS 4 | モバイルファースト |
 | BaaS / DB | Supabase | PostgreSQL + Auth + RLS |
 | デプロイ | Vercel | フロントエンドホスティング（本番はコンテナ化しない） |
 | ローカル開発 | Docker | Dev Container + docker compose。Node 24。ホストに Node は置かない |
@@ -34,7 +34,7 @@
 
 - **React Server Components** を基本とし、インタラクティブな部分のみ Client Component
 - 配置: リポジトリの `web/`（コンテナ内は `/workspace/web`）
-- ルーティング: `web/app/` ディレクトリ配下
+- ルーティング: `web/src/app/` ディレクトリ配下（`src/` あり）
 - データ更新: Server Actions を優先。中身は Supabase クライアント呼び出し（薄いラッパー）
 - 独自 REST / Route Handler の CRUD は作らない。データ API は Supabase（PostgREST + RLS）
 
@@ -137,10 +137,11 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   ├── Dockerfile
 │   ├── docker-compose.yml
 │   └── devcontainer.json
-├── web/                      # Next.js アプリ（Phase 0-2）
-│   ├── app/
-│   ├── components/
-│   ├── lib/
+├── web/                      # Next.js アプリ
+│   ├── src/
+│   │   ├── app/
+│   │   ├── components/
+│   │   └── lib/
 │   └── package.json
 └── supabase/                 # Phase 0-1 で init。migrations は Phase 3
 ```
