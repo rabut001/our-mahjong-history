@@ -2,7 +2,7 @@
 
 Phase 1-4 / 1-5。Phase 3 の migration の前提。SQL は書かない。
 
-用語・保存方針・多重度・権限の正は [overview.md](overview.md)。SELECT / INSERT / UPDATE / DELETE の条件は本ファイルの [RLS 方針](#rls-方針)。
+ドメイン（用語・保存方針・多重度・誰が何をできるか）の正は [overview.md](overview.md)。本ファイルは属性・制約・ER 図と、SELECT / INSERT / UPDATE / DELETE の判定経路。
 
 ---
 
@@ -12,7 +12,7 @@ Phase 1-4 / 1-5。Phase 3 の migration の前提。SQL は書かない。
 |------|------|
 | 主キー | UUID |
 | テーブル名 | 英語スネークケース（下表） |
-| 日時 | 全エンティティに `created_at`。更新しうるものは `updated_at`。メンバーシップは `joined_at` を作成日時とする |
+| 日時 | 全テーブルに `created_at`（timestamptz, 必須）。行を更新しうるテーブルは `updated_at`（timestamptz, 必須）も付ける。例外: `community_memberships` は `joined_at` のみ。`activity_logs` と `community_invite_codes` は `created_at` のみ（差し替え・追記で、行の UPDATE は業務操作にしない） |
 | **点数** | 整数（例: 25000） |
 | **ポイント**・レート・大会修正ポイント | 小数（符号あり。PostgreSQL `numeric`。表示は小数第 1 位を想定するが、DB で桁は切らない） |
 | 未使用の名称・タイトル | 空文字・空白のみは未使用（null と同じ）。`is_used` は持たない |
@@ -65,6 +65,8 @@ erDiagram
 | Auth | `auth_user_id` | UUID | 条件 | ログイン中のみ。UNIQUE。Auth 削除時は NULL（墓石）。出鱈目な値は使わない |
 | 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。退会後は「退会済みユーザ」。コミュニティ別ニックネームは MVP 外 |
 | 退会日時 | `withdrawn_at` | timestamptz | — | 入っていれば墓石。ログイン不可 |
+| 作成日時 | `created_at` | timestamptz | ✓ | |
+| 更新日時 | `updated_at` | timestamptz | ✓ | 表示名の変更など |
 
 - 利用中: `auth_user_id` ありかつ `withdrawn_at` は空
 - 退会（墓石）: 行は残す。`auth_user_id` を NULL、`withdrawn_at` を入れる、表示名を「退会済みユーザ」にする。`auth.users` は消す（Auth 削除で profiles を CASCADE しない）
@@ -77,6 +79,8 @@ erDiagram
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | |
 | 名称 | `name` | 文字列 | ✓ | |
+| 作成日時 | `created_at` | timestamptz | ✓ | |
+| 更新日時 | `updated_at` | timestamptz | ✓ | |
 
 ## コミュニティメンバーシップ `community_memberships`
 
@@ -85,7 +89,7 @@ erDiagram
 | ID | `id` | UUID | ✓ | |
 | コミュニティ | `community_id` | UUID | ✓ | FK → `communities` |
 | ユーザー | `user_id` | UUID | ✓ | FK → `profiles` |
-| 参加日時 | `joined_at` | timestamptz | ✓ | |
+| 参加日時 | `joined_at` | timestamptz | ✓ | 作成日時を兼ねる。`created_at` / `updated_at` は持たない |
 
 - UNIQUE (`community_id`, `user_id`)
 - **役割カラムは持たない**（全員同等。Phase 1-5）
@@ -112,11 +116,14 @@ erDiagram
 | その他ポイント1〜5の名称 | `other_points_1_name` … `other_points_5_name` | 文字列 | — | 例: 役満ご祝儀。空ならその枠は未使用 |
 | レート | `rate` | 小数 | ✓ | 0 以上。ポイント計算の係数 |
 | メモ | `notes` | 文字列 | — | ハウスルール等。計算には使わない |
+| 作成日時 | `created_at` | timestamptz | ✓ | |
+| 更新日時 | `updated_at` | timestamptz | ✓ | |
 
 - `community_rules.community_id` → `communities`（必須）
 - `tournament_rules.tournament_id` → `tournaments`（必須）
 - UNIQUE (`community_id`, `name`) / UNIQUE (`tournament_id`, `name`)
 - 大会作成時、コミュニティ既定を **値コピー** して大会ルールを作る。既定が 0 件なら大会ルールも 0 件で始まり、あとから追加できる
+- 試合は大会ルールを 1 つ必須とする。ルール 0 件の大会では試合を作れない
 - 1 件でも試合が紐づいた大会ルールは **修正不可**（アプリ制約。Phase 3 で trigger 可）。未使用の大会ルールとコミュニティ既定は修正できる
 
 ## 麻雀大会 `tournaments`
@@ -129,6 +136,8 @@ erDiagram
 | 大会名 | `name` | 文字列 | ✓ | 同一コミュニティ内の重複は許す |
 | 大会修正ポイント1〜5のタイトル | `adjustment_points_1_title` … `adjustment_points_5_title` | 文字列 | — | 例: チップ、会場優遇。空ならその枠は未使用 |
 | メモ | `memo` | 文字列 | — | |
+| 作成日時 | `created_at` | timestamptz | ✓ | |
+| 更新日時 | `updated_at` | timestamptz | ✓ | |
 
 最終順位・最終ポイントは **列にしない**（都度集計）。写真は MVP 外。
 
@@ -140,12 +149,15 @@ erDiagram
 | 大会 | `tournament_id` | UUID | ✓ | FK → `tournaments` |
 | ユーザー | `user_id` | UUID | 条件 | メンバーのとき必須。FK → `profiles` |
 | ゲスト表示名 | `guest_display_name` | 文字列 | 条件 | ゲストのとき必須。空文字不可 |
+| 作成日時 | `created_at` | timestamptz | ✓ | |
+| 更新日時 | `updated_at` | timestamptz | ✓ | |
 
 - XOR: `user_id` と `guest_display_name` のどちらか一方のみ
 - UNIQUE (`tournament_id`, `user_id`) WHERE `user_id` IS NOT NULL
-- UNIQUE (`tournament_id`, `guest_display_name`) WHERE `guest_display_name` IS NOT NULL
+- UNIQUE (`tournament_id`, `guest_display_name`) WHERE `guest_display_name` IS NOT NULL（同一大会のゲスト同名は不可）
 - **新たに** メンバーとして載せるとき、その `user_id` は当該コミュニティの **現メンバー**（墓石でない）であること
 - 既存行は、離脱・除名・退会後も `user_id` を残してよい。ゲストへ載せ替えない。離脱・除名後の表示は現行の `profiles.display_name`。退会後は墓石の「退会済みユーザ」
+- コミュニティ所属者をゲストとして載せる二重登録はしない（アプリ制約。XOR だけでは検知しない）
 - 試合に出すには、先にこのリストへ載せる
 
 ## 大会修正ポイント `tournament_point_adjustments`
@@ -155,6 +167,8 @@ erDiagram
 | ID | `id` | UUID | ✓ | |
 | 大会参加者 | `tournament_participant_id` | UUID | ✓ | FK → `tournament_participants`。UNIQUE（参加者あたり最大 1 行） |
 | 修正ポイント1〜5 | `adjustment_points_1` … `adjustment_points_5` | 小数 | ✓ | 大会の同番号のタイトルに対応。タイトルが空なら 0。手入力 |
+| 作成日時 | `created_at` | timestamptz | ✓ | |
+| 更新日時 | `updated_at` | timestamptz | ✓ | |
 
 - 行が無い参加者は、修正ポイントすべて 0 とみなす
 - その人の大会修正ポイント = 1〜5 の合計
@@ -170,8 +184,8 @@ erDiagram
 | 使用ルール | `tournament_rule_id` | UUID | ✓ | FK → `tournament_rules`。**同じ大会の**ルールであること |
 | 試合個別ポイント1〜3のタイトル | `manual_points_1_title` … `manual_points_3_title` | 文字列 | — | この試合だけの手動枠。空ならその枠は未使用 |
 | コメント | `comment` | 文字列 | — | 試合単位。プレイヤーごとではない |
-
-並びは `created_at`。明示的な通し番号は持たない（並べ替え UI は Phase 2 以降で必要なら足す）。
+| 作成日時 | `created_at` | timestamptz | ✓ | 試合一覧の並び。明示的な通し番号は持たない（並べ替え UI は Phase 2 以降で必要なら足す） |
+| 更新日時 | `updated_at` | timestamptz | ✓ | |
 
 ## 試合結果 `match_results`
 
@@ -189,6 +203,8 @@ erDiagram
 | 試合個別ポイント1〜3 | `manual_points_1` … `manual_points_3` | 小数 | ✓ | 試合の同番号のタイトルに対応。タイトルが空なら 0。手入力 |
 | ポイント | `points` | 小数 | ✓ | この試合の合計。大会集計の正。レートはルールの係数としてここに反映 |
 | 順位 | `rank` | 整数 | ✓ | **点数**の高い順で保存時に計算。1 以上。同点は同位で次を飛ばす（1, 2, 2, 4）。上家取りはオカ・ウマの配分に使い、順位は分けない |
+| 作成日時 | `created_at` | timestamptz | ✓ | |
+| 更新日時 | `updated_at` | timestamptz | ✓ | |
 
 - UNIQUE (`match_id`, `tournament_participant_id`)
 - 1 試合の結果件数は、使用ルールの `player_count`（3 または 4）と一致（アプリ制約）
@@ -209,7 +225,8 @@ erDiagram
 | 作成日時 | `created_at` | timestamptz | ✓ | 再発行したら作り直す |
 
 - 所有はコミュニティ（`community_id`）のみ。`created_by` は属性であり、ER 図のリレーションにはしない
-- 再発行は旧行を消して新しい行を入れる（または同等の差し替え）。旧コードは無効
+- 再発行は旧行を消して新しい行を入れる（差し替え）。旧コードは無効。期限だけ延ばす操作は持たない（再発行する）
+- アプリの業務操作としては行の UPDATE は使わない（RLS 上 UPDATE を許可しても、再発行は差し替え）
 - 期限切れまで何度でも使える。使用回数の上限は持たない
 - 未所属者はこの表を SELECT できない
 - 参加はコードを引数にする関数（Phase 3）。未所属者が `community_memberships` へ直接 INSERT することは許可しない
@@ -269,7 +286,7 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 | `communities` | `community_memberships`（`community_id` = この行の `id`） | 可（所属しているコミュニティだけ） | 不可（作成関数が、コミュニティと自分のメンバーシップをまとめて作る） | 可 | 可、かつ **空**（大会 0 かつ既定ルール 0） |
 | `community_memberships` | 同じ表（この行の `community_id` について、呼び出し人のメンバーシップがある） | 可（同じコミュニティのメンバー一覧。抜けた人の行は無い） | 不可（参加関数または作成関数） | 不可 | 可（自分の離脱・他人の除名）。**最後の 1 人**のときはコミュニティごと消す（関数または trigger。空でないコミュニティの直接 DELETE は使わない） |
 | `community_rules` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可 |
-| `community_invite_codes` | `community_memberships`（この行の `community_id`） | 可。**未所属者は不可**（参加はコードを渡す関数） | 可 | 可（再発行は差し替え） | 可 |
+| `community_invite_codes` | `community_memberships`（この行の `community_id`） | 可。**未所属者は不可**（参加はコードを渡す関数） | 可 | 可（実装都合。業務操作の再発行は差し替え） | 可 |
 | `tournaments` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可。試合・参加者が残っている間は FK で RESTRICT（子から消す） |
 | `tournament_rules` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可 | 可。**試合が 1 件でも紐づいていれば不可**（trigger 等） | 可。試合が紐づいている間は RESTRICT |
 | `tournament_participants` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可。`user_id` を付けるならその人は当該コミュニティの **現メンバー**（墓石不可）。ゲストは表示名 | 可。`user_id` を付ける／変える場合も現メンバーであること | 可。試合結果がある間は RESTRICT |
@@ -292,7 +309,11 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 
 ## 扱わないもの（MVP）
 
-- 局単位の記録
-- アガリ役・詳細な和了情報
+ドメイン側の一覧は [overview.md の MVP スコープ](overview.md#mvp-スコープ)。スキーマに載せないもの:
+
+- 局単位の記録、アガリ役・詳細な和了情報
 - 写真のアップロード
 - コミュニティ別ニックネーム、ゲストの名寄せ
+- 公開ルーム
+- 通算成績・統計用の集計テーブル
+- 操作ログの値差分、`community_id`
