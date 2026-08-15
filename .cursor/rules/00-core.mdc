@@ -35,12 +35,13 @@ alwaysApply: true
 2. **MVP スコープ**: 写真・統計・PC 最適化は明示的依頼まで着手しない
 3. **フェーズ順守**: `docs/development.md` のフェーズに従う
 4. **DB 変更**: migration SQL で管理する
-5. **ドキュメント**: 進捗変更時は `docs/status.md`、ドメイン変更時は `docs/overview.md` を更新する
+5. **ドキュメント**: 進捗変更時は `docs/status.md`、ドメイン変更時は `docs/overview.md`、ER 変更時は `docs/er.md` を更新する
 
 ## 参照ドキュメント
 
 - `AGENTS.md` — 入口
 - `docs/status.md` — 現在フェーズ・次のアクション
 - `docs/overview.md` — 要件・ドメイン
+- `docs/er.md` — ER（属性・制約・Mermaid）
 - `docs/development.md` — フェーズ定義
 - `docs/tech-stack.md` — 技術選定

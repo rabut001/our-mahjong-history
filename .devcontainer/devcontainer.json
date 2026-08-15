@@ -9,7 +9,8 @@
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss"
+        "bradlc.vscode-tailwindcss",
+        "bierner.markdown-mermaid"
       ],
       "settings": {
         "remote.autoForwardPorts": false,

@@ -34,6 +34,7 @@
 |------|----------|
 | **進捗・現在フェーズ** | [docs/status.md](docs/status.md) |
 | アプリ概要・ドメイン・MVP 範囲 | [docs/overview.md](docs/overview.md) |
+| ER（属性・制約・Mermaid） | [docs/er.md](docs/er.md) |
 | 開発フェーズの定義・進め方 | [docs/development.md](docs/development.md) |
 | 技術スタック・言語・プラットフォーム | [docs/tech-stack.md](docs/tech-stack.md) |
 | 具体タスク（Phase 0 以降） | [docs/tasks.md](docs/tasks.md) |
@@ -59,10 +60,11 @@
 
 ## エージェント向け作業指針
 
-- 実装前に [docs/overview.md](docs/overview.md) でドメインを確認する
+- 実装前に [docs/overview.md](docs/overview.md) でドメインを確認する。DB / migration は [docs/er.md](docs/er.md)
 - フェーズを飛ばさず、[docs/development.md](docs/development.md) の順序に従う
 - DB 変更は migration SQL として管理する
 - フェーズや作業が進んだら [docs/status.md](docs/status.md) を更新する
 - ドメイン用語に変更があれば [docs/overview.md](docs/overview.md) を更新する
+- ER の属性・制約に変更があれば [docs/er.md](docs/er.md) を更新する
 - コミット・PR はユーザーが明示的に依頼した場合のみ作成する
 - Node / npm はホストで実行しない。Dev Container 内、または `docker compose -f .devcontainer/docker-compose.yml exec app`
