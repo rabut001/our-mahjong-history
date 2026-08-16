@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { NavButton } from "@/components/NavButton";
 import { formatPoints } from "@/mock";
 import type { RankingRow, UnplayedRow } from "@/mock";
 
@@ -32,14 +32,9 @@ export function TournamentResults({
 
   return (
     <>
-      <div className="mt-6 flex items-baseline justify-between gap-3">
+      <div className="mt-6 flex items-center justify-between gap-3">
         <h2 className="text-sm font-medium text-neutral-600">総合順位</h2>
-        <Link
-          href={correctionHref}
-          className="shrink-0 text-sm text-neutral-600"
-        >
-          ポイントの補正
-        </Link>
+        <NavButton href={correctionHref}>ポイント補正</NavButton>
       </div>
       <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
         {standings.map((row) => (

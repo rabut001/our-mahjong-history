@@ -11,3 +11,4 @@ alwaysApply: true
 - Next.js はリポジトリの `web/`（コンテナ内 `/workspace/web`）
 - 本番デプロイは Vercel（コンテナ化しない）
 - Phase 0 で `supabase init` まで。`supabase start` は Phase 3
+- 同一 LAN のスマホ確認は `docs/development.md` の「同一 LAN のスマホから見る」

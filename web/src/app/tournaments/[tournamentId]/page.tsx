@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { NavButton } from "@/components/NavButton";
 import { TournamentResults } from "@/components/TournamentResults";
 import {
   describeTournamentRules,
@@ -44,7 +44,11 @@ export default async function TournamentDetailPage({
       <AppHeader
         title={tournament.name}
         backHref={`/communities/${tournament.communityId}`}
-        action={<Link href={`/tournaments/${tournament.id}/edit`}>編集</Link>}
+        action={
+          <NavButton href={`/tournaments/${tournament.id}/edit`}>
+            編集
+          </NavButton>
+        }
       />
       <main className="px-4 py-4">
         <p className="text-sm text-neutral-600">
@@ -61,18 +65,18 @@ export default async function TournamentDetailPage({
           correctionHref={`/tournaments/${tournament.id}/adjustments`}
         />
 
-        <h2 className="mt-6 text-sm font-medium text-neutral-600">試合一覧</h2>
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium text-neutral-600">試合一覧</h2>
+          <NavButton href={`/tournaments/${tournament.id}/matches/new`}>
+            追加
+          </NavButton>
+        </div>
         <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
           {matches.map((match) => (
             <li key={match.id} className="py-3">
-              <div className="flex items-baseline justify-between gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <p className="font-medium tabular-nums">#{match.number}</p>
-                <Link
-                  href={`/matches/${match.id}/edit`}
-                  className="shrink-0 text-sm text-neutral-600"
-                >
-                  編集
-                </Link>
+                <NavButton href={`/matches/${match.id}/edit`}>修正</NavButton>
               </div>
               <ul className="mt-2 space-y-1">
                 {match.results.map((result) => (
@@ -95,12 +99,6 @@ export default async function TournamentDetailPage({
             </li>
           ))}
         </ul>
-        <Link
-          href={`/tournaments/${tournament.id}/matches/new`}
-          className="mt-6 block w-full border border-neutral-400 px-4 py-3 text-center text-sm"
-        >
-          試合結果を追加
-        </Link>
       </main>
     </>
   );

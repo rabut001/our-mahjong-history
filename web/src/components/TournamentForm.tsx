@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ParticipantPicker } from "@/components/ParticipantPicker";
 
 const fieldClass =
@@ -20,17 +21,44 @@ type TournamentFormProps = {
   values: TournamentFormValues;
 };
 
+function toDisplayDate(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  if (!year || !month || !day) {
+    return iso;
+  }
+  return `${year}/${month}/${day}`;
+}
+
+function HeldOnInput({ defaultValue }: { defaultValue: string }) {
+  const [iso, setIso] = useState(defaultValue);
+  return (
+    <div className="relative mt-1">
+      <input
+        type="text"
+        readOnly
+        tabIndex={-1}
+        value={toDisplayDate(iso)}
+        className={`${fieldClass} pointer-events-none mt-0`}
+      />
+      <input
+        type="date"
+        name="heldOn"
+        value={iso}
+        lang="ja"
+        aria-label="開催日"
+        onChange={(event) => setIso(event.target.value)}
+        className="absolute inset-0 cursor-pointer opacity-0"
+      />
+    </div>
+  );
+}
+
 export function TournamentForm({ mode, values }: TournamentFormProps) {
   return (
     <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
       <label className={labelClass}>
         開催日
-        <input
-          type="date"
-          name="heldOn"
-          defaultValue={values.heldOn}
-          className={fieldClass}
-        />
+        <HeldOnInput defaultValue={values.heldOn} />
       </label>
       <label className={labelClass}>
         大会名

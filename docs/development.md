@@ -218,11 +218,42 @@ Phase 6: 拡張（MVP 後）
 | **Dev Container（主）** | Cursor で「Reopen in Container」。以降の `npm` / `supabase` はそのまま実行 |
 | **docker compose（副）** | `docker compose -f .devcontainer/docker-compose.yml up -d` のあと `docker compose -f .devcontainer/docker-compose.yml exec app bash` |
 
-Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-study](https://github.com/rabut001/ci-cd-study) のひな形に合わせる）。`network_mode: host` のため、Next.js はホストの `localhost:3000` で直接届く。
+Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-study](https://github.com/rabut001/ci-cd-study) のひな形に合わせる）。`network_mode: host` のため、Next.js はホストのポートで直接届く。PC のブラウザは `http://localhost:3000`。同一 LAN のスマホから見る手順は [同一 LAN のスマホから見る](#同一-lan-のスマホから見る)。
 
 コンテナの作業ディレクトリは `/workspace`（リポジトリルートを bind mount）。Next.js は `/workspace/web`。ホットリロード用に polling を有効化する。`node_modules` 用の名前付き volume は作らない。コンテナユーザーは root。
 
 `docker.sock` をマウントし、コンテナからホスト Docker を操作する（個人のローカル開発用）。`supabase start` は Phase 3。
+
+### 同一 LAN のスマホから見る
+
+WSL2 は NAT のため、PC の `localhost:3000` だけでは同一 Wi-Fi のスマホに届かない。公開は一時的にし、確認が終わったら戻す。
+
+**公開する**
+
+1. 開発サーバを LAN 向けに待ち受け、スマホからの HMR を許可する。
+   - `web/package.json` の `dev` を `next dev --hostname 0.0.0.0` にする（戻すときは `next dev --hostname 127.0.0.1`）
+   - `web/next.config.ts` に `allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"]` を入れる
+2. コンテナ内 `web/` で `npm run dev`（`http://localhost:3000`）
+3. Windows の **管理者 PowerShell**（リポジトリルート）:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .devcontainer/expose-lan.ps1
+```
+
+4. スクリプトが表示する `http://<PCのIPv4>:3000` をスマホで開く。PC の `localhost` はそのまま使える。
+
+**元に戻す**
+
+1. Windows の **管理者 PowerShell**:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .devcontainer/unexpose-lan.ps1
+```
+
+   3000 番の portproxy と、名前が `Our Mahjong History dev 3000` のファイアウォール規則だけを外す。
+2. 開発サーバを localhost だけにする。`web/package.json` の `dev` を `next dev --hostname 127.0.0.1` に戻し、`web/next.config.ts` の `allowedDevOrigins` を外す。
+
+スクリプトは `.devcontainer/expose-lan.ps1`（公開）と `.devcontainer/unexpose-lan.ps1`（戻す）。
 
 ---
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { NavButton } from "@/components/NavButton";
 import {
   countMatches,
   countMembers,
@@ -48,38 +48,38 @@ export default async function CommunityDetailPage({
             const ruleLabel = describeTournamentRules(tournament.id);
             const matchCount = countMatches(tournament.id);
             return (
-              <li key={tournament.id}>
-                <Link
-                  href={`/tournaments/${tournament.id}`}
-                  className="flex items-center justify-between gap-3 py-3"
-                >
-                  <span className="min-w-0">
-                    <span className="block text-sm text-neutral-600">
-                      {formatHeldOn(tournament.heldOn)}
-                    </span>
-                    <span className="mt-0.5 block font-medium">
-                      {tournament.name}
-                    </span>
-                    <span className="mt-0.5 block text-sm text-neutral-600">
-                      {ruleLabel}
-                      {ruleLabel ? "、" : ""}
-                      {matchCount}試合
-                    </span>
+              <li
+                key={tournament.id}
+                className="flex items-center justify-between gap-3 py-3"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm text-neutral-600">
+                    {formatHeldOn(tournament.heldOn)}
                   </span>
-                  <span className="shrink-0 text-sm text-neutral-500">
-                    詳細
+                  <span className="mt-0.5 block font-medium">
+                    {tournament.name}
                   </span>
-                </Link>
+                  <span className="mt-0.5 block text-sm text-neutral-600">
+                    {ruleLabel}
+                    {ruleLabel ? "、" : ""}
+                    {matchCount}試合
+                  </span>
+                </span>
+                <NavButton href={`/tournaments/${tournament.id}`}>
+                  詳細
+                </NavButton>
               </li>
             );
           })}
         </ul>
-        <Link
-          href={`/communities/${community.id}/tournaments/new`}
-          className="mt-6 block w-full border border-neutral-400 px-4 py-3 text-center text-sm"
-        >
-          大会を作成
-        </Link>
+        <div className="mt-6">
+          <NavButton
+            href={`/communities/${community.id}/tournaments/new`}
+            variant="block"
+          >
+            大会を作成
+          </NavButton>
+        </div>
       </main>
     </>
   );
