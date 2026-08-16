@@ -56,7 +56,7 @@ export default async function TournamentDetailPage({
           {ruleLabel ? `　${ruleLabel}` : ""}
         </p>
         {tournament.memo ? (
-          <p className="mt-1 line-clamp-3 min-h-[3.75rem] whitespace-pre-wrap text-sm leading-5 text-neutral-600">
+          <p className="mt-1 line-clamp-3 min-h-15 whitespace-pre-wrap text-sm leading-5 text-neutral-600">
             {tournament.memo}
           </p>
         ) : null}

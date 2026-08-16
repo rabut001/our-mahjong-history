@@ -51,7 +51,7 @@ export default async function CommunityDetailPage({
       />
       <main className="px-4 py-4">
         {community.comment ? (
-          <p className="mb-6 line-clamp-3 min-h-[3.75rem] whitespace-pre-wrap text-sm leading-5 text-neutral-600">
+          <p className="mb-6 line-clamp-3 min-h-15 whitespace-pre-wrap text-sm leading-5 text-neutral-600">
             {community.comment}
           </p>
         ) : null}
