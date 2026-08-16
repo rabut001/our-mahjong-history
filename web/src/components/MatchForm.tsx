@@ -595,7 +595,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
 
         <GridRow label="レート">
           {seats.map((_, index) => (
-            <CellRead key={`rate-${index}`}>{String(rule.rate)}</CellRead>
+            <CellRead key={`rate-${index}`}>{rule.rate.toFixed(1)}</CellRead>
           ))}
         </GridRow>
 

@@ -56,13 +56,16 @@ export default async function TournamentDetailPage({
           {ruleLabel ? `　${ruleLabel}` : ""}
         </p>
         {tournament.memo ? (
-          <p className="mt-1 text-sm text-neutral-600">{tournament.memo}</p>
+          <p className="mt-1 line-clamp-3 min-h-[3.75rem] whitespace-pre-wrap text-sm leading-5 text-neutral-600">
+            {tournament.memo}
+          </p>
         ) : null}
 
         <TournamentResults
           ranked={summary.ranked}
           unplayed={summary.unplayed}
           correctionHref={`/tournaments/${tournament.id}/adjustments`}
+          from={`/tournaments/${tournament.id}`}
         />
 
         <div className="mt-6 flex items-center justify-between gap-3">
@@ -76,7 +79,7 @@ export default async function TournamentDetailPage({
             <li key={match.id} className="py-3">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium tabular-nums">#{match.number}</p>
-                <NavButton href={`/matches/${match.id}/edit`}>修正</NavButton>
+                <NavButton href={`/matches/${match.id}`}>詳細</NavButton>
               </div>
               <ul className="mt-2 space-y-1">
                 {match.results.map((result) => (

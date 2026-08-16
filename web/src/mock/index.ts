@@ -1,7 +1,9 @@
 import {
   communities,
+  communityInviteCodes,
   communityMemberships,
   communityRules,
+  currentUserId,
   matchResults,
   matches,
   profiles,
@@ -14,13 +16,28 @@ import type {
   Community,
   CommunityRule,
   Match,
+  Profile,
+  Rule,
   Seat,
   Tournament,
   TournamentParticipant,
   TournamentRule,
 } from "./types";
 
-export type { Community, Tournament, TournamentRule, Seat } from "./types";
+export type {
+  Community,
+  Rule,
+  Tournament,
+  TournamentRule,
+  Seat,
+} from "./types";
+
+export const SEAT_LABEL: Record<Seat, string> = {
+  east: "東家",
+  south: "南家",
+  west: "西家",
+  north: "北家",
+};
 
 export type AdjustmentLine = {
   title: string;
@@ -29,7 +46,9 @@ export type AdjustmentLine = {
 
 export type RankingRow = {
   participantId: string;
+  userId: string | null;
   name: string;
+  avatarUrl: string | null;
   rank: number;
   matchPoints: number;
   adjustments: AdjustmentLine[];
@@ -39,7 +58,9 @@ export type RankingRow = {
 
 export type UnplayedRow = {
   participantId: string;
+  userId: string | null;
   name: string;
+  avatarUrl: string | null;
   adjustments: AdjustmentLine[];
   adjustmentTotal: number;
 };
@@ -70,9 +91,19 @@ export function countMembers(communityId: string): number {
     .length;
 }
 
+export function getCurrentProfile(): Profile | undefined {
+  return profiles.find((profile) => profile.id === currentUserId);
+}
+
+export function getProfile(userId: string): Profile | undefined {
+  return profiles.find((profile) => profile.id === userId);
+}
+
 export function listCommunityMembers(communityId: string): {
   userId: string;
   displayName: string;
+  avatarUrl: string | null;
+  isCurrentUser: boolean;
 }[] {
   return communityMemberships
     .filter((row) => row.communityId === communityId)
@@ -81,12 +112,86 @@ export function listCommunityMembers(communityId: string): {
       return {
         userId: row.userId,
         displayName: profile?.displayName ?? row.userId,
+        avatarUrl: profile?.avatarUrl ?? null,
+        isCurrentUser: row.userId === currentUserId,
       };
-    });
+    })
+    .sort((a, b) => Number(b.isCurrentUser) - Number(a.isCurrentUser));
+}
+
+export const INVITE_DEFAULT_DAYS = 7;
+
+export function getCommunityInviteCode(communityId: string):
+  | {
+      code: string;
+      expiresAt: string;
+    }
+  | undefined {
+  return communityInviteCodes.find((row) => row.communityId === communityId);
 }
 
 export function listCommunityRules(communityId: string): CommunityRule[] {
   return communityRules.filter((rule) => rule.communityId === communityId);
+}
+
+export function getCommunityRule(ruleId: string): CommunityRule | undefined {
+  return communityRules.find((rule) => rule.id === ruleId);
+}
+
+export function getTournamentRule(ruleId: string): TournamentRule | undefined {
+  return tournamentRules.find((rule) => rule.id === ruleId);
+}
+
+export function isTournamentRuleInUse(ruleId: string): boolean {
+  return matches.some((match) => match.tournamentRuleId === ruleId);
+}
+
+export type RuleFormData = Omit<Rule, "id">;
+
+export function toRuleFormData(rule: Rule): RuleFormData {
+  return {
+    name: rule.name,
+    playerCount: rule.playerCount,
+    startingScore: rule.startingScore,
+    returnScore: rule.returnScore,
+    okaTieHandling: rule.okaTieHandling,
+    umaEnabled: rule.umaEnabled,
+    umaTieHandling: rule.umaTieHandling,
+    umaPoints1: rule.umaPoints1,
+    umaPoints2: rule.umaPoints2,
+    tobiEnabled: rule.tobiEnabled,
+    yakitoriEnabled: rule.yakitoriEnabled,
+    otherPoints1Name: rule.otherPoints1Name,
+    otherPoints2Name: rule.otherPoints2Name,
+    otherPoints3Name: rule.otherPoints3Name,
+    otherPoints4Name: rule.otherPoints4Name,
+    otherPoints5Name: rule.otherPoints5Name,
+    rate: rule.rate,
+    notes: rule.notes,
+  };
+}
+
+export function emptyRuleFormData(): RuleFormData {
+  return {
+    name: "",
+    playerCount: 4,
+    startingScore: 25000,
+    returnScore: 30000,
+    okaTieHandling: "kamicha",
+    umaEnabled: true,
+    umaTieHandling: "kamicha",
+    umaPoints1: 30,
+    umaPoints2: 10,
+    tobiEnabled: true,
+    yakitoriEnabled: false,
+    otherPoints1Name: "",
+    otherPoints2Name: "",
+    otherPoints3Name: "",
+    otherPoints4Name: "",
+    otherPoints5Name: "",
+    rate: 1,
+    notes: "",
+  };
 }
 
 export function listTournaments(communityId: string): Tournament[] {
@@ -143,6 +248,16 @@ export function participantDisplayName(
   }
   const profile = profiles.find((item) => item.id === participant.userId);
   return profile?.displayName ?? "不明";
+}
+
+export function participantAvatarUrl(
+  participant: TournamentParticipant,
+): string | null {
+  if (participant.guestDisplayName || !participant.userId) {
+    return null;
+  }
+  const profile = profiles.find((item) => item.id === participant.userId);
+  return profile?.avatarUrl ?? null;
 }
 
 export function formatHeldOn(heldOn: string): string {
@@ -255,6 +370,7 @@ export function getTournamentSummary(tournamentId: string): {
 
   for (const participant of participants) {
     const name = participantDisplayName(participant);
+    const avatarUrl = participantAvatarUrl(participant);
     const adjustments = adjustmentLines(tournament, participant.id);
     const adjustmentTotal = adjustments.reduce(
       (sum, line) => sum + line.amount,
@@ -276,7 +392,9 @@ export function getTournamentSummary(tournamentId: string): {
     if (playedCount === 0) {
       unplayed.push({
         participantId: participant.id,
+        userId: participant.userId,
         name,
+        avatarUrl,
         adjustments,
         adjustmentTotal,
       });
@@ -285,7 +403,9 @@ export function getTournamentSummary(tournamentId: string): {
 
     played.push({
       participantId: participant.id,
+      userId: participant.userId,
       name,
+      avatarUrl,
       rank: 0,
       matchPoints,
       adjustments,
@@ -404,6 +524,78 @@ export function getMatch(matchId: string): Match | undefined {
   return matches.find((match) => match.id === matchId);
 }
 
+const SEAT_ORDER: Seat[] = ["east", "south", "west", "north"];
+
+export type MatchDetailResult = {
+  participantId: string;
+  name: string;
+  seat: Seat;
+  rank: number;
+  score: number;
+  points: number;
+};
+
+export type MatchDetailData = {
+  id: string;
+  number: number;
+  tournamentId: string;
+  tournamentName: string;
+  ruleName: string;
+  playerCount: 3 | 4;
+  comment: string;
+  results: MatchDetailResult[];
+};
+
+export function getMatchDetail(matchId: string): MatchDetailData | undefined {
+  const match = getMatch(matchId);
+  if (!match) {
+    return undefined;
+  }
+  const tournament = getTournament(match.tournamentId);
+  if (!tournament) {
+    return undefined;
+  }
+  const rule = listTournamentRules(match.tournamentId).find(
+    (item) => item.id === match.tournamentRuleId,
+  );
+  const listed = listMatches(match.tournamentId).find(
+    (item) => item.id === matchId,
+  );
+  const nameById = new Map(
+    listTournamentParticipants(match.tournamentId).map((participant) => [
+      participant.id,
+      participantDisplayName(participant),
+    ]),
+  );
+
+  return {
+    id: match.id,
+    number: listed?.number ?? 0,
+    tournamentId: match.tournamentId,
+    tournamentName: tournament.name,
+    ruleName: rule?.name ?? "",
+    playerCount: rule?.playerCount ?? 4,
+    comment: match.comment,
+    results: matchResults
+      .filter((result) => result.matchId === matchId)
+      .slice()
+      .sort((a, b) => {
+        if (a.rank !== b.rank) {
+          return a.rank - b.rank;
+        }
+        return SEAT_ORDER.indexOf(a.seat) - SEAT_ORDER.indexOf(b.seat);
+      })
+      .map((result) => ({
+        participantId: result.tournamentParticipantId,
+        name: nameById.get(result.tournamentParticipantId) ?? "不明",
+        seat: result.seat,
+        rank: result.rank,
+        score: result.score,
+        points: result.points,
+      })),
+  };
+}
+
 export function getNewMatchFormData(
   tournamentId: string,
 ): MatchFormData | undefined {
@@ -479,6 +671,6 @@ export function getMatchFormData(matchId: string): MatchFormData | undefined {
     participants,
     players,
     manualTitles: ["", "", ""],
-    comment: "",
+    comment: match.comment,
   };
 }

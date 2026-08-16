@@ -38,9 +38,11 @@ export default async function NewTournamentPage({
               selected: false,
             })),
             guests: [],
-            ruleNames: listCommunityRules(community.id).map(
-              (rule) => rule.name,
-            ),
+            rules: listCommunityRules(community.id).map((rule) => ({
+              id: rule.id,
+              name: rule.name,
+              inUse: false,
+            })),
           }}
         />
       </main>

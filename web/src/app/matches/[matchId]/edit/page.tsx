@@ -27,10 +27,7 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
 
   return (
     <>
-      <AppHeader
-        title="試合を編集"
-        backHref={`/tournaments/${data.tournamentId}`}
-      />
+      <AppHeader title="試合を編集" backHref={`/matches/${matchId}`} />
       <main className="px-4 py-4">
         <MatchForm mode="edit" data={data} />
       </main>

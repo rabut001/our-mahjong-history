@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { TournamentForm } from "@/components/TournamentForm";
 import {
   getTournament,
+  isTournamentRuleInUse,
   listCommunityMembers,
   listTournamentParticipants,
   listTournamentRules,
@@ -60,9 +61,13 @@ export default async function TournamentEditPage({ params }: EditPageProps) {
               selected: selectedUserIds.has(member.userId),
             })),
             guests,
-            ruleNames: listTournamentRules(tournament.id).map(
-              (rule) => rule.name,
-            ),
+            rules: listTournamentRules(tournament.id).map((rule) => ({
+              id: rule.id,
+              name: rule.name,
+              detailHref: `/tournaments/${tournament.id}/rules/${rule.id}`,
+              inUse: isTournamentRuleInUse(rule.id),
+            })),
+            addRuleHref: `/tournaments/${tournament.id}/rules/new`,
           }}
         />
       </main>

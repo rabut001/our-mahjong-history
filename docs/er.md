@@ -64,12 +64,14 @@ erDiagram
 | ID | `id` | UUID | ✓ | アプリ側の人の ID。生涯不変。`auth.users.id` とは別 |
 | Auth | `auth_user_id` | UUID | 条件 | ログイン中のみ。UNIQUE。Auth 削除時は NULL（墓石）。出鱈目な値は使わない |
 | 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。退会後は「退会済みユーザ」。コミュニティ別ニックネームは MVP 外 |
+| コメント | `comment` | 文字列 | — | 自己紹介。空なら未設定。退会後は空にする |
+| アイコン | `avatar_url` | 文字列 | — | Google / LINE ログイン時に Auth の `user_metadata.avatar_url` をコピー。メール登録は空。空なら頭文字を出す。アプリからのアップロードはしない。退会後は空 |
 | 退会日時 | `withdrawn_at` | timestamptz | — | 入っていれば墓石。ログイン不可 |
 | 作成日時 | `created_at` | timestamptz | ✓ | |
-| 更新日時 | `updated_at` | timestamptz | ✓ | 表示名の変更など |
+| 更新日時 | `updated_at` | timestamptz | ✓ | 表示名・コメントの変更など |
 
 - 利用中: `auth_user_id` ありかつ `withdrawn_at` は空
-- 退会（墓石）: 行は残す。`auth_user_id` を NULL、`withdrawn_at` を入れる、表示名を「退会済みユーザ」にする。`auth.users` は消す（Auth 削除で profiles を CASCADE しない）
+- 退会（墓石）: 行は残す。`auth_user_id` を NULL、`withdrawn_at` を入れる、表示名を「退会済みユーザ」にする、コメントと `avatar_url` は空にする。`auth.users` は消す（Auth 削除で profiles を CASCADE しない）
 - 再登録は新しい `profiles`（別人）。墓石とはつなげない
 - Auth への FK を張るなら `auth_user_id` → `auth.users` の ON DELETE SET NULL。`id` には張らない
 
@@ -79,6 +81,7 @@ erDiagram
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | |
 | 名称 | `name` | 文字列 | ✓ | |
+| コメント | `comment` | 文字列 | — | コミュニティの説明。空なら未設定 |
 | 作成日時 | `created_at` | timestamptz | ✓ | |
 | 更新日時 | `updated_at` | timestamptz | ✓ | |
 

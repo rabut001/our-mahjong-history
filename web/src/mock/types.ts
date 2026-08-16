@@ -1,16 +1,26 @@
 export type Profile = {
   id: string;
   displayName: string;
+  comment: string;
+  avatarUrl: string | null;
 };
 
 export type Community = {
   id: string;
   name: string;
+  comment: string;
 };
 
 export type CommunityMembership = {
   communityId: string;
   userId: string;
+};
+
+export type CommunityInviteCode = {
+  communityId: string;
+  code: string;
+  expiresAt: string;
+  createdBy: string;
 };
 
 export type Rule = {
@@ -67,6 +77,7 @@ export type Match = {
   id: string;
   tournamentId: string;
   tournamentRuleId: string;
+  comment: string;
   createdAt: string;
 };
 

@@ -1,6 +1,7 @@
 import type {
   Community,
   CommunityMembership,
+  CommunityInviteCode,
   CommunityRule,
   Match,
   MatchResult,
@@ -53,14 +54,32 @@ const sanmaBase = {
 };
 
 export const profiles: Profile[] = [
-  { id: "sato", displayName: "佐藤" },
-  { id: "suzuki", displayName: "鈴木" },
-  { id: "takahashi", displayName: "高橋" },
-  { id: "tanaka", displayName: "田中" },
-  { id: "ito", displayName: "伊藤" },
+  {
+    id: "sato",
+    displayName: "佐藤",
+    comment:
+      "金曜はだいたい参加します。\n東家が多いです。\nよろしくお願いします。",
+    avatarUrl: "https://i.pravatar.cc/96?u=sato",
+  },
+  {
+    id: "suzuki",
+    displayName: "鈴木",
+    comment: "",
+    avatarUrl: "https://i.pravatar.cc/96?u=suzuki",
+  },
+  { id: "takahashi", displayName: "高橋", comment: "", avatarUrl: null },
+  { id: "tanaka", displayName: "田中", comment: "", avatarUrl: null },
+  { id: "ito", displayName: "伊藤", comment: "", avatarUrl: null },
 ];
 
-export const communities: Community[] = [{ id: "friday", name: "金曜麻雀" }];
+export const communities: Community[] = [
+  {
+    id: "friday",
+    name: "金曜麻雀",
+    comment:
+      "毎週金曜の夜に集まっています。\n場所はその都度決めます。\n初めての人も歓迎です。",
+  },
+];
 
 export const communityMemberships: CommunityMembership[] = [
   { communityId: "friday", userId: "sato" },
@@ -68,6 +87,17 @@ export const communityMemberships: CommunityMembership[] = [
   { communityId: "friday", userId: "takahashi" },
   { communityId: "friday", userId: "tanaka" },
   { communityId: "friday", userId: "ito" },
+];
+
+export const currentUserId = "sato";
+
+export const communityInviteCodes: CommunityInviteCode[] = [
+  {
+    communityId: "friday",
+    code: "FRIDAY8X",
+    expiresAt: "2026-08-23T23:59:59+09:00",
+    createdBy: "sato",
+  },
 ];
 
 export const communityRules: CommunityRule[] = [
@@ -91,7 +121,7 @@ export const tournaments: Tournament[] = [
     communityId: "friday",
     heldOn: "2026-08-08",
     name: "第12回金曜麻雀",
-    memo: "いつもの店",
+    memo: "いつもの店。\n開始は19時ごろ。\n遅刻連絡はグループへ。",
     adjustmentPoints1Title: "チップ",
     adjustmentPoints2Title: "",
     adjustmentPoints3Title: "",
@@ -130,6 +160,13 @@ export const tournamentRules: TournamentRule[] = [
     tournamentId: "t-20260808",
     name: "四麻標準",
     ...yonmaBase,
+  },
+  {
+    id: "tr-20260808-no-tobi",
+    tournamentId: "t-20260808",
+    name: "四麻・トビなし",
+    ...yonmaBase,
+    tobiEnabled: false,
   },
   {
     id: "tr-20260801-yonma",
@@ -237,54 +274,63 @@ export const matches: Match[] = [
     id: "m-0808-1",
     tournamentId: "t-20260808",
     tournamentRuleId: "tr-20260808-yonma",
+    comment: "",
     createdAt: "2026-08-08T19:10:00+09:00",
   },
   {
     id: "m-0808-2",
     tournamentId: "t-20260808",
     tournamentRuleId: "tr-20260808-yonma",
+    comment: "",
     createdAt: "2026-08-08T20:20:00+09:00",
   },
   {
     id: "m-0808-3",
     tournamentId: "t-20260808",
     tournamentRuleId: "tr-20260808-yonma",
+    comment: "ラス親が飛んだ",
     createdAt: "2026-08-08T21:30:00+09:00",
   },
   {
     id: "m-0801-1",
     tournamentId: "t-20260801",
     tournamentRuleId: "tr-20260801-yonma",
+    comment: "",
     createdAt: "2026-08-01T19:00:00+09:00",
   },
   {
     id: "m-0801-2",
     tournamentId: "t-20260801",
     tournamentRuleId: "tr-20260801-sanma",
+    comment: "ゲストの山本さん初参加",
     createdAt: "2026-08-01T20:10:00+09:00",
   },
   {
     id: "m-0801-3",
     tournamentId: "t-20260801",
     tournamentRuleId: "tr-20260801-yonma",
+    comment: "",
     createdAt: "2026-08-01T21:00:00+09:00",
   },
   {
     id: "m-0801-4",
     tournamentId: "t-20260801",
     tournamentRuleId: "tr-20260801-sanma",
+    comment: "",
     createdAt: "2026-08-01T22:00:00+09:00",
   },
   {
     id: "m-0718-1",
     tournamentId: "t-20260718",
     tournamentRuleId: "tr-20260718-sanma",
+    comment: "",
     createdAt: "2026-07-18T19:30:00+09:00",
   },
   {
     id: "m-0718-2",
     tournamentId: "t-20260718",
     tournamentRuleId: "tr-20260718-sanma",
+    comment: "",
     createdAt: "2026-07-18T20:40:00+09:00",
   },
 ];

@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { NavButton } from "@/components/NavButton";
 import { ParticipantPicker } from "@/components/ParticipantPicker";
 
 const fieldClass =
   "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
 const labelClass = "block text-sm";
+
+export type TournamentFormRule = {
+  id: string;
+  name: string;
+  detailHref?: string;
+  inUse: boolean;
+};
 
 export type TournamentFormValues = {
   heldOn: string;
@@ -13,7 +21,8 @@ export type TournamentFormValues = {
   memo: string;
   members: { userId: string; displayName: string; selected: boolean }[];
   guests: string[];
-  ruleNames: string[];
+  rules: TournamentFormRule[];
+  addRuleHref?: string;
 };
 
 type TournamentFormProps = {
@@ -54,6 +63,8 @@ function HeldOnInput({ defaultValue }: { defaultValue: string }) {
 }
 
 export function TournamentForm({ mode, values }: TournamentFormProps) {
+  const [rules, setRules] = useState(values.rules);
+
   return (
     <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
       <label className={labelClass}>
@@ -75,7 +86,7 @@ export function TournamentForm({ mode, values }: TournamentFormProps) {
         <textarea
           name="memo"
           defaultValue={values.memo}
-          rows={2}
+          rows={3}
           className={fieldClass}
         />
       </label>
@@ -92,30 +103,54 @@ export function TournamentForm({ mode, values }: TournamentFormProps) {
         <p className="mt-1 text-sm text-neutral-600">
           {mode === "create"
             ? "作成時にコミュニティの既定ルールをコピーします。"
-            : "この大会のルールです。"}
+            : "この大会のルールです。試合で使っているものは修正できません。"}
         </p>
         <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
-          {values.ruleNames.map((name) => (
+          {rules.map((rule) => (
             <li
-              key={name}
+              key={rule.id}
               className="flex items-center justify-between gap-3 py-2"
             >
-              <span>{name}</span>
-              <button
-                type="button"
-                className="shrink-0 text-sm text-neutral-600"
-              >
-                削除
-              </button>
+              <span className="min-w-0 truncate">
+                {rule.name}
+                {rule.inUse ? (
+                  <span className="ml-2 text-sm text-neutral-600">使用中</span>
+                ) : null}
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                {rule.detailHref ? (
+                  <NavButton href={rule.detailHref}>詳細</NavButton>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={rule.inUse}
+                  onClick={() => {
+                    setRules((current) =>
+                      current.filter((item) => item.id !== rule.id),
+                    );
+                  }}
+                  className="inline-flex shrink-0 items-center justify-center border border-neutral-400 px-3 py-1 text-sm disabled:border-neutral-200 disabled:text-neutral-400"
+                >
+                  削除
+                </button>
+              </span>
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          className="mt-3 w-full border border-neutral-400 px-4 py-2 text-sm"
-        >
-          ルールを追加
-        </button>
+        {values.addRuleHref ? (
+          <div className="mt-3">
+            <NavButton href={values.addRuleHref} variant="block">
+              ルールを追加
+            </NavButton>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="mt-3 w-full border border-neutral-400 px-4 py-2 text-sm"
+          >
+            ルールを追加
+          </button>
+        )}
       </section>
       <button
         type="button"

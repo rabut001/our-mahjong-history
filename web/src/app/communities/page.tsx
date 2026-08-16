@@ -12,7 +12,10 @@ export default function CommunitiesPage() {
 
   return (
     <>
-      <AppHeader title="コミュニティ" />
+      <AppHeader
+        title="コミュニティ"
+        action={<NavButton href="/profile">プロフィール</NavButton>}
+      />
       <main className="px-4 py-4">
         <ul className="divide-y divide-neutral-200 border-y border-neutral-200">
           {communities.map((community) => (
@@ -32,12 +35,16 @@ export default function CommunitiesPage() {
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          className="mt-6 w-full border border-neutral-400 px-4 py-3 text-sm"
-        >
-          コミュニティを作成
-        </button>
+        <div className="mt-6">
+          <NavButton href="/communities/new" variant="block">
+            コミュニティを作成
+          </NavButton>
+        </div>
+        <div className="mt-3">
+          <NavButton href="/join" variant="block">
+            招待コードで参加
+          </NavButton>
+        </div>
       </main>
     </>
   );

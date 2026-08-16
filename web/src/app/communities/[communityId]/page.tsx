@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { MemberIconRow } from "@/components/MemberIconRow";
 import { NavButton } from "@/components/NavButton";
 import {
   countMatches,
-  countMembers,
   describeTournamentRules,
   formatHeldOn,
   getCommunity,
+  listCommunityMembers,
+  listCommunityRules,
   listTournaments,
 } from "@/mock";
 
@@ -35,14 +37,42 @@ export default async function CommunityDetailPage({
   }
 
   const tournaments = listTournaments(community.id);
-  const memberCount = countMembers(community.id);
+  const members = listCommunityMembers(community.id);
+  const rules = listCommunityRules(community.id);
 
   return (
     <>
-      <AppHeader title={community.name} backHref="/communities" />
+      <AppHeader
+        title={community.name}
+        backHref="/communities"
+        action={
+          <NavButton href={`/communities/${community.id}/edit`}>編集</NavButton>
+        }
+      />
       <main className="px-4 py-4">
-        <p className="text-sm text-neutral-600">メンバー {memberCount}人</p>
-        <h2 className="mt-6 text-sm font-medium text-neutral-600">大会</h2>
+        {community.comment ? (
+          <p className="mb-6 line-clamp-3 min-h-[3.75rem] whitespace-pre-wrap text-sm leading-5 text-neutral-600">
+            {community.comment}
+          </p>
+        ) : null}
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium text-neutral-600">メンバー</h2>
+          <NavButton href={`/communities/${community.id}/invite`}>
+            招待
+          </NavButton>
+        </div>
+        <div className="mt-2">
+          <MemberIconRow
+            members={members}
+            from={`/communities/${community.id}`}
+          />
+        </div>
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium text-neutral-600">大会</h2>
+          <NavButton href={`/communities/${community.id}/tournaments/new`}>
+            追加
+          </NavButton>
+        </div>
         <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
           {tournaments.map((tournament) => {
             const ruleLabel = describeTournamentRules(tournament.id);
@@ -72,14 +102,31 @@ export default async function CommunityDetailPage({
             );
           })}
         </ul>
-        <div className="mt-6">
-          <NavButton
-            href={`/communities/${community.id}/tournaments/new`}
-            variant="block"
-          >
-            大会を作成
+
+        <div className="mt-8 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium text-neutral-600">ルール</h2>
+          <NavButton href={`/communities/${community.id}/rules/new`}>
+            追加
           </NavButton>
         </div>
+        <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
+          {rules.map((rule) => (
+            <li
+              key={rule.id}
+              className="flex items-center justify-between gap-3 py-3"
+            >
+              <span className="min-w-0">
+                <span className="block font-medium">{rule.name}</span>
+                <span className="mt-0.5 block text-sm text-neutral-600">
+                  {rule.playerCount === 4 ? "四麻" : "三麻"}
+                </span>
+              </span>
+              <NavButton href={`/communities/${community.id}/rules/${rule.id}`}>
+                詳細
+              </NavButton>
+            </li>
+          ))}
+        </ul>
       </main>
     </>
   );
