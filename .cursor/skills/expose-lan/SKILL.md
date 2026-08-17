@@ -2,10 +2,11 @@
 name: expose-lan
 description: >-
   Exposes the Next.js dev server on port 3000 to the same Wi-Fi so a phone can
-  open http://<PC-IPv4>:3000, and reverts that exposure. Use when the user asks
-  for スマホ確認, 実機確認, 同一 LAN, ローカルネット, bind 0.0.0.0, expose-lan,
-  unexpose-lan, or to undo LAN preview. Source of truth is
-  docs/development.md 「同一 LAN のスマホから見る」.
+  open http://<PC-IPv4>:3000, and reverts that exposure. Takes an option:
+  `expose` publishes, `unexpose` reverts. Use when the user asks for スマホ確認,
+  実機確認, 同一 LAN, ローカルネット, bind 0.0.0.0, expose-lan, unexpose-lan, or
+  to undo LAN preview. Source of truth is docs/development.md
+  「同一 LAN のスマホから見る」.
 ---
 
 # 同一 LAN のスマホ確認
@@ -16,6 +17,16 @@ WSL2 は NAT のため、`localhost:3000` だけでは同一 Wi-Fi のスマホ�
 
 ホストで `npm` / `node` を呼ばない。開発サーバは Dev Container 内の `web/`。
 
+## オプション
+
+| 指定 | 動作 |
+|------|------|
+| `expose` | [公開する](#公開する-expose) |
+| `unexpose` | [元に戻す](#元に戻す-unexpose) |
+| 省略 | `web/package.json` の `dev` の hostname で判断する。`127.0.0.1` なら expose、`0.0.0.0` なら unexpose。ユーザーの意図と食い違いそうなら確認する |
+
+例: `expose-lan expose`、`expose-lan unexpose`。
+
 ## 役割分担
 
 | 誰 | できること |
@@ -25,7 +36,7 @@ WSL2 は NAT のため、`localhost:3000` だけでは同一 Wi-Fi のスマホ�
 
 エージェントは `.ps1` を WSL / コンテナから実行しない（管理者権限と Windows の portproxy / ファイアウォールが必要）。
 
-## 公開する
+## 公開する（expose）
 
 1. `web/package.json` の `dev` を `next dev --hostname 0.0.0.0` にする。
 2. `web/next.config.ts` に次を入れる（既存キーは残す）:
@@ -43,9 +54,7 @@ powershell -ExecutionPolicy Bypass -File .devcontainer/expose-lan.ps1
 
 5. スクリプトが出す `http://<PCのIPv4>:3000` をスマホで開いてもらう。URL を推測して渡さない。
 
-## 元に戻す
-
-ユーザーが確認終了・戻して・unexpose と言ったら、この順:
+## 元に戻す（unexpose）
 
 1. ユーザーに管理者 PowerShell で次を実行するよう頼む:
 
@@ -63,4 +72,4 @@ powershell -ExecutionPolicy Bypass -File .devcontainer/unexpose-lan.ps1
 
 - コミットしない。hostname と `allowedDevOrigins` は作業用の一時変更。
 - 公開したままセッションを終えない。戻す手順をユーザーに残す。
-- スマホ確認の対象 URL は、そのとき見ている画面（例: `/preview`）を添える。
+- スマホ確認の対象 URL は、そのとき見ている画面（例: `/communities`）を添える。
