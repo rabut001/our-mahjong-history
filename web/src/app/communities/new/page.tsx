@@ -1,27 +1,29 @@
 import type { Metadata } from "next";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
+import {
+  fieldClass,
+  labelClass,
+  textareaClass,
+  TEXTAREA_ROWS,
+} from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "コミュニティを作成",
+  title: "麻雀グループを作成",
 };
-
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
-const labelClass = "block text-sm";
 
 export default function NewCommunityPage() {
   return (
     <>
-      <AppHeader title="コミュニティを作成" backHref="/communities" />
+      <AppHeader title="麻雀グループを作成" backHref="/communities" />
       <main className="px-4 py-4">
         <div className="space-y-6">
           <label className={labelClass}>
-            コミュニティ名
+            麻雀グループ名
             <input
               type="text"
               name="name"
-              placeholder="例: 金曜麻雀"
+              placeholder="例: ○○株式会社 麻雀仲間"
               className={fieldClass}
             />
           </label>
@@ -29,9 +31,9 @@ export default function NewCommunityPage() {
             コメント
             <textarea
               name="comment"
-              rows={3}
-              placeholder="例: 毎週金曜の夜に集まっています"
-              className="mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-sm"
+              rows={TEXTAREA_ROWS}
+              placeholder="例: 社内の有志で、月に数回集まっています"
+              className={textareaClass}
             />
           </label>
           <NavButton href="/communities" variant="block">

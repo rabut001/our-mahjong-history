@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import { Avatar } from "@/components/Avatar";
 import { AppHeader } from "@/components/AppHeader";
+import { DangerAction } from "@/components/DangerAction";
 import { NavButton } from "@/components/NavButton";
+import {
+  fieldClass,
+  labelClass,
+  textareaClass,
+  TEXTAREA_ROWS,
+} from "@/components/ui";
 import { getCurrentProfile } from "@/mock";
 
 export const metadata: Metadata = {
   title: "プロフィール",
 };
-
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
-const labelClass = "block text-sm";
 
 export default function ProfilePage() {
   const profile = getCurrentProfile();
@@ -27,11 +30,11 @@ export default function ProfilePage() {
               sizeClass="h-20 w-20 text-xl"
               className="mx-auto"
             />
-            <p className="mt-2 text-sm text-neutral-600">
-              {profile?.avatarUrl
-                ? "Google / LINE のアイコンです。アプリから変更はできません。"
-                : "メール登録のため、表示名の頭文字を出しています。"}
-            </p>
+            {profile?.avatarUrl ? null : (
+              <p className="mt-2 text-sm text-muted">
+                メール登録のため、表示名の頭文字を出しています。
+              </p>
+            )}
           </div>
           <label className={labelClass}>
             表示名
@@ -46,21 +49,23 @@ export default function ProfilePage() {
             コメント
             <textarea
               name="comment"
-              rows={3}
+              rows={TEXTAREA_ROWS}
               defaultValue={profile?.comment ?? ""}
               placeholder="例: 金曜はだいたい参加します"
-              className="mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-sm"
+              className={textareaClass}
             />
           </label>
           <NavButton href="/communities" variant="block">
             保存する
           </NavButton>
         </div>
-        <p className="mt-16 text-center">
-          <button type="button" className="text-sm text-neutral-600">
-            アプリを退会する
-          </button>
-        </p>
+        <DangerAction
+          label="アプリを退会する"
+          dialogTitle="アプリを退会しますか？"
+          dialogBody="アカウントが消え、参加している麻雀グループから外れます。元に戻せません。"
+          confirmLabel="退会する"
+          doneHref="/login"
+        />
       </main>
     </>
   );

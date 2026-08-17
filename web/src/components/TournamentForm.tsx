@@ -3,10 +3,17 @@
 import { useState } from "react";
 import { NavButton } from "@/components/NavButton";
 import { ParticipantPicker } from "@/components/ParticipantPicker";
-
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
-const labelClass = "block text-sm";
+import { RowLink } from "@/components/RowLink";
+import { SectionCard } from "@/components/SectionCard";
+import {
+  blockButtonClass,
+  compactButtonClass,
+  fieldClass,
+  labelClass,
+  rowTitleClass,
+  textareaClass,
+  TEXTAREA_ROWS,
+} from "@/components/ui";
 
 export type TournamentFormRule = {
   id: string;
@@ -23,6 +30,8 @@ export type TournamentFormValues = {
   guests: string[];
   rules: TournamentFormRule[];
   addRuleHref?: string;
+  addParticipantHref?: string;
+  addGuestHref?: string;
 };
 
 type TournamentFormProps = {
@@ -63,8 +72,6 @@ function HeldOnInput({ defaultValue }: { defaultValue: string }) {
 }
 
 export function TournamentForm({ mode, values }: TournamentFormProps) {
-  const [rules, setRules] = useState(values.rules);
-
   return (
     <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
       <label className={labelClass}>
@@ -86,8 +93,8 @@ export function TournamentForm({ mode, values }: TournamentFormProps) {
         <textarea
           name="memo"
           defaultValue={values.memo}
-          rows={3}
-          className={fieldClass}
+          rows={TEXTAREA_ROWS}
+          className={textareaClass}
         />
       </label>
       <ParticipantPicker
@@ -96,66 +103,57 @@ export function TournamentForm({ mode, values }: TournamentFormProps) {
           .filter((member) => member.selected)
           .map((member) => member.userId)}
         initialGuests={values.guests}
-        startWithAdderOpen={mode === "create"}
+        addParticipantHref={values.addParticipantHref}
+        addGuestHref={values.addGuestHref}
       />
-      <section>
-        <h2 className="text-sm">ルール</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          {mode === "create"
-            ? "作成時にコミュニティの既定ルールをコピーします。"
-            : "この大会のルールです。試合で使っているものは修正できません。"}
-        </p>
-        <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
-          {rules.map((rule) => (
-            <li
-              key={rule.id}
-              className="flex items-center justify-between gap-3 py-2"
-            >
-              <span className="min-w-0 truncate">
-                {rule.name}
-                {rule.inUse ? (
-                  <span className="ml-2 text-sm text-neutral-600">使用中</span>
-                ) : null}
-              </span>
-              <span className="flex shrink-0 items-center gap-2">
+      <div>
+        <SectionCard
+          title="ルール"
+          action={
+            values.addRuleHref ? (
+              <NavButton href={values.addRuleHref}>追加</NavButton>
+            ) : (
+              <button type="button" className={compactButtonClass}>
+                追加
+              </button>
+            )
+          }
+        >
+          <ul className="divide-y divide-line border-t border-line">
+            {values.rules.map((rule) => (
+              <li key={rule.id}>
                 {rule.detailHref ? (
-                  <NavButton href={rule.detailHref}>詳細</NavButton>
-                ) : null}
-                <button
-                  type="button"
-                  disabled={rule.inUse}
-                  onClick={() => {
-                    setRules((current) =>
-                      current.filter((item) => item.id !== rule.id),
-                    );
-                  }}
-                  className="inline-flex shrink-0 items-center justify-center border border-neutral-400 px-3 py-1 text-sm disabled:border-neutral-200 disabled:text-neutral-400"
-                >
-                  削除
-                </button>
-              </span>
-            </li>
-          ))}
-        </ul>
-        {values.addRuleHref ? (
-          <div className="mt-3">
-            <NavButton href={values.addRuleHref} variant="block">
-              ルールを追加
-            </NavButton>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="mt-3 w-full border border-neutral-400 px-4 py-2 text-sm"
-          >
-            ルールを追加
-          </button>
-        )}
-      </section>
-      <button
-        type="button"
-        className="w-full border border-neutral-400 px-4 py-3 text-sm"
-      >
+                  <RowLink href={rule.detailHref} label={`${rule.name}の詳細`}>
+                    <span className={`block truncate ${rowTitleClass}`}>
+                      {rule.name}
+                      {rule.inUse ? (
+                        <span className="ml-2 text-sm font-normal text-muted">
+                          使用中
+                        </span>
+                      ) : null}
+                    </span>
+                  </RowLink>
+                ) : (
+                  <span className={`block truncate py-3 ${rowTitleClass}`}>
+                    {rule.name}
+                    {rule.inUse ? (
+                      <span className="ml-2 text-sm font-normal text-muted">
+                        使用中
+                      </span>
+                    ) : null}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+        <p className="mt-3 px-1 text-sm leading-6 text-muted">
+          大会のルールを追加します。
+          <br />
+          試合で使用中のものは修正できません。
+        </p>
+      </div>
+      <button type="button" className={blockButtonClass}>
         {mode === "create" ? "作成する" : "保存する"}
       </button>
     </form>

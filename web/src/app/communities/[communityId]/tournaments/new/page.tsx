@@ -41,8 +41,12 @@ export default async function NewTournamentPage({
             rules: listCommunityRules(community.id).map((rule) => ({
               id: rule.id,
               name: rule.name,
+              detailHref: `/communities/${community.id}/tournaments/new/rules/${rule.id}`,
               inUse: false,
             })),
+            addParticipantHref: `/communities/${community.id}/tournaments/new/participants`,
+            addGuestHref: `/communities/${community.id}/tournaments/new/guests`,
+            addRuleHref: `/communities/${community.id}/tournaments/new/rules`,
           }}
         />
       </main>

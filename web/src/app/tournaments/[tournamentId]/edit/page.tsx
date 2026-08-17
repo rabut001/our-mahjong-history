@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { DangerAction } from "@/components/DangerAction";
 import { TournamentForm } from "@/components/TournamentForm";
 import {
   getTournament,
@@ -68,7 +69,16 @@ export default async function TournamentEditPage({ params }: EditPageProps) {
               inUse: isTournamentRuleInUse(rule.id),
             })),
             addRuleHref: `/tournaments/${tournament.id}/rules/new`,
+            addParticipantHref: `/tournaments/${tournament.id}/participants/new`,
+            addGuestHref: `/tournaments/${tournament.id}/guests/new`,
           }}
+        />
+        <DangerAction
+          label="この大会を削除する"
+          dialogTitle="この大会を削除しますか？"
+          dialogBody="大会に登録した試合の記録も消えます。元に戻せません。"
+          confirmLabel="削除する"
+          doneHref={`/communities/${tournament.communityId}`}
         />
       </main>
     </>

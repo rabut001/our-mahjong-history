@@ -1,50 +1,79 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
+import { Avatar } from "@/components/Avatar";
 import { NavButton } from "@/components/NavButton";
-import { countMembers, listCommunities } from "@/mock";
+import { RowLink } from "@/components/RowLink";
+import { SectionCard } from "@/components/SectionCard";
+import { rowTitleClass } from "@/components/ui";
+import { countMembers, getCurrentProfile, listCommunities } from "@/mock";
 
 export const metadata: Metadata = {
-  title: "コミュニティ",
+  title: {
+    absolute: "俺たちの雀歴",
+  },
 };
 
-export default function CommunitiesPage() {
+export default function TopPage() {
   const communities = listCommunities();
+  const profile = getCurrentProfile();
 
   return (
     <>
-      <AppHeader
-        title="コミュニティ"
-        action={<NavButton href="/profile">プロフィール</NavButton>}
-      />
-      <main className="px-4 py-4">
-        <ul className="divide-y divide-neutral-200 border-y border-neutral-200">
-          {communities.map((community) => (
-            <li
-              key={community.id}
-              className="flex items-center justify-between gap-3 py-3"
-            >
-              <span className="min-w-0">
-                <span className="block truncate font-medium">
-                  {community.name}
-                </span>
-                <span className="mt-0.5 block text-sm text-neutral-600">
-                  メンバー {countMembers(community.id)}人
-                </span>
-              </span>
-              <NavButton href={`/communities/${community.id}`}>詳細</NavButton>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-6">
-          <NavButton href="/communities/new" variant="block">
-            コミュニティを作成
-          </NavButton>
-        </div>
-        <div className="mt-3">
-          <NavButton href="/join" variant="block">
-            招待コードで参加
-          </NavButton>
-        </div>
+      <AppHeader title="俺たちの雀歴" />
+      <main className="px-3 py-3">
+        <section className="mb-6 flex items-start gap-3 px-1">
+          <Avatar
+            url={profile?.avatarUrl ?? null}
+            name={profile?.displayName ?? ""}
+            sizeClass="h-20 w-20 text-xl"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-heading font-medium">{profile?.displayName}</p>
+            {profile?.comment ? (
+              <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm leading-5 text-muted">
+                {profile.comment}
+              </p>
+            ) : null}
+          </div>
+          <NavButton href="/profile">編集</NavButton>
+        </section>
+
+        <SectionCard
+          title="麻雀グループ"
+          action={
+            <NavButton href="/communities/new">追加</NavButton>
+          }
+        >
+          <ul className="divide-y divide-line border-y border-line">
+            {communities.map((community) => (
+              <li key={community.id}>
+                <RowLink
+                  href={`/communities/${community.id}`}
+                  label={`${community.name}の詳細`}
+                >
+                  <span className={`block truncate ${rowTitleClass}`}>
+                    {community.name}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-muted">
+                    メンバー {countMembers(community.id)}人
+                  </span>
+                </RowLink>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex justify-end">
+            <NavButton href="/join">招待コードで参加</NavButton>
+          </div>
+        </SectionCard>
+        <p className="mt-3 px-1 text-right">
+          <Link
+            href="/help/community"
+            className="text-sm text-muted underline"
+          >
+            麻雀グループってなに？
+          </Link>
+        </p>
       </main>
     </>
   );

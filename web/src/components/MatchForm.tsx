@@ -5,12 +5,15 @@ import { calculateMatchPoints, okaPool } from "@/lib/match-points";
 import { formatPoints } from "@/mock";
 import type { MatchFormData, MatchFormPlayer } from "@/mock";
 import type { TournamentRule } from "@/mock";
+import {
+  blockButtonClass,
+  textareaClass,
+  TEXTAREA_ROWS,
+} from "@/components/ui";
 
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
 const cellInputClass =
-  "w-full min-w-0 border border-neutral-400 bg-white px-0.5 py-1 text-center text-sm tabular-nums disabled:border-transparent disabled:bg-transparent disabled:text-neutral-400";
-const labelClass = "flex items-center text-xs leading-tight text-neutral-600";
+  "w-full min-w-0 rounded-ui border border-line bg-field px-0.5 py-1 text-center text-sm tabular-nums disabled:border-transparent disabled:bg-transparent disabled:text-muted";
+const labelClass = "flex items-center text-xs leading-tight text-muted";
 
 type MatchFormProps = {
   mode: "create" | "edit";
@@ -91,7 +94,7 @@ function GridRow({
 
 function CellRead({ children }: { children: string }) {
   return (
-    <p className="px-0.5 py-1 text-center text-sm tabular-nums text-neutral-600">
+    <p className="px-0.5 py-1 text-center text-sm tabular-nums text-muted">
       {children}
     </p>
   );
@@ -276,7 +279,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
                     onChange={() => applyRule(item)}
                   />
                   {item.name}
-                  <span className="text-sm text-neutral-600">
+                  <span className="text-sm text-muted">
                     {item.playerCount === 4 ? "四麻" : "三麻"}
                   </span>
                 </label>
@@ -285,7 +288,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
           </ul>
         </fieldset>
       ) : (
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted">
           ルール {rule.name}
           <span className="ml-2">
             {rule.playerCount === 4 ? "四麻" : "三麻"}
@@ -314,7 +317,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
               value={seat?.participantId ?? ""}
               aria-label={`${SEAT_LABEL[wind]}の参加者`}
               onChange={(event) => assignUser(index, event.target.value)}
-              className="w-full min-w-0 border border-neutral-400 bg-white px-0 py-1 text-center text-xs"
+              className="w-full min-w-0 rounded-ui border border-line bg-field px-0 py-1 text-center text-xs"
             >
               <option value="">選ぶ</option>
               {options.map((participant) => (
@@ -431,7 +434,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
 
         {showInputRows ? (
           <div
-            className="border-t border-neutral-200"
+            className="border-t border-line"
             style={{ gridColumn: "1 / -1" }}
           />
         ) : null}
@@ -530,7 +533,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
                   next[titleIndex] = event.target.value;
                   setManualTitles(next);
                 }}
-                className="w-full min-w-0 border border-neutral-400 bg-white px-0.5 py-1 text-xs"
+                className="w-full min-w-0 rounded-ui border border-line bg-field px-0.5 py-1 text-xs"
               />
             }
           >
@@ -568,7 +571,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
           <button
             type="button"
             onClick={addManualRow}
-            className="py-1 text-left text-sm text-neutral-600"
+            className="py-1 text-left text-sm text-muted"
             style={{ gridColumn: "1 / -1" }}
           >
             行を追加
@@ -576,7 +579,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
         ) : null}
 
         <div
-          className="border-t border-neutral-200"
+          className="border-t border-line"
           style={{ gridColumn: "1 / -1" }}
         />
 
@@ -613,7 +616,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
         </GridRow>
       </div>
 
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-muted">
         0 のままでよい行は触らなくて大丈夫です。
         {showTobi ? " トビは素点が 0 以下のときに使います。" : null}
         {editBasePt
@@ -626,15 +629,12 @@ export function MatchForm({ mode, data }: MatchFormProps) {
         <textarea
           value={comment}
           onChange={(event) => setComment(event.target.value)}
-          rows={2}
-          className={fieldClass}
+          rows={TEXTAREA_ROWS}
+          className={textareaClass}
         />
       </label>
 
-      <button
-        type="button"
-        className="w-full border border-neutral-400 px-4 py-3 text-sm"
-      >
+      <button type="button" className={blockButtonClass}>
         {mode === "create" ? "追加する" : "保存する"}
       </button>
     </form>

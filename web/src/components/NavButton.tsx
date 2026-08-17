@@ -1,15 +1,15 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-
-const compactClass =
-  "inline-flex shrink-0 items-center justify-center border border-neutral-400 px-3 py-1 text-sm";
-const blockClass =
-  "block w-full border border-neutral-400 px-4 py-3 text-center text-sm";
+import {
+  blockButtonClass,
+  compactButtonClass,
+  outlineBlockButtonClass,
+} from "@/components/ui";
 
 type NavButtonProps = {
   href: string;
   children: ReactNode;
-  variant?: "compact" | "block";
+  variant?: "compact" | "block" | "outline";
 };
 
 export function NavButton({
@@ -17,11 +17,15 @@ export function NavButton({
   children,
   variant = "compact",
 }: NavButtonProps) {
+  const className =
+    variant === "block"
+      ? blockButtonClass
+      : variant === "outline"
+        ? outlineBlockButtonClass
+        : compactButtonClass;
+
   return (
-    <Link
-      href={href}
-      className={variant === "block" ? blockClass : compactClass}
-    >
+    <Link href={href} className={className}>
       {children}
     </Link>
   );

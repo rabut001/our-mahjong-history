@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { DangerAction } from "@/components/DangerAction";
 import { RuleForm } from "@/components/RuleForm";
 import { getCommunity, getCommunityRule, toRuleFormData } from "@/mock";
 
@@ -36,6 +37,13 @@ export default async function CommunityRulePage({
       />
       <main className="px-4 py-4">
         <RuleForm mode="edit" data={toRuleFormData(rule)} />
+        <DangerAction
+          label="このルールを削除する"
+          dialogTitle="このルールを削除しますか？"
+          dialogBody="麻雀グループの既定ルールから消えます。大会にコピー済みのルールは残ります。"
+          confirmLabel="削除する"
+          doneHref={`/communities/${community.id}`}
+        />
       </main>
     </>
   );

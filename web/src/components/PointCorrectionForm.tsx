@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { formatPoints } from "@/mock";
 import type { PointCorrectionParticipant, PointCorrectionRow } from "@/mock";
+import { blockButtonClass, pressableClass } from "@/components/ui";
 
 const CORRECTION_MAX = 5;
 const cellInputClass =
-  "w-16 border border-neutral-400 bg-white px-1 py-1 text-center text-sm tabular-nums";
+  "w-16 rounded-ui border border-line bg-field px-1 py-1 text-center text-sm tabular-nums";
 
 type PointCorrectionFormProps = {
   participants: PointCorrectionParticipant[];
@@ -92,7 +93,7 @@ export function PointCorrectionForm({
         <table className="border-separate border-spacing-0 text-sm">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 min-w-16 bg-white px-2 py-2 text-left font-medium" />
+              <th className="sticky left-0 z-10 min-w-16 bg-surface px-2 py-2 text-left font-medium" />
               <th className="min-w-16 px-1 py-2 text-center font-medium">
                 試合pt
               </th>
@@ -106,7 +107,7 @@ export function PointCorrectionForm({
                     onChange={(event) =>
                       updateTitle(rowIndex, event.target.value)
                     }
-                    className="w-20 border border-neutral-400 bg-white px-1 py-1 text-center text-sm"
+                    className="w-20 rounded-ui border border-line bg-field px-1 py-1 text-center text-sm"
                   />
                 </th>
               ))}
@@ -116,13 +117,13 @@ export function PointCorrectionForm({
                     type="button"
                     onClick={addColumn}
                     aria-label="列を追加"
-                    className="inline-flex h-8 w-8 items-center justify-center border border-neutral-400 text-base leading-none"
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-ui border border-ink text-base leading-none ${pressableClass}`}
                   >
                     +
                   </button>
                 </th>
               ) : null}
-              <th className="sticky right-0 z-10 min-w-16 bg-white px-2 py-2 text-center font-medium">
+              <th className="sticky right-0 z-10 min-w-16 bg-surface px-2 py-2 text-center font-medium">
                 合計pt
               </th>
             </tr>
@@ -136,10 +137,10 @@ export function PointCorrectionForm({
               const netTotal = participant.matchPoints + adjustmentTotal;
               return (
                 <tr key={participant.id}>
-                  <th className="sticky left-0 z-10 bg-white px-2 py-1 text-left font-medium">
+                  <th className="sticky left-0 z-10 bg-surface px-2 py-1 text-left font-medium">
                     {participant.name}
                   </th>
-                  <td className="px-1 py-2 text-center tabular-nums text-neutral-600">
+                  <td className="px-1 py-2 text-center tabular-nums text-muted">
                     {formatPoints(participant.matchPoints)}
                   </td>
                   {draft.map((row, rowIndex) => (
@@ -161,7 +162,7 @@ export function PointCorrectionForm({
                     </td>
                   ))}
                   {canAdd ? <td className="px-1 py-1" /> : null}
-                  <td className="sticky right-0 z-10 bg-white px-2 py-2 text-center tabular-nums">
+                  <td className="sticky right-0 z-10 bg-surface px-2 py-2 text-center tabular-nums">
                     {formatPoints(netTotal)}
                   </td>
                 </tr>
@@ -170,10 +171,7 @@ export function PointCorrectionForm({
           </tbody>
         </table>
       </div>
-      <button
-        type="button"
-        className="w-full border border-neutral-400 px-4 py-3 text-sm"
-      >
+      <button type="button" className={blockButtonClass}>
         保存する
       </button>
     </form>

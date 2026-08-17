@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
+import { fieldClass, labelClass } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "招待コードで参加",
 };
-
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
-const labelClass = "block text-sm";
 
 export default function JoinPage() {
   return (
@@ -27,9 +24,10 @@ export default function JoinPage() {
               className={fieldClass}
             />
           </label>
-          <p className="text-sm text-neutral-600">
-            参加するにはログインが必要です。コードはコミュニティ ID
-            なしで使えます。
+          <p className="text-sm leading-6 text-muted">
+            招待コードを入力し「参加する」ボタンを押してください。
+            <br />
+            コードは麻雀グループに参加済みの人に確認してください。
           </p>
           <NavButton href="/communities/friday" variant="block">
             参加する

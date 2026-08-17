@@ -39,10 +39,10 @@ export default async function NewTournamentRulePage({
       <main className="px-4 py-4">
         {templates.length > 0 ? (
           <>
-            <p className="text-sm text-neutral-600">
-              コミュニティの既定ルールをこの大会へコピーできます。コピー後に大会用へ直せます。
+            <p className="text-sm text-muted">
+              麻雀グループの既定ルールをこの大会へコピーできます。コピー後に大会用へ直せます。
             </p>
-            <ul className="mt-4 divide-y divide-neutral-200 border-y border-neutral-200">
+            <ul className="mt-4 divide-y divide-line border-y border-line">
               {templates.map((rule) => (
                 <li
                   key={rule.id}
@@ -50,7 +50,7 @@ export default async function NewTournamentRulePage({
                 >
                   <span className="min-w-0">
                     <span className="block font-medium">{rule.name}</span>
-                    <span className="mt-0.5 block text-sm text-neutral-600">
+                    <span className="mt-0.5 block text-sm text-muted">
                       {rule.playerCount === 4 ? "四麻" : "三麻"}
                     </span>
                   </span>
@@ -62,8 +62,8 @@ export default async function NewTournamentRulePage({
             </ul>
           </>
         ) : (
-          <p className="text-sm text-neutral-600">
-            コミュニティに既定ルールがありません。いちから作成できます。
+          <p className="text-sm text-muted">
+            麻雀グループに既定ルールがありません。いちから作成できます。
           </p>
         )}
         <div className="mt-6">

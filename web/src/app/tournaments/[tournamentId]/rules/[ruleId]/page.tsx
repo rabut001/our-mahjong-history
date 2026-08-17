@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { DangerAction } from "@/components/DangerAction";
 import { RuleForm } from "@/components/RuleForm";
 import {
   getTournament,
@@ -49,6 +50,15 @@ export default async function TournamentRulePage({
           addRuleHref={
             inUse ? `/tournaments/${tournament.id}/rules/new` : undefined
           }
+        />
+        <DangerAction
+          label="このルールを削除する"
+          dialogTitle="このルールを削除しますか？"
+          dialogBody="この大会のルール一覧から消えます。元に戻せません。"
+          confirmLabel="削除する"
+          doneHref={`/tournaments/${tournament.id}/edit`}
+          disabled={inUse}
+          disabledNote="試合で使用中のため削除できません。"
         />
       </main>
     </>

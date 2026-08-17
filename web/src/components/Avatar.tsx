@@ -20,7 +20,7 @@ export function Avatar({
 
   return (
     <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-base ${sizeClass} ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-subtle text-base text-ink ${sizeClass} ${className}`}
     >
       {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element

@@ -2,11 +2,16 @@
 
 import { useState, type ReactNode } from "react";
 import { NavButton } from "@/components/NavButton";
+import {
+  blockButtonClass,
+  compactButtonClass,
+  fieldClass,
+  labelClass,
+  textareaClass,
+  TEXTAREA_ROWS,
+} from "@/components/ui";
 import type { RuleFormData } from "@/mock";
 
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base disabled:bg-neutral-100";
-const labelClass = "block text-sm";
 const OTHER_MAX = 5;
 
 const TIE_OPTIONS = [
@@ -147,7 +152,7 @@ export function RuleForm({ mode, data, addRuleHref }: RuleFormProps) {
   return (
     <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
       {readOnly ? (
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted">
           試合で使っているため修正できません。内容を変えるときはルールを新規登録してください。
         </p>
       ) : null}
@@ -317,7 +322,7 @@ export function RuleForm({ mode, data, addRuleHref }: RuleFormProps) {
             <button
               type="button"
               onClick={addOtherName}
-              className="inline-flex shrink-0 items-center justify-center border border-neutral-400 px-3 py-1 text-sm"
+              className={compactButtonClass}
             >
               追加
             </button>
@@ -333,12 +338,12 @@ export function RuleForm({ mode, data, addRuleHref }: RuleFormProps) {
                 disabled={readOnly}
                 aria-label={`その他ポイント${index + 1}`}
                 placeholder="例：役満ご祝儀"
-                className="w-full border border-neutral-400 bg-white px-3 py-2 text-base disabled:bg-neutral-100"
+                className={fieldClass}
               />
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-sm text-neutral-600">
+        <p className="mt-2 text-sm text-muted">
           試合で手入力する枠です。未使用なら空のままで大丈夫です。
         </p>
       </section>
@@ -362,8 +367,8 @@ export function RuleForm({ mode, data, addRuleHref }: RuleFormProps) {
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           disabled={readOnly}
-          rows={2}
-          className={fieldClass}
+          rows={TEXTAREA_ROWS}
+          className={textareaClass}
         />
       </label>
 
@@ -374,10 +379,7 @@ export function RuleForm({ mode, data, addRuleHref }: RuleFormProps) {
           </NavButton>
         ) : null
       ) : (
-        <button
-          type="button"
-          className="w-full border border-neutral-400 px-4 py-3 text-sm"
-        >
+        <button type="button" className={blockButtonClass}>
           {mode === "create" ? "追加する" : "保存する"}
         </button>
       )}

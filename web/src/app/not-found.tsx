@@ -6,7 +6,7 @@ export default function NotFound() {
       <AppHeader title="見つかりません" backHref="/communities" />
       <main className="px-4 py-8">
         <p className="text-sm leading-relaxed">
-          指定したページはありません。コミュニティ一覧からやり直してください。
+          指定したページはありません。トップからやり直してください。
         </p>
       </main>
     </>

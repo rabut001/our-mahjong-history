@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
+import { RowLink } from "@/components/RowLink";
+import { SectionCard } from "@/components/SectionCard";
 import { TournamentResults } from "@/components/TournamentResults";
+import { rowTitleClass } from "@/components/ui";
 import {
   describeTournamentRules,
   formatHeldOn,
@@ -50,58 +53,75 @@ export default async function TournamentDetailPage({
           </NavButton>
         }
       />
-      <main className="px-4 py-4">
-        <p className="text-sm text-neutral-600">
-          {formatHeldOn(tournament.heldOn)}
-          {ruleLabel ? `　${ruleLabel}` : ""}
-        </p>
-        {tournament.memo ? (
-          <p className="mt-1 line-clamp-3 min-h-15 whitespace-pre-wrap text-sm leading-5 text-neutral-600">
-            {tournament.memo}
+      <main className="space-y-3 px-3 py-3">
+        <div className="px-1">
+          <p className="text-sm text-muted">
+            {formatHeldOn(tournament.heldOn)}
+            {ruleLabel ? `　${ruleLabel}` : ""}
           </p>
-        ) : null}
-
-        <TournamentResults
-          ranked={summary.ranked}
-          unplayed={summary.unplayed}
-          correctionHref={`/tournaments/${tournament.id}/adjustments`}
-          from={`/tournaments/${tournament.id}`}
-        />
-
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium text-neutral-600">試合一覧</h2>
-          <NavButton href={`/tournaments/${tournament.id}/matches/new`}>
-            追加
-          </NavButton>
+          {tournament.memo ? (
+            <p className="mt-1 line-clamp-3 min-h-15 whitespace-pre-wrap text-sm leading-5 text-muted">
+              {tournament.memo}
+            </p>
+          ) : null}
         </div>
-        <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
-          {matches.map((match) => (
-            <li key={match.id} className="py-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-medium tabular-nums">#{match.number}</p>
-                <NavButton href={`/matches/${match.id}`}>詳細</NavButton>
-              </div>
-              <ul className="mt-2 space-y-1">
-                {match.results.map((result) => (
-                  <li
-                    key={result.participantId}
-                    className="flex items-baseline justify-between gap-3"
-                  >
-                    <p className="min-w-0 truncate">
-                      <span className="inline-block w-6 tabular-nums">
-                        {result.rank}
-                      </span>
-                      <span>{result.name}</span>
-                    </p>
-                    <p className="shrink-0 tabular-nums">
-                      {formatPoints(result.points)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
+
+        <SectionCard
+          title="総合順位"
+          action={
+            <NavButton href={`/tournaments/${tournament.id}/adjustments`}>
+              ポイント補正
+            </NavButton>
+          }
+        >
+          <TournamentResults
+            ranked={summary.ranked}
+            unplayed={summary.unplayed}
+            from={`/tournaments/${tournament.id}`}
+          />
+        </SectionCard>
+
+        <SectionCard
+          title="試合一覧"
+          action={
+            <NavButton href={`/tournaments/${tournament.id}/matches/new`}>
+              追加
+            </NavButton>
+          }
+        >
+          <ul className="divide-y divide-line border-t border-line">
+            {matches.map((match) => (
+              <li key={match.id}>
+                <RowLink
+                  href={`/matches/${match.id}`}
+                  label={`#${match.number}の詳細`}
+                >
+                  <span className={`block tabular-nums ${rowTitleClass}`}>
+                    #{match.number}
+                  </span>
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {match.results.map((result) => (
+                      <li
+                        key={result.participantId}
+                        className="flex items-baseline justify-between gap-3"
+                      >
+                        <p className="min-w-0 truncate">
+                          <span className="inline-block w-6 tabular-nums">
+                            {result.rank}
+                          </span>
+                          <span>{result.name}</span>
+                        </p>
+                        <p className="shrink-0 tabular-nums">
+                          {formatPoints(result.points)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </RowLink>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
       </main>
     </>
   );

@@ -56,7 +56,7 @@ export default async function ProfileDetailPage({
           <p className="mt-3 font-medium">{profile.displayName}</p>
         </div>
         {profile.comment ? (
-          <p className="mt-6 whitespace-pre-wrap text-sm leading-5 text-neutral-600">
+          <p className="mt-6 whitespace-pre-wrap text-sm leading-5 text-muted">
             {profile.comment}
           </p>
         ) : null}

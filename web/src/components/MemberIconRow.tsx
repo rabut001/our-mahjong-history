@@ -15,8 +15,8 @@ type MemberIconRowProps = {
 
 export function MemberIconRow({ members, from }: MemberIconRowProps) {
   return (
-    <div className="-mx-4 overflow-x-auto">
-      <ul className="flex w-max gap-3 px-4">
+    <div className="overflow-x-auto">
+      <ul className="flex w-max gap-3">
         {members.map((member) => {
           const label = member.isCurrentUser ? "自分" : member.displayName;
           return (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { blockButtonClass, outlineBlockButtonClass } from "@/components/ui";
 import {
   formatHeldOn,
   getCommunity,
@@ -38,42 +39,33 @@ export default async function CommunityInvitePage({ params }: InvitePageProps) {
       <main className="px-4 py-4">
         {invite && expiryDate ? (
           <>
-            <p className="text-sm text-neutral-600">招待コード</p>
+            <p className="text-sm text-muted">招待コード</p>
             <p className="mt-2 text-center font-mono text-2xl tracking-widest">
               {invite.code}
             </p>
-            <p className="mt-4 text-sm text-neutral-600">
+            <p className="mt-4 text-sm text-muted">
               {formatHeldOn(expiryDate)}まで（発行から{INVITE_DEFAULT_DAYS}
               日間）
             </p>
-            <p className="mt-2 text-sm text-neutral-600">
+            <p className="mt-2 text-sm text-muted">
               期限切れまで何度でも使えます。参加する人はログインしたあと、このコードを入力します。
             </p>
             <div className="mt-6 space-y-3">
-              <button
-                type="button"
-                className="w-full border border-neutral-400 px-4 py-3 text-sm"
-              >
+              <button type="button" className={outlineBlockButtonClass}>
                 コピー
               </button>
-              <button
-                type="button"
-                className="w-full border border-neutral-400 px-4 py-3 text-sm"
-              >
+              <button type="button" className={outlineBlockButtonClass}>
                 再発行する
               </button>
             </div>
           </>
         ) : (
           <>
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-muted">
               招待コードはまだありません。発行すると、発行から
               {INVITE_DEFAULT_DAYS}日間使えます。
             </p>
-            <button
-              type="button"
-              className="mt-6 w-full border border-neutral-400 px-4 py-3 text-sm"
-            >
+            <button type="button" className={`mt-6 ${blockButtonClass}`}>
               発行する
             </button>
           </>

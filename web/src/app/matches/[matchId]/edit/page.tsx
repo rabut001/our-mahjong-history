@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { DangerAction } from "@/components/DangerAction";
 import { MatchForm } from "@/components/MatchForm";
 import { getMatchFormData } from "@/mock";
 
@@ -30,6 +31,13 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
       <AppHeader title="試合を編集" backHref={`/matches/${matchId}`} />
       <main className="px-4 py-4">
         <MatchForm mode="edit" data={data} />
+        <DangerAction
+          label="この試合を削除する"
+          dialogTitle="この試合を削除しますか？"
+          dialogBody="点数とポイントの記録が消えます。元に戻せません。"
+          confirmLabel="削除する"
+          doneHref={`/tournaments/${data.tournamentId}`}
+        />
       </main>
     </>
   );

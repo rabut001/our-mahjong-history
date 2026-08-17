@@ -4,14 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
-
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
-const labelClass = "block text-sm";
-const backButtonClass =
-  "inline-flex shrink-0 items-center justify-center border border-neutral-400 px-3 py-1 text-sm";
-const blockButtonClass =
-  "block w-full border border-neutral-400 px-4 py-3 text-center text-sm";
+import {
+  blockButtonClass,
+  compactButtonClass,
+  fieldClass,
+  labelClass,
+} from "@/components/ui";
 
 export function LoginForm() {
   const [step, setStep] = useState<"email" | "password">("email");
@@ -26,14 +24,14 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setStep("email")}
-              className={backButtonClass}
+              className={compactButtonClass}
             >
               戻る
             </button>
           }
         />
         <main className="px-4 py-4">
-          <p className="text-sm text-neutral-600">{email || "メール"}</p>
+          <p className="text-sm text-muted">{email || "メール"}</p>
           <div className="mt-6 space-y-6">
             <label className={labelClass}>
               パスワード
@@ -78,10 +76,10 @@ export function LoginForm() {
           </button>
         </div>
         <div className="mt-6 space-y-3">
-          <NavButton href="/communities" variant="block">
+          <NavButton href="/communities" variant="outline">
             Googleでログイン
           </NavButton>
-          <NavButton href="/communities" variant="block">
+          <NavButton href="/communities" variant="outline">
             LINEでログイン
           </NavButton>
         </div>

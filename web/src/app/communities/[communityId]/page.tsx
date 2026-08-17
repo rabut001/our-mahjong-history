@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { MemberIconRow } from "@/components/MemberIconRow";
 import { NavButton } from "@/components/NavButton";
+import { RowLink } from "@/components/RowLink";
+import { SectionCard } from "@/components/SectionCard";
+import { rowTitleClass } from "@/components/ui";
 import {
   countMatches,
   describeTournamentRules,
@@ -23,7 +26,7 @@ export async function generateMetadata({
   const { communityId } = await params;
   const community = getCommunity(communityId);
   return {
-    title: community?.name ?? "コミュニティ",
+    title: community?.name ?? "麻雀グループ",
   };
 }
 
@@ -49,84 +52,84 @@ export default async function CommunityDetailPage({
           <NavButton href={`/communities/${community.id}/edit`}>編集</NavButton>
         }
       />
-      <main className="px-4 py-4">
+      <main className="space-y-3 px-3 py-3">
         {community.comment ? (
-          <p className="mb-6 line-clamp-3 min-h-15 whitespace-pre-wrap text-sm leading-5 text-neutral-600">
+          <p className="px-1 text-sm leading-5 text-muted line-clamp-3 min-h-15 whitespace-pre-wrap">
             {community.comment}
           </p>
         ) : null}
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium text-neutral-600">メンバー</h2>
-          <NavButton href={`/communities/${community.id}/invite`}>
-            招待
-          </NavButton>
-        </div>
-        <div className="mt-2">
+        <SectionCard
+          title="メンバー"
+          action={
+            <NavButton href={`/communities/${community.id}/invite`}>
+              招待
+            </NavButton>
+          }
+        >
           <MemberIconRow
             members={members}
             from={`/communities/${community.id}`}
           />
-        </div>
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium text-neutral-600">大会</h2>
-          <NavButton href={`/communities/${community.id}/tournaments/new`}>
-            追加
-          </NavButton>
-        </div>
-        <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
-          {tournaments.map((tournament) => {
-            const ruleLabel = describeTournamentRules(tournament.id);
-            const matchCount = countMatches(tournament.id);
-            return (
-              <li
-                key={tournament.id}
-                className="flex items-center justify-between gap-3 py-3"
-              >
-                <span className="min-w-0">
-                  <span className="block text-sm text-neutral-600">
-                    {formatHeldOn(tournament.heldOn)}
+        </SectionCard>
+        <SectionCard
+          title="大会"
+          action={
+            <NavButton href={`/communities/${community.id}/tournaments/new`}>
+              追加
+            </NavButton>
+          }
+        >
+          <ul className="divide-y divide-line border-t border-line">
+            {tournaments.map((tournament) => {
+              const ruleLabel = describeTournamentRules(tournament.id);
+              const matchCount = countMatches(tournament.id);
+              return (
+                <li key={tournament.id}>
+                  <RowLink
+                    href={`/tournaments/${tournament.id}`}
+                    label={`${tournament.name}の詳細`}
+                  >
+                    <span className="block text-sm text-muted">
+                      {formatHeldOn(tournament.heldOn)}
+                    </span>
+                    <span className={`mt-0.5 block ${rowTitleClass}`}>
+                      {tournament.name}
+                    </span>
+                    <span className="mt-0.5 block text-sm text-muted">
+                      {ruleLabel}
+                      {ruleLabel ? "、" : ""}
+                      {matchCount}試合
+                    </span>
+                  </RowLink>
+                </li>
+              );
+            })}
+          </ul>
+        </SectionCard>
+        <SectionCard
+          title="ルール"
+          action={
+            <NavButton href={`/communities/${community.id}/rules/new`}>
+              追加
+            </NavButton>
+          }
+        >
+          <ul className="divide-y divide-line border-t border-line">
+            {rules.map((rule) => (
+              <li key={rule.id}>
+                <RowLink
+                  href={`/communities/${community.id}/rules/${rule.id}`}
+                  label={`${rule.name}の詳細`}
+                >
+                  <span className={`block ${rowTitleClass}`}>{rule.name}</span>
+                  <span className="mt-0.5 block text-sm text-muted">
+                    {rule.playerCount === 4 ? "四麻" : "三麻"}
                   </span>
-                  <span className="mt-0.5 block font-medium">
-                    {tournament.name}
-                  </span>
-                  <span className="mt-0.5 block text-sm text-neutral-600">
-                    {ruleLabel}
-                    {ruleLabel ? "、" : ""}
-                    {matchCount}試合
-                  </span>
-                </span>
-                <NavButton href={`/tournaments/${tournament.id}`}>
-                  詳細
-                </NavButton>
+                </RowLink>
               </li>
-            );
-          })}
-        </ul>
-
-        <div className="mt-8 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium text-neutral-600">ルール</h2>
-          <NavButton href={`/communities/${community.id}/rules/new`}>
-            追加
-          </NavButton>
-        </div>
-        <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
-          {rules.map((rule) => (
-            <li
-              key={rule.id}
-              className="flex items-center justify-between gap-3 py-3"
-            >
-              <span className="min-w-0">
-                <span className="block font-medium">{rule.name}</span>
-                <span className="mt-0.5 block text-sm text-neutral-600">
-                  {rule.playerCount === 4 ? "四麻" : "三麻"}
-                </span>
-              </span>
-              <NavButton href={`/communities/${community.id}/rules/${rule.id}`}>
-                詳細
-              </NavButton>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </ul>
+        </SectionCard>
       </main>
     </>
   );

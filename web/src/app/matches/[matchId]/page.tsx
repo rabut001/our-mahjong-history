@@ -33,13 +33,13 @@ export default async function MatchDetailPage({ params }: MatchPageProps) {
         action={<NavButton href={`/matches/${match.id}/edit`}>修正</NavButton>}
       />
       <main className="px-4 py-4">
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted">
           {match.ruleName}
           {match.ruleName ? "　" : ""}
           {match.playerCount === 4 ? "四麻" : "三麻"}
         </p>
 
-        <ul className="mt-4 divide-y divide-neutral-200 border-y border-neutral-200">
+        <ul className="mt-4 divide-y divide-line border-y border-line">
           {match.results.map((result) => (
             <li key={result.participantId} className="py-3">
               <div className="flex items-baseline justify-between gap-3">
@@ -47,7 +47,7 @@ export default async function MatchDetailPage({ params }: MatchPageProps) {
                   <span className="inline-block w-6 tabular-nums">
                     {result.rank}
                   </span>
-                  <span className="text-sm text-neutral-600">
+                  <span className="text-sm text-muted">
                     {SEAT_LABEL[result.seat]}
                   </span>
                   <span className="ml-2 font-medium">{result.name}</span>
@@ -56,7 +56,7 @@ export default async function MatchDetailPage({ params }: MatchPageProps) {
                   {formatPoints(result.points)}
                 </p>
               </div>
-              <p className="mt-1 pl-6 text-sm text-neutral-600">
+              <p className="mt-1 pl-6 text-sm text-muted">
                 点数 <span className="tabular-nums">{result.score}</span>
               </p>
             </li>
@@ -65,9 +65,7 @@ export default async function MatchDetailPage({ params }: MatchPageProps) {
 
         {match.comment ? (
           <>
-            <h2 className="mt-6 text-sm font-medium text-neutral-600">
-              コメント
-            </h2>
+            <h2 className="mt-6 text-sm font-medium text-muted">コメント</h2>
             <p className="mt-2 whitespace-pre-wrap">{match.comment}</p>
           </>
         ) : null}

@@ -2,21 +2,19 @@
 
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { NavButton } from "@/components/NavButton";
 import { formatPoints } from "@/mock";
 import type { RankingRow, UnplayedRow } from "@/mock";
+import { rowTitleClass } from "@/components/ui";
 
 type TournamentResultsProps = {
   ranked: RankingRow[];
   unplayed: UnplayedRow[];
-  correctionHref: string;
   from: string;
 };
 
 export function TournamentResults({
   ranked,
   unplayed,
-  correctionHref,
   from,
 }: TournamentResultsProps) {
   const standings = [
@@ -40,11 +38,7 @@ export function TournamentResults({
 
   return (
     <>
-      <div className="mt-6 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium text-neutral-600">総合順位</h2>
-        <NavButton href={correctionHref}>ポイント補正</NavButton>
-      </div>
-      <ul className="mt-2 divide-y divide-neutral-200 border-y border-neutral-200">
+      <ul className="divide-y divide-line border-t border-line">
         {standings.map((row) => {
           const identity = (
             <>
@@ -53,7 +47,9 @@ export function TournamentResults({
                 name={row.name}
                 sizeClass="h-8 w-8 text-xs"
               />
-              <span className="min-w-0 truncate font-medium">{row.name}</span>
+              <span className={`min-w-0 truncate ${rowTitleClass}`}>
+                {row.name}
+              </span>
             </>
           );
 
@@ -85,7 +81,7 @@ export function TournamentResults({
           );
         })}
       </ul>
-      <p className="mt-2 text-right text-sm text-neutral-600">
+      <p className="mt-2 text-right text-sm text-muted">
         大会への参加は右上の編集ボタンから
       </p>
     </>

@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
+import { DangerAction } from "@/components/DangerAction";
 import { NavButton } from "@/components/NavButton";
+import {
+  fieldClass,
+  labelClass,
+  textareaClass,
+  TEXTAREA_ROWS,
+} from "@/components/ui";
 import { getCommunity } from "@/mock";
 
 type EditCommunityPageProps = {
   params: Promise<{ communityId: string }>;
 };
-
-const fieldClass =
-  "mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-base";
-const labelClass = "block text-sm";
 
 export async function generateMetadata({
   params,
@@ -18,7 +21,7 @@ export async function generateMetadata({
   const { communityId } = await params;
   const community = getCommunity(communityId);
   return {
-    title: community ? `${community.name}を編集` : "コミュニティを編集",
+    title: community ? `${community.name}を編集` : "麻雀グループを編集",
   };
 }
 
@@ -34,13 +37,13 @@ export default async function EditCommunityPage({
   return (
     <>
       <AppHeader
-        title="コミュニティを編集"
+        title="麻雀グループを編集"
         backHref={`/communities/${community.id}`}
       />
       <main className="px-4 py-4">
         <div className="space-y-6">
           <label className={labelClass}>
-            コミュニティ名
+            麻雀グループ名
             <input
               type="text"
               name="name"
@@ -52,21 +55,23 @@ export default async function EditCommunityPage({
             コメント
             <textarea
               name="comment"
-              rows={3}
+              rows={TEXTAREA_ROWS}
               defaultValue={community.comment}
               placeholder="例: 毎週金曜の夜に集まっています"
-              className="mt-1 w-full border border-neutral-400 bg-white px-3 py-2 text-sm"
+              className={textareaClass}
             />
           </label>
           <NavButton href={`/communities/${community.id}`} variant="block">
             保存する
           </NavButton>
         </div>
-        <p className="mt-16 text-center">
-          <button type="button" className="text-sm text-neutral-600">
-            このコミュニティを抜ける
-          </button>
-        </p>
+        <DangerAction
+          label="この麻雀グループを抜ける"
+          dialogTitle="この麻雀グループを抜けますか？"
+          dialogBody="抜けると、この麻雀グループの大会と試合は見られなくなります。"
+          confirmLabel="抜ける"
+          doneHref="/communities"
+        />
       </main>
     </>
   );
