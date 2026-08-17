@@ -46,7 +46,7 @@
 ### Tailwind CSS
 
 - モバイルファースト（`sm:` 以下はスマホ、`md:` 以上は PC 妥協表示）
-- デザイントークンは Phase 2 モック確定後に `docs/ui-spec.md` へ記録
+- デザイントークンは [docs/ui-spec.md](ui-spec.md) と `web/src/app/globals.css`
 
 ---
 

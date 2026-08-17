@@ -47,7 +47,7 @@
 | 開発フェーズの定義・進め方 | [docs/development.md](docs/development.md) |
 | 技術スタック・言語・プラットフォーム | [docs/tech-stack.md](docs/tech-stack.md) |
 | 具体タスク（Phase 0 以降） | [docs/tasks.md](docs/tasks.md) |
-| UI 仕様（モックフェーズ後） | `docs/ui-spec.md`（未作成） |
+| UI 仕様（画面・部品・トークン） | [docs/ui-spec.md](docs/ui-spec.md) |
 | コア方針（Cursor 常時適用） | [.cursor/rules/00-core.mdc](.cursor/rules/00-core.mdc) |
 
 ## 進捗
