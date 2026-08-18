@@ -480,7 +480,7 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 
 | 層 | 何を担保するか | 置き場所 | コマンド |
 |----|----------------|----------|----------|
-| A. pgTAP（主） | `test-cases.md` の ID | `supabase/tests/*.sql` | `supabase test db` |
+| A. pgTAP（主） | `test-cases.md` の ID | `supabase/tests/*_test.sql` | `supabase test db` |
 | B. PostgREST（副） | JWT・`GRANT`・RPC が API に出ていること | 3-5 で置く。`web/` の画面テストにはしない | ローカル Auth の JWT + anon キー |
 | C. 画面 E2E | 煙 | Phase 4 以降 | 権限行列は再実装しない |
 
@@ -510,10 +510,10 @@ CI は手元と同じ入口（`supabase start` のあと `supabase test db`）�
 
 ### 3-1 ローカルスタック
 
-- [ ] Dev Container 内で `supabase start`
-- [ ] Studio / 接続確認。`web/.env.local` は接続情報まで（画面は繋がない）
-- [ ] `supabase test db` が空でも緑
-- [ ] CI で同じコマンドが走る
+- [x] Dev Container 内で `supabase start`
+- [x] Studio / 接続確認。`web/.env.local` は接続情報まで（画面は繋がない）
+- [x] `supabase test db` が空でも緑
+- [x] CI で同じコマンドが走る（`.github/workflows/ci.yml`。リモート未設定のため Actions は未実行）
 
 ### 3-2 テストケース一覧
 

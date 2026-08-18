@@ -3,6 +3,10 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
+  "initializeCommand": "printf 'LOCAL_WORKSPACE_FOLDER=%s\\n' '${localWorkspaceFolder}' > '${localWorkspaceFolder}/.devcontainer/.env'",
+  "containerEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  },
   "postCreateCommand": "bash -lc 'if [ -f web/package.json ]; then cd web && npm install; fi'",
   "customizations": {
     "vscode": {

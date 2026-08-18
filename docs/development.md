@@ -234,7 +234,20 @@ Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-st
 
 コンテナの作業ディレクトリは `/workspace`（リポジトリルートを bind mount）。Next.js は `/workspace/web`。ホットリロード用に polling を有効化する。`node_modules` 用の名前付き volume は作らない。コンテナユーザーは root。
 
-`docker.sock` をマウントし、コンテナからホスト Docker を操作する（個人のローカル開発用）。`supabase start` は Phase 3。
+`docker.sock` をマウントし、コンテナからホスト Docker を操作する（個人のローカル開発用）。`supabase start` はホスト Docker 上で公式スタックを起動する。CLI の bind はホスト実パスと一致させる（`alias supabase=...` が `.devcontainer/supabase-workdir.sh` を呼び、本体 `/usr/local/bin/supabase --workdir "$LOCAL_WORKSPACE_FOLDER"` を実行する）。Cursor は Reopen 時に `.devcontainer/.env` を書く。
+
+ローカル Supabase（3-1）:
+
+| 項目 | 値 |
+|------|-----|
+| Studio | http://127.0.0.1:54323 |
+| API | http://127.0.0.1:54321 |
+| DB | postgresql://postgres:postgres@127.0.0.1:54322/postgres |
+| CLI | 2.114.0（Dockerfile と CI でピン留め） |
+| テスト | `supabase test db`（ファイル名は `*_test.sql`） |
+| 未使用サービス | Storage / Realtime / Vector / Edge Runtime は切ってある |
+
+`web/.env.local` は URL と anon キーのみ。画面への接続は Phase 4-0。
 
 ### 同一 LAN のスマホから見る
 

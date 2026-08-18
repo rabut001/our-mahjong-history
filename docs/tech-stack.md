@@ -82,11 +82,12 @@
 
 | ファイル | 役割 |
 |----------|------|
-| `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI |
+| `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** |
 | `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
 | `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
+| `.github/workflows/ci.yml` | `supabase start` → `supabase test db`（CLI 2.114.0） |
 
-Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3。本番は Vercel + Supabase Cloud。
+Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本番は Vercel + Supabase Cloud。ローカルでは Storage / Realtime / Vector / Edge Runtime を切る（写真は MVP 外）。
 
 ---
 
@@ -105,10 +106,8 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3。本番
 
 | 変数 | 用途 |
 |------|------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー |
-
-`.env.example` は Phase 0-2 で `web/` に作成する。
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL（ローカルは `http://127.0.0.1:54321`） |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー（`supabase start` の値を `web/.env.local` へ。画面接続は Phase 4-0） |
 
 ---
 
@@ -132,7 +131,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3。本番
 | 画面 | Playwright 等 | 煙。権限行列の代替にしない | Phase 4 以降 |
 | アプリ単体 | Vitest 等 | ポイント計算・バリデーション。権限には使わない | Phase 4 |
 
-CI（Phase 3）: `supabase start` のあと `supabase test db`。手元と同じ入口にする。
+CI（Phase 3）: `.github/workflows/ci.yml` が手元と同じ入口（`supabase start` のあと `supabase test db`）。GitHub リモートは未設定。
 
 ---
 
@@ -148,16 +147,20 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 ├── .devcontainer/
 │   ├── Dockerfile
 │   ├── docker-compose.yml
-│   └── devcontainer.json
+│   ├── devcontainer.json
+│   ├── supabase-alias.sh     # alias supabase=ラッパー
+│   └── supabase-workdir.sh   # --workdir を付けて公式 CLI を呼ぶ
+├── .github/workflows/ci.yml  # supabase start → test db
 ├── web/                      # Next.js アプリ
 │   ├── src/
 │   │   ├── app/
 │   │   ├── components/
 │   │   └── lib/
 │   └── package.json
-└── supabase/                 # Phase 0-1 で init
-    ├── migrations/           # Phase 3
-    └── tests/                # pgTAP。Phase 3
+└── supabase/
+    ├── config.toml
+    ├── migrations/           # Phase 3-3
+    └── tests/                # pgTAP。ファイル名は *_test.sql
 ```
 
 ---

@@ -5,15 +5,19 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
+      # supabase の alias はイメージの /etc/profile.d/omh-supabase.sh
     working_dir: /workspace
     volumes:
-      - ..:/workspace
-      - /var/run/docker.sock:/var/run/docker.sock
+    - ..:/workspace
+    - /var/run/docker.sock:/var/run/docker.sock
+    # Docker-from-Docker: ホスト実パスをコンテナ内の同じパスにも生やす（未設定なら失敗させる）
+    - ${LOCAL_WORKSPACE_FOLDER:?LOCAL_WORKSPACE_FOLDER is required}:${LOCAL_WORKSPACE_FOLDER}
     network_mode: host
     environment:
       NODE_ENV: development
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
+      LOCAL_WORKSPACE_FOLDER: ${LOCAL_WORKSPACE_FOLDER:-}
     stdin_open: true
     tty: true
     command: sleep infinity
