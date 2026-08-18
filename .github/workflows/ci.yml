@@ -1,4 +1,4 @@
-# 手元と同じ入口: supabase start → lint / advisors / auth.uid 静的検査 → test db
+# 手元と同じ入口: supabase start → lint / advisors / auth.uid 静的検査 → test db → PostgREST
 # Node の lint / 画面 E2E は後のフェーズ。
 name: CI
 
@@ -39,6 +39,9 @@ jobs:
 
       - name: Run database tests
         run: supabase test db
+
+      - name: PostgREST smoke
+        run: bash supabase/ci/postgrest-smoke.sh
 
       - name: Stop Supabase
         if: always()

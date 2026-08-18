@@ -545,7 +545,7 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
    - `supabase db lint --local --schema public --fail-on warning`
    - `bash supabase/ci/run-security-advisors.sh`（Advisors JSON の 0029 除外 ＋ `check-definer-grants.sh`）
    - `bash supabase/ci/check-definer-auth-uid.sh`（対象関数が 0 件ならスキップ）
-2. 0029 の許可リスト: `create_community` / `join_community` / `leave_community` / `withdraw_account`（`allowlist.json` の `advisor0029Functions`）。authenticated が DEFINER を呼んでよい明示オプトイン。**新しい DEFINER RPC は 0029 で落ちる**（意図した公開だけ足す）。**0028**（anon が呼べる）は落とす。CLI の `db advisors` は `pgrst.db_schemas` が空のため 0028/0029 を出さないので、同じ判定を `check-definer-grants.sh` で補う
+2. 0029 の許可リスト: `create_community` / `join_community` / `leave_community` / `withdraw_account` / `is_community_member`（`allowlist.json` の `advisor0029Functions`）。authenticated が DEFINER を呼んでよい明示オプトイン。ヘルパーは RLS policy から呼ぶため GRANT が必要（PostgREST の RPC には出さない）。**新しい DEFINER の authenticated EXECUTE は 0029 で落ちる**（意図した公開だけ足す）。**0028**（anon が呼べる）は落とす。CLI の `db advisors` は `pgrst.db_schemas` が空のため 0028/0029 を出さないので、同じ判定を `check-definer-grants.sh` で補う
 3. `auth.uid()` 検査は `public` / `private` の **SECURITY DEFINER**（sql / plpgsql。trigger 以外）をすべて見る。新規追加はリスト更新なしで対象。例外だけ `allowlist.json` の `authUidExclude`（`schema.function` または関数名）。引数名 `user_id` / `auth_user_id` / `uid` および `p_` 付きは禁止。本体に `auth.uid()` が無いと失敗
 4. 標準検査は pgTAP の代わりにしない
 
@@ -568,25 +568,25 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 
 ### 3-4 スキーマ
 
-- [ ] [er.md](er.md) を migration SQL にする（テーブル、制約、FK、trigger。操作ログは `private.trg_append_activity_log`）
-- [ ] [test-cases.md](test-cases.md) の制約 ID を pgTAP にする（空のときだけ削除、招待 UNIQUE、試合中ルールの修正不可、操作ログ trigger など）
-- [ ] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
+- [x] [er.md](er.md) を migration SQL にする（テーブル、制約、FK、trigger。操作ログは `private.trg_append_activity_log`）
+- [x] [test-cases.md](test-cases.md) の制約 ID を pgTAP にする（空のときだけ削除、招待 UNIQUE、試合中ルールの修正不可、操作ログ trigger など）
+- [x] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
 
 ### 3-5 RLS
 
-- [ ] 所属判定ヘルパー（利用中プロフィール + `community_memberships`）
-- [ ] 全業務テーブルの RLS policy（判定経路は er.md）
-- [ ] [test-cases.md](test-cases.md) の RLS ID とメタテストを pgTAP にする
-- [ ] ポリシーと pgTAP を同じセッションで。落ちるテストから書いてよい
-- [ ] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
+- [x] 所属判定ヘルパー（利用中プロフィール + `community_memberships`）
+- [x] 全業務テーブルの RLS policy（判定経路は er.md）
+- [x] [test-cases.md](test-cases.md) の RLS ID とメタテストを pgTAP にする
+- [x] ポリシーと pgTAP を同じセッションで。落ちるテストから書いてよい
+- [x] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す（ヘルパー GRANT は M-09 / M-09b に直した）
 
 ### 3-6 関数
 
-- [ ] 麻雀グループ作成・参加・離脱・退会（`create_community` / `join_community` / `leave_community` / `withdraw_account`）。除名は `community_memberships` 直接 DELETE
-- [ ] `community_memberships` への直接 INSERT は認証ロールでは不可
-- [ ] [test-cases.md](test-cases.md) の関数 ID を pgTAP にする
-- [ ] 薄い PostgREST 通し（JWT + GRANT + RPC）
-- [ ] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
+- [x] 麻雀グループ作成・参加・離脱・退会（`create_community` / `join_community` / `leave_community` / `withdraw_account`）。除名は `community_memberships` 直接 DELETE
+- [x] `community_memberships` への直接 INSERT は認証ロールでは不可
+- [x] [test-cases.md](test-cases.md) の関数 ID を pgTAP にする
+- [x] 薄い PostgREST 通し（JWT + GRANT + RPC。`supabase/ci/postgrest-smoke.sh`）
+- [x] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
 
 ### 3-7 Auth と型
 

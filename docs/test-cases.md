@@ -53,7 +53,7 @@ SQL・policy・関数本体は書かない。属性・FK・判定経路の正は
 
 | 関数 | 引数 | 戻り | 内容 |
 |------|------|------|------|
-| `private.is_community_member` | `community_id uuid` | boolean | 呼び出し人の **利用中** プロフィールが、その麻雀グループの `community_memberships` にあるか。本体で `auth.uid()` を使う。`anon` / `authenticated` に EXECUTE しない |
+| `private.is_community_member` | `community_id uuid` | boolean | 呼び出し人の **利用中** プロフィールが、その麻雀グループの `community_memberships` にあるか。本体で `auth.uid()` を使う。RLS policy から呼ぶため `authenticated` に EXECUTE を出す。`anon` には出さない。`private` は API に出さないので PostgREST の RPC にはならない |
 
 各表の policy はこのヘルパーに寄せる。表ごとの「B が 0 件」は policy 付け忘れ用に残す。
 
@@ -112,7 +112,8 @@ RLS 上、所属メンバーは自分のメンバーシップも直接 DELETE �
 | M-06 | `private.is_community_member`、RPC 4 本、`private.trg_append_activity_log` | 定義 | — | SECURITY DEFINER の `search_path` が固定 | 3-0 / 3-2 |
 | M-07 | RPC 4 本 | GRANT EXECUTE | `anon` | 不可 | Advisor 0028。未ログインは参加できない |
 | M-08 | RPC 4 本 | GRANT EXECUTE | `authenticated` | 可 | allowlist 0029 |
-| M-09 | `private.is_community_member` | GRANT EXECUTE | `anon` / `authenticated` | 不可（policy 内のみ） | ヘルパーを API に出さない |
+| M-09 | `private.is_community_member` | GRANT EXECUTE | `anon` | 不可 | 未ログインは所属判定を呼べない |
+| M-09b | `private.is_community_member` | GRANT EXECUTE | `authenticated` | 可（policy のため）。PostgREST の `schemas` に `private` は出ない | allowlist 0029。API の RPC には出さない |
 | M-10 | RPC 4 本と `private.is_community_member` | 定義 | — | 引数名に `user_id` / `auth_user_id` / `uid` および `p_` 付きを使わない。本体に `auth.uid()` がある | 3-2 |
 | M-11 | 業務テーブル | 定義 | — | `community_id` を持たないのは `profiles` / `activity_logs` / `match_results` 等、er.md のとおり。`activity_logs` に `community_id` が無い | [操作ログ](er.md#操作ログ-activity_logs) |
 
@@ -258,7 +259,7 @@ Phase 3 の DB（CHECK / UNIQUE / FK / trigger）で落とすもの。アプリ�
 | C-fk-04 | 空でない麻雀グループを直接 DELETE | RESTRICT | 明示削除は空のときだけ |
 | C-fk-05 | 最後のメンバーシップ削除 | グループ配下を CASCADE で全部消す。ログは残す | 最後の 1 人 |
 
-C-fk-01〜04 は上表と重複してよい（実装は 1 本の pgTAP で複数 ID を満たしてよいが、ID は欠かさない）。
+C-fk-01〜04 は上表と重複してよい（実装は 1 本の pgTAP で複数 ID を満たしてよいが、ID は欠かさない）。C-fk-05 のログ残存は C-logs-03 と同一の削除で満たしてよい。
 
 ---
 
@@ -268,11 +269,13 @@ C-fk-01〜04 は上表と重複してよい（実装は 1 本の pgTAP で複数
 
 書き込みの「失敗」は、INSERT/UPDATE/DELETE が 0 件またはエラー。SELECT の「見えない」は 0 件（エラーでもよい）。
 
+未ログインの実装の代表は **SELECT と INSERT**（GRANT 付け忘れは INSERT で出る）。anon の UPDATE / DELETE GRANT は M-05 で見る。
+
 ### 未ログイン（全表）
 
 | ID | テーブル | 操作 | 期待 |
 |----|----------|------|------|
-| R-anon-profiles | `profiles` | SELECT / INSERT / UPDATE / DELETE | 失敗 |
+| R-anon-profiles | `profiles` | SELECT / INSERT | 失敗 |
 | R-anon-communities | `communities` | 同上 | 失敗 |
 | R-anon-memberships | `community_memberships` | 同上 | 失敗 |
 | R-anon-community_rules | `community_rules` | 同上 | 失敗 |
@@ -339,51 +342,51 @@ R-profiles-14 の「C は読めない」: L はグループ 1 のメンバーシ
 
 対象: `community_rules`, `community_invite_codes`, `tournaments`, `tournament_rules`, `tournament_participants`, `tournament_point_adjustments`, `matches`, `match_results`。
 
-各表・各アクターに ID を付ける。操作の代表は SELECT 1 本 + 書き込み 1 本（INSERT または UPDATE）。付け忘れ防止のため表ごとに B の SELECT 0 件を必須とする。
+各表・各アクターに ID を付ける。拒否側（B / L）の代表は SELECT 1 本 + 書き込み 1 本（INSERT または UPDATE）。表の操作列もこの代表に合わせる。付け忘れ防止のため表ごとに B の SELECT 0 件を必須とする。成功側（A）で INSERT / UPDATE / DELETE を併記した ID は、3 操作とも行が変わることを見る（1 本の `lives_ok` にまとめない。0 行成功を見逃す）。L の「SELECT / 書き込み」は SELECT 0 件 + INSERT 1 本（`R-invite-06` は仕様どおり SELECT のみ）。
 
 | ID | テーブル | 操作 | アクター | 期待 |
 |----|----------|------|----------|------|
 | R-community_rules-01 | `community_rules` | SELECT | A | グループ 1 の既定が読める |
 | R-community_rules-02 | `community_rules` | SELECT | B | グループ 1 は 0 件 |
 | R-community_rules-03 | `community_rules` | INSERT / UPDATE / DELETE グループ 1 | A | 成功 |
-| R-community_rules-04 | `community_rules` | INSERT / UPDATE / DELETE グループ 1 | B | 失敗 |
-| R-community_rules-05 | `community_rules` | SELECT / 書き込み グループ 1 | L | 失敗 |
+| R-community_rules-04 | `community_rules` | INSERT グループ 1 | B | 失敗 |
+| R-community_rules-05 | `community_rules` | SELECT / INSERT グループ 1 | L | 失敗 |
 | R-invite-01 | `community_invite_codes` | SELECT | A | グループ 1 のコードが読める |
 | R-invite-02 | `community_invite_codes` | SELECT | B | 0 件 |
 | R-invite-03 | `community_invite_codes` | SELECT | 未所属の利用中（コード文字列は知っている B） | 0 件。参加は関数 | 
 | R-invite-04 | `community_invite_codes` | INSERT / DELETE グループ 1（再発行の差し替え） | A | 成功 |
-| R-invite-05 | `community_invite_codes` | INSERT / UPDATE / DELETE グループ 1 | B | 失敗 |
+| R-invite-05 | `community_invite_codes` | INSERT グループ 1 | B | 失敗 |
 | R-invite-06 | `community_invite_codes` | SELECT | L | 0 件 |
 | R-tournaments-01 | `tournaments` | SELECT | A | グループ 1 の大会が読める |
 | R-tournaments-02 | `tournaments` | SELECT | B | 0 件 |
 | R-tournaments-03 | `tournaments` | INSERT / UPDATE / DELETE グループ 1 | A | 成功（DELETE は子が空のとき） |
-| R-tournaments-04 | `tournaments` | 書き込み グループ 1 | B | 失敗 |
-| R-tournaments-05 | `tournaments` | SELECT / 書き込み | L | 失敗 |
+| R-tournaments-04 | `tournaments` | INSERT グループ 1 | B | 失敗 |
+| R-tournaments-05 | `tournaments` | SELECT / INSERT | L | 失敗 |
 | R-tournament_rules-01 | `tournament_rules` | SELECT | A | 読める |
 | R-tournament_rules-02 | `tournament_rules` | SELECT | B | 0 件 |
 | R-tournament_rules-03 | `tournament_rules` | INSERT / 未使用行の UPDATE・DELETE | A | 成功 |
-| R-tournament_rules-04 | `tournament_rules` | 書き込み | B | 失敗 |
-| R-tournament_rules-05 | `tournament_rules` | SELECT / 書き込み | L | 失敗 |
+| R-tournament_rules-04 | `tournament_rules` | INSERT | B | 失敗 |
+| R-tournament_rules-05 | `tournament_rules` | SELECT / INSERT | L | 失敗 |
 | R-participants-01 | `tournament_participants` | SELECT | A | 読める（L と T の参加者行も含む） |
 | R-participants-02 | `tournament_participants` | SELECT | B | 0 件 |
 | R-participants-03 | `tournament_participants` | INSERT ゲスト / 現メンバー | A | 成功 |
-| R-participants-04 | `tournament_participants` | 書き込み | B | 失敗 |
-| R-participants-05 | `tournament_participants` | SELECT / 書き込み | L | 失敗 |
+| R-participants-04 | `tournament_participants` | INSERT | B | 失敗 |
+| R-participants-05 | `tournament_participants` | SELECT / INSERT | L | 失敗 |
 | R-adjustments-01 | `tournament_point_adjustments` | SELECT | A | 読める |
 | R-adjustments-02 | `tournament_point_adjustments` | SELECT | B | 0 件 |
 | R-adjustments-03 | `tournament_point_adjustments` | INSERT / UPDATE / DELETE | A | 成功 |
-| R-adjustments-04 | `tournament_point_adjustments` | 書き込み | B | 失敗 |
-| R-adjustments-05 | `tournament_point_adjustments` | SELECT / 書き込み | L | 失敗 |
+| R-adjustments-04 | `tournament_point_adjustments` | INSERT | B | 失敗 |
+| R-adjustments-05 | `tournament_point_adjustments` | SELECT / INSERT | L | 失敗 |
 | R-matches-01 | `matches` | SELECT | A | 読める |
 | R-matches-02 | `matches` | SELECT | B | 0 件 |
 | R-matches-03 | `matches` | INSERT / UPDATE / DELETE | A | 成功 |
-| R-matches-04 | `matches` | 書き込み | B | 失敗 |
-| R-matches-05 | `matches` | SELECT / 書き込み | L | 失敗 |
+| R-matches-04 | `matches` | INSERT | B | 失敗 |
+| R-matches-05 | `matches` | SELECT / INSERT | L | 失敗 |
 | R-match_results-01 | `match_results` | SELECT | A | 読める |
 | R-match_results-02 | `match_results` | SELECT | B | 0 件 |
 | R-match_results-03 | `match_results` | INSERT / UPDATE / DELETE | A | 成功 |
-| R-match_results-04 | `match_results` | 書き込み | B | 失敗 |
-| R-match_results-05 | `match_results` | SELECT / 書き込み | L | 失敗 |
+| R-match_results-04 | `match_results` | UPDATE | B | 失敗 |
+| R-match_results-05 | `match_results` | SELECT / INSERT | L | 失敗 |
 
 `tournament_participants` の INSERT で `user_id` を付ける追加条件は C-participants-05 / 06（制約）と次:
 
@@ -460,7 +463,7 @@ R-profiles-14 の「C は読めない」: L はグループ 1 のメンバーシ
 | F-helper-01 | グループ 1 | A | true | 利用中 + メンバーシップ |
 | F-helper-02 | グループ 1 | B | false | 未所属 |
 | F-helper-03 | グループ 1 | L | false | 離脱済みは利用中でも false |
-| F-helper-04 | RPC としては呼べない | A | EXECUTE 不可 | M-09 |
+| F-helper-04 | PostgREST `/rpc/is_community_member` | A | 失敗（`private` は API に出ない） | M-09b |
 
 ### Auth 登録 `handle_new_user`（3-7）
 
@@ -507,5 +510,5 @@ JWT + anon キー。画面テストにはしない。GRANT と RPC 公開の通�
 |------------|----------------|
 | 制約 `C-*`、`C-fk-*`（操作ログ trigger の `C-logs-04`〜`08` を含む） | 3-4 |
 | RLS `R-*`、メタ `M-01`〜`M-05` `M-11` | 3-5 |
-| 関数 `F-*`、メタ `M-06`〜`M-10`、PostgREST `P-*` | 3-6 |
+| 関数 `F-*`、メタ `M-06`〜`M-10`（`M-09b` を含む）、PostgREST `P-*` | 3-6 |
 | `F-signup-*` | 3-7（ケース追加はしない。実装のみ） |

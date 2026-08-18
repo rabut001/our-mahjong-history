@@ -75,7 +75,7 @@ erDiagram
 - 利用中: `auth_user_id` ありかつ `withdrawn_at` は空。表示名は「退会済みユーザ」以外
 - 退会（墓石）: 行は残す。`auth_user_id` を NULL、`withdrawn_at` を入れる、表示名を「退会済みユーザ」にする、コメントと `avatar_url` は空にする。`auth.users` は消す（Auth 削除で profiles を CASCADE しない）。この形への変更は `withdraw_account` のみ（直接 UPDATE は不可）。CHECK で利用中と墓石の形を分ける
 - 再登録は新しい `profiles`（別人）。墓石とはつなげない
-- Auth への FK を張るなら `auth_user_id` → `auth.users` の ON DELETE SET NULL。`id` には張らない
+- `auth_user_id` → `auth.users` の ON DELETE SET NULL。`id` には張らない。退会は先に墓石にしてから Auth を消す（利用中のまま Auth を消すと CHECK と衝突する）
 
 ## 麻雀グループ `communities`
 
@@ -309,7 +309,7 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 
 `profiles` の SELECT (3) は、所属が切れたあとも対局の名前を出すため。
 
-所属判定は `private.is_community_member(community_id uuid)`（SECURITY DEFINER。`auth.uid()` で利用中プロフィールを取り、メンバーシップを見る）。policy 内でのみ使う。RPC には出さない。
+所属判定は `private.is_community_member(community_id uuid)`（SECURITY DEFINER。`auth.uid()` で利用中プロフィールを取り、メンバーシップを見る）。各表の policy はこのヘルパーに寄せる。PostgreSQL では policy 式が呼び出し人権限で評価されるため、`authenticated` に `EXECUTE` を出す（Advisor 0029 の許可リスト）。`private` は PostgREST の `schemas` に出さないので RPC には出ない。`anon` には `EXECUTE` しない。
 
 操作ログは `private.trg_append_activity_log`（trigger 関数。対象業務表の AFTER INSERT/UPDATE/DELETE）。`anon` / `authenticated` に EXECUTE しない。Advisor 0029 の対象外（trigger）。
 

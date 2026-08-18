@@ -3,7 +3,8 @@
     "create_community",
     "join_community",
     "leave_community",
-    "withdraw_account"
+    "withdraw_account",
+    "is_community_member"
   ],
   "authUidExclude": []
 }
