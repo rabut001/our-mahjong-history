@@ -451,8 +451,8 @@ UI の正は本ファイル。見た目の正は `web/` のモック。ドメイ
 
 - `supabase start`、migration SQL、RLS policy、関数
 - テストケースは `docs/test-cases.md`（実装より前に一括。pgTAP はケース ID を実行）
-- 招待コードの文字種・長さ、関数名（3-2 のケース一覧で決める）
-- pgTAP と薄い PostgREST。CI で `supabase test db`
+- 招待コードの文字種・長さ、関数名（3-3 のケース一覧で決める）
+- pgTAP と薄い PostgREST。CI で lint / Advisors / `auth.uid()` 検査と `supabase test db`
 - Auth はメールを正。OAuth（画面上の Google / LINE）は設定まで
 
 **Phase 4 で触る**

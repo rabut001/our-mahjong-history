@@ -1,4 +1,4 @@
-# 手元と同じ入口: supabase start → supabase test db
+# 手元と同じ入口: supabase start → lint / advisors / auth.uid 静的検査 → test db
 # Node の lint / 画面 E2E は後のフェーズ。
 name: CI
 
@@ -20,8 +20,22 @@ jobs:
         with:
           version: 2.114.0
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
       - name: Start Supabase
         run: supabase start
+
+      - name: Lint database functions
+        run: supabase db lint --local --schema public --fail-on warning
+
+      - name: Security advisors
+        run: bash supabase/ci/run-security-advisors.sh
+
+      - name: Check DEFINER functions use auth.uid
+        run: bash supabase/ci/check-definer-auth-uid.sh
 
       - name: Run database tests
         run: supabase test db

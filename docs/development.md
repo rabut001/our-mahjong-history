@@ -126,7 +126,7 @@ Phase 6: 拡張（MVP 後）
 | 関数 | 作成・参加・離脱・退会（SECURITY DEFINER）。アプリからは `supabase.rpc` |
 | Auth | Supabase Auth。メールを正。OAuth は設定まで（ローカル必須にしない） |
 | 型生成 | `supabase gen types` → TypeScript 型（`web/` の型ファイルのみ） |
-| テスト | ケースの正は `docs/test-cases.md`（実装より前に一括）。pgTAP（主）。PostgREST の薄い通し（副）。CI で `supabase test db` |
+| テスト | ケースの正は `docs/test-cases.md`（実装より前に一括）。pgTAP（主）。PostgREST の薄い通し（副）。静的検査は `db lint` / `db advisors` / `auth.uid()` 検査（3-2）。CI で同じ入口 |
 
 `web/` の画面は触らない。テスト専用画面も作らない。ログイン〜一覧の実データ接続は Phase 4-0。
 
@@ -212,7 +212,7 @@ Phase 6: 拡張（MVP 後）
 | 具体タスクの追加・完了時 | `docs/tasks.md`（Phase 0 以降） |
 | ドメイン変更時 | [docs/overview.md](overview.md) |
 | ER 変更時 | [docs/er.md](er.md) |
-| DB / RLS のテストケース変更時 | [docs/test-cases.md](test-cases.md)（Phase 3-2 で作成） |
+| DB / RLS のテストケース変更時 | [docs/test-cases.md](test-cases.md)（Phase 3-3 で作成） |
 | モック確定時 | `docs/ui-spec.md`（新規作成） |
 | 技術選定変更時 | [docs/tech-stack.md](tech-stack.md) |
 | コーディング規約追加時 | `.cursor/rules/` |
@@ -244,7 +244,7 @@ Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-st
 | API | http://127.0.0.1:54321 |
 | DB | postgresql://postgres:postgres@127.0.0.1:54322/postgres |
 | CLI | 2.114.0（Dockerfile と CI でピン留め） |
-| テスト | `supabase test db`（ファイル名は `*_test.sql`） |
+| テスト | `supabase test db`（ファイル名は `*_test.sql`）。静的検査は `supabase db lint` / `supabase db advisors`（方針は 3-2） |
 | 未使用サービス | Storage / Realtime / Vector / Edge Runtime は切ってある |
 
 `web/.env.local` は URL と anon キーのみ。画面への接続は Phase 4-0。
@@ -292,4 +292,4 @@ powershell -ExecutionPolicy Bypass -File .devcontainer/unexpose-lan.ps1
 - 認証セッション: `@supabase/ssr`（cookie）
 - 利用者の Auth 削除だけは Supabase Auth Admin（Server Action から service role）
 
-アクセス制御の検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。ケースの正は [test-cases.md](test-cases.md)（3-2 で作成）。層とタイミングは [tasks.md のテスト方針](tasks.md#テスト方針)。
+アクセス制御の検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。層とタイミングは [tasks.md のテスト方針](tasks.md#テスト方針)。

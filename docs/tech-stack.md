@@ -85,7 +85,7 @@
 | `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** |
 | `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
 | `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
-| `.github/workflows/ci.yml` | `supabase start` → `supabase test db`（CLI 2.114.0） |
+| `.github/workflows/ci.yml` | `supabase start` → lint / Advisors / `auth.uid()` 検査 → `test db`（CLI 2.114.0） |
 
 Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本番は Vercel + Supabase Cloud。ローカルでは Storage / Realtime / Vector / Edge Runtime を切る（写真は MVP 外）。
 
@@ -122,16 +122,17 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 
 ### テスト
 
-アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。ケースの正は [test-cases.md](test-cases.md)（3-2 で作成）。層とタイミングは [tasks.md のテスト方針](tasks.md#テスト方針)。
+アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。層とタイミングは [tasks.md のテスト方針](tasks.md#テスト方針)。
 
 | 層 | ツール | 用途 | 時期 |
 |----|--------|------|------|
 | DB / RLS（主） | pgTAP（`supabase test db`） | 権限行列、制約、SECURITY DEFINER 関数 | Phase 3 |
+| DB 静的検査 | `supabase db lint` / `db advisors` | 型、RLS 付け忘れ、`search_path`、公開範囲 | Phase 3（方針は 3-2） |
 | PostgREST（副） | ローカル Auth の JWT + anon キー | GRANT・RPC 公開 | Phase 3（関数後） |
 | 画面 | Playwright 等 | 煙。権限行列の代替にしない | Phase 4 以降 |
 | アプリ単体 | Vitest 等 | ポイント計算・バリデーション。権限には使わない | Phase 4 |
 
-CI（Phase 3）: `.github/workflows/ci.yml` が手元と同じ入口（`supabase start` のあと `supabase test db`）。GitHub リモートは未設定。
+CI（Phase 3）: `.github/workflows/ci.yml` が手元と同じ入口（`supabase start` のあと lint / Advisors / `auth.uid()` 静的検査 → `supabase test db`）。GitHub リモートは未設定。
 
 ---
 
@@ -150,7 +151,7 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   ├── devcontainer.json
 │   ├── supabase-alias.sh     # alias supabase=ラッパー
 │   └── supabase-workdir.sh   # --workdir を付けて公式 CLI を呼ぶ
-├── .github/workflows/ci.yml  # supabase start → test db
+├── .github/workflows/ci.yml  # start → lint / advisors / auth.uid → test db
 ├── web/                      # Next.js アプリ
 │   ├── src/
 │   │   ├── app/
@@ -159,7 +160,8 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   └── package.json
 └── supabase/
     ├── config.toml
-    ├── migrations/           # Phase 3-3
+    ├── ci/                   # Advisors 除外ラッパー、auth.uid() 静的検査
+    ├── migrations/           # Phase 3-4
     └── tests/                # pgTAP。ファイル名は *_test.sql
 ```
 

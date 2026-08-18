@@ -53,7 +53,7 @@ alwaysApply: true
 - `docs/status.md` — 現在フェーズ・次のアクション
 - `docs/overview.md` — 要件・ドメイン
 - `docs/er.md` — ER（属性・制約・Mermaid）
-- `docs/test-cases.md` — DB / RLS テストケース（Phase 3-2 で作成）
+- `docs/test-cases.md` — DB / RLS テストケース（Phase 3-3 で作成）
 - `docs/development.md` — フェーズ定義
 - `docs/ui-spec.md` — 画面遷移・部品・トークン
 - `docs/tech-stack.md` — 技術選定
