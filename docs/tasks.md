@@ -690,7 +690,7 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 | B. PostgREST | GRANT・RPC | `supabase/ci/postgrest-smoke.sh` | 同スクリプト | 既存 `db` job |
 | C. Vitest | ポイント・順位・整形・バリデーション | `web/src/lib/domain/` | `npm test` | `web` job |
 | D. 静的検査（アプリ） | lint / 型 / フォーマット | `web/` | `npm run lint` / `tsc` / `format:check` | `web` job |
-| E. Playwright | 煙（ログインできる、自分の麻雀グループが見える） | 4-3 で置く | 4-3 で決める | 別 job（4-3。Supabase が要る） |
+| E. Playwright | 煙（ログインできる、自分の麻雀グループが見える） | `web/e2e/` | `npm run test:e2e` | 別 job `e2e`（Supabase が要る） |
 | 人 | 375px の見た目 | — | ブラウザ | CI にしない |
 
 `web` job は Docker の Supabase を起動しない。Playwright は 4-3 の直後に煙だけ足す。試合入力の E2E は 4-7 以降で足してよい。権限行列は画面テストにしない。
@@ -732,13 +732,13 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 旧「4-0」。テスト専用画面は作らない。
 
-- [ ] 未ログインはログインへ。メール `signInWithPassword`。Google / LINE の呼び出しは [tech-stack.md の認証](tech-stack.md#認証)
-- [ ] `/auth/callback`。cookie セッション（`@supabase/ssr`）
-- [ ] `/communities` を実セッション / 実 RLS の SELECT に繋ぐ（上部が自分、下部が所属麻雀グループ）
-- [ ] トップとログインに使っていた mock を削除（または未接続画面だけ残す）
-- [ ] Playwright 煙: ログインできる、自分の麻雀グループが見える。権限行列は踏まない
-- [ ] CI に e2e job（ローカルスタックが要る）。`web` / `db` とは分ける
-- [ ] [status.md](status.md) を更新
+- [x] 未ログインはログインへ。メール `signInWithPassword`。Google / LINE の呼び出しは [tech-stack.md の認証](tech-stack.md#認証)
+- [x] `/auth/callback`。cookie セッション（`@supabase/ssr`）
+- [x] `/communities` を実セッション / 実 RLS の SELECT に繋ぐ（上部が自分、下部が所属麻雀グループ）
+- [x] トップとログインに使っていた mock を削除（または未接続画面だけ残す）
+- [x] Playwright 煙: ログインできる、自分の麻雀グループが見える。権限行列は踏まない
+- [x] CI に e2e job（ローカルスタックが要る）。`web` / `db` とは分ける
+- [x] [status.md](status.md) を更新
 
 ### 4-4 麻雀グループ CRUD + 招待
 

@@ -257,7 +257,7 @@ Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-st
 | テスト | `supabase test db`（ファイル名は `*_test.sql`）。静的検査は `supabase db lint` / `supabase db advisors` / grants 補完 / `auth.uid()` 検査（方針は 3-2） |
 | 未使用サービス | Storage / Realtime / Vector / Edge Runtime は切ってある |
 
-`web/.env.local` は URL と anon キーのみ。画面への接続は Phase 4-3。
+`web/.env.local` は URL と anon キーのみ。ログインとトップは実セッションに接続済み。
 
 ### 同一 LAN のスマホから見る
 

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { Avatar } from "@/components/Avatar";
 import { NavButton } from "@/components/NavButton";
 import { RowLink, rowTitleClass, SectionCard } from "@/components/ui";
-import { countMembers, getCurrentProfile, listCommunities } from "@/mock";
+import { getHomePageData } from "@/lib/data";
+import { LOGIN_PATH } from "@/lib/supabase/paths";
 
 export const metadata: Metadata = {
   title: {
@@ -12,9 +14,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function TopPage() {
-  const communities = listCommunities();
-  const profile = getCurrentProfile();
+export const dynamic = "force-dynamic";
+
+export default async function TopPage() {
+  const data = await getHomePageData();
+  if (!data) {
+    redirect(LOGIN_PATH);
+  }
+
+  const { profile, communities } = data;
 
   return (
     <>
@@ -52,7 +60,7 @@ export default function TopPage() {
                     {community.name}
                   </span>
                   <span className="mt-0.5 block text-sm text-muted">
-                    メンバー {countMembers(community.id)}人
+                    メンバー {community.memberCount}人
                   </span>
                 </RowLink>
               </li>

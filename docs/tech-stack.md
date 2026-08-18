@@ -120,7 +120,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 | `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** |
 | `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
 | `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
-| `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job: `web/` で lint / `tsc --noEmit` / `format:check` / vitest。Playwright 煙は 4-3 |
+| `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job: `web/` で lint / `tsc --noEmit` / `format:check` / vitest。`e2e` job: start → Playwright 煙（ログイン + トップ） |
 
 Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本番は Vercel + Supabase Cloud。ローカルでは Storage / Realtime / Vector / Edge Runtime を切る（写真は MVP 外）。
 
@@ -171,7 +171,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | アプリ静的検査 | ESLint / `tsc` / Prettier | 型と体裁 | Phase 4-1（CI の `web` job） |
 | 画面 | Playwright | 煙（ログインできる、自分の麻雀グループが見える）。権限行列の代替にしない | Phase 4-3 以降 |
 
-CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。Playwright は 4-3 で別 job。GitHub リモートは未設定。
+CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。`e2e` job は `supabase start` のあと `web/` で Playwright 煙（`npm run test:e2e`）。GitHub リモートは未設定。
 
 見た目のピクセル一致と、全画面の Testing Library は CI にしない。確認は 375px の操作。
 
@@ -179,7 +179,7 @@ CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase s
 
 ## ディレクトリ構成（予定）
 
-Phase 0 の前提として確定。`supabase/tests/` は Phase 3。`web/src/lib/domain/` は 4-1 済み、`components/ui/` の寄せは 4-2 済み、`lib/data/` は 4-3 以降。
+Phase 0 の前提として確定。`supabase/tests/` は Phase 3。`web/src/lib/domain/` は 4-1 済み、`components/ui/` の寄せは 4-2 済み、`lib/data/` は 4-3 済み。
 
 ```
 our-mahjong-history/            # リポジトリ名（Our Mahjong History）
@@ -192,16 +192,18 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   ├── devcontainer.json
 │   ├── supabase-alias.sh     # alias supabase=ラッパー
 │   └── supabase-workdir.sh   # --workdir を付けて公式 CLI を呼ぶ
-├── .github/workflows/ci.yml  # db job と web job。e2e は 4-3
+├── .github/workflows/ci.yml  # db / web / e2e
 ├── web/                      # Next.js アプリ
 │   ├── src/
 │   │   ├── app/              # ルート。読む・並べるだけ
+│   │   ├── proxy.ts          # 未ログインはログインへ（cookie セッション更新）
 │   │   ├── components/       # 見た目。計算も fetch もしない。共通は `ui/`
 │   │   ├── lib/
 │   │   │   ├── domain/       # 純関数。React / Supabase / mock に依存しない
-│   │   │   ├── data/         # RSC / Server Action と DB 型の変換（4-3 以降）
+│   │   │   ├── data/         # RSC / Server Action と DB 型の変換
 │   │   │   └── supabase/     # クライアントと生成型 `database.types.ts`
 │   │   └── mock/             # フィクスチャと薄い list/get。接続が進んだら消す
+│   ├── e2e/                  # Playwright 煙
 │   └── package.json
 └── supabase/
     ├── config.toml

@@ -1,5 +1,7 @@
-# 手元と同じ入口: db job は supabase start → lint / advisors / auth.uid 静的検査 → test db → PostgREST。
-# web job は web/ の lint / tsc / format / vitest（Supabase は起動しない）。
+# 手元と同じ入口:
+# db job: supabase start → lint / advisors / auth.uid 静的検査 → test db → PostgREST
+# web job: web/ の lint / tsc / format / vitest（Supabase は起動しない）
+# e2e job: supabase start → Playwright 煙（ログイン + トップ）
 name: CI
 
 on:
@@ -78,16 +80,11 @@ jobs:
       - name: Test
         run: npm test
 
-
-on:
-  pull_request:
-  push:
-    branches:
-      - main
-
-jobs:
-  db:
+  e2e:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -101,25 +98,34 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
 
       - name: Start Supabase
+        working-directory: .
         run: supabase start
 
-      - name: Lint database functions
-        run: supabase db lint --local --schema public --fail-on warning
+      - name: Write web env
+        working-directory: .
+        run: |
+          eval "$(supabase status -o env)"
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$API_URL" "$ANON_KEY" > web/.env.local
 
-      - name: Security advisors
-        run: bash supabase/ci/run-security-advisors.sh
+      - name: Install
+        run: npm ci
 
-      - name: Check DEFINER functions use auth.uid
-        run: bash supabase/ci/check-definer-auth-uid.sh
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
 
-      - name: Run database tests
-        run: supabase test db
+      - name: Build
+        run: npm run build
 
-      - name: PostgREST smoke
-        run: bash supabase/ci/postgrest-smoke.sh
+      - name: Playwright smoke
+        run: npm run test:e2e
+        env:
+          CI: true
 
       - name: Stop Supabase
         if: always()
+        working-directory: .
         run: supabase stop

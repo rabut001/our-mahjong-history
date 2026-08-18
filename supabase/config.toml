@@ -163,7 +163,7 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-# /auth/callback は Phase 4-0 で画面を置く。ここは許可リストだけ先に置く。
+# /auth/callback は Phase 4-3 で置く。ここは許可リスト。
 additional_redirect_urls = [
   "https://127.0.0.1:3000",
   "http://127.0.0.1:3000/auth/callback",
