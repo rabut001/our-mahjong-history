@@ -592,7 +592,7 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 
 ログイン〜一覧の画面接続ではない（それは Phase 4-0）。
 
-- [ ] メール Auth。登録時に `profiles` が付く trigger
-- [ ] OAuth（Google / LINE）は設定と画面導線の前提まで。ローカル必須にしない
-- [ ] `supabase gen types` → `web/` の型ファイルのみ（ページは触らない）
-- [ ] [status.md](status.md) を Phase 3 完了・次は Phase 4-0 に更新（ユーザーレビュー後）
+- [x] メール Auth。登録時に `profiles` が付く trigger
+- [x] OAuth（Google / LINE）は設定と画面導線の前提まで。ローカル必須にしない
+- [x] `supabase gen types` → `web/` の型ファイルのみ（ページは触らない）
+- [x] [status.md](status.md) を Phase 3 完了・次は Phase 4-0 に更新（ユーザーレビュー後）

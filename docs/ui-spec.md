@@ -273,13 +273,15 @@ flowchart TD
 - 初画面: メール → 「次へ」／「Googleでログイン」／「LINEでログイン」
 - 次画面: パスワード → 「ログイン」。戻るは初画面へ
 - 下部に「アカウントを作成」
-- メールは `signInWithPassword`（パスワードは 2 画面目）。Google / LINE は初画面から OAuth。LINE の有効化は Phase 3
+- メールは `signInWithPassword`（パスワードは 2 画面目）。Google / LINE は初画面から OAuth
+- Phase 4-0 が呼ぶ API: Google は `signInWithOAuth({ provider: 'google' })`。LINE は `signInWithOAuth({ provider: 'custom:line' })`。戻り先は `/auth/callback`（ページも 4-0）
 
 **アカウント作成**（`/signup`）
 
 - 初画面はログインと同じ三択（「Googleで登録」「LINEで登録」）
 - 次画面: 表示名とパスワード → 「登録する」
 - 下部に「ログイン」
+- メール登録は `signUp` の `options.data.display_name` に表示名を渡す（`handle_new_user` が `profiles` にコピーする）
 
 ### トップ（俺たちの雀歴）
 
@@ -453,7 +455,7 @@ UI の正は本ファイル。見た目の正は `web/` のモック。ドメイ
 - テストケースは `docs/test-cases.md`（実装より前に一括。pgTAP はケース ID を実行）
 - 招待コードは 10 文字 Crockford Base32。RPC は `create_community` / `join_community` / `leave_community` / `withdraw_account`
 - pgTAP と薄い PostgREST。CI で lint / Advisors / `auth.uid()` 検査と `supabase test db`
-- Auth はメールを正。OAuth（画面上の Google / LINE）は設定まで
+- Auth はメールを正。OAuth（画面上の Google / LINE）の呼び方は [tech-stack.md の認証](tech-stack.md#認証)
 
 **Phase 4 で触る**
 

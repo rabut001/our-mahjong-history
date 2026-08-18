@@ -65,9 +65,9 @@ erDiagram
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | アプリ側の人の ID。生涯不変。`auth.users.id` とは別 |
 | Auth | `auth_user_id` | UUID | 条件 | ログイン中のみ。UNIQUE。Auth 削除時は NULL（墓石）。出鱈目な値は使わない |
-| 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。退会後は「退会済みユーザ」。麻雀グループ別ニックネームは MVP 外 |
+| 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。退会後は「退会済みユーザ」。麻雀グループ別ニックネームは MVP 外。登録時は `handle_new_user` が `user_metadata.display_name` → `full_name` / `name` → メールの `@` より前。どれも無ければ失敗 |
 | コメント | `comment` | 文字列 | — | 自己紹介。空なら未設定。退会後は空にする |
-| アイコン | `avatar_url` | 文字列 | — | Google / LINE ログイン時に Auth の `user_metadata.avatar_url` をコピー。メール登録は空。空なら頭文字を出す。アプリからのアップロードはしない。退会後は空 |
+| アイコン | `avatar_url` | 文字列 | — | Google / LINE ログイン時に Auth の `user_metadata.avatar_url` または `picture` をコピー。メール登録は空。空なら頭文字を出す。アプリからのアップロードはしない。退会後は空 |
 | 退会日時 | `withdrawn_at` | timestamptz | — | 入っていれば墓石。ログイン不可 |
 | 作成日時 | `created_at` | timestamptz | ✓ | |
 | 更新日時 | `updated_at` | timestamptz | ✓ | 表示名・コメントの変更など |
@@ -75,6 +75,7 @@ erDiagram
 - 利用中: `auth_user_id` ありかつ `withdrawn_at` は空。表示名は「退会済みユーザ」以外
 - 退会（墓石）: 行は残す。`auth_user_id` を NULL、`withdrawn_at` を入れる、表示名を「退会済みユーザ」にする、コメントと `avatar_url` は空にする。`auth.users` は消す（Auth 削除で profiles を CASCADE しない）。この形への変更は `withdraw_account` のみ（直接 UPDATE は不可）。CHECK で利用中と墓石の形を分ける
 - 再登録は新しい `profiles`（別人）。墓石とはつなげない
+- 登録: `auth.users` INSERT の trigger `private.handle_new_user` が利用中 `profiles` を 1 行付ける。`profiles.id` は新規 UUID（Auth ID と同一視しない）
 - `auth_user_id` → `auth.users` の ON DELETE SET NULL。`id` には張らない。退会は先に墓石にしてから Auth を消す（利用中のまま Auth を消すと CHECK と衝突する）
 
 ## 麻雀グループ `communities`
@@ -294,7 +295,7 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 
 | テーブル | 判定経路 | SELECT | INSERT | UPDATE | DELETE |
 |----------|----------|--------|--------|--------|--------|
-| `profiles` | SELECT は次のいずれか。（1）この行の `auth_user_id` が呼び出し人。（2）`community_memberships` を共有する。（3）`tournament_participants.user_id` = この行の `id` かつ、その大会の `community_id` について呼び出し人のメンバーシップがある。UPDATE は (1) のみ | 可。所属メンバーは (2)。離脱・退会後の墓石は (3) のみ | 不可（Auth 登録時の trigger `handle_new_user`） | 可（表示名・コメント）。`withdrawn_at` / `auth_user_id` の変更と、表示名を「退会済みユーザ」にすることは **`withdraw_account` のみ**（直接 UPDATE は不可） | 不可（退会は墓石。行は残す） |
+| `profiles` | SELECT は次のいずれか。（1）この行の `auth_user_id` が呼び出し人。（2）`community_memberships` を共有する。（3）`tournament_participants.user_id` = この行の `id` かつ、その大会の `community_id` について呼び出し人のメンバーシップがある。UPDATE は (1) のみ | 可。所属メンバーは (2)。離脱・退会後の墓石は (3) のみ | 不可（Auth 登録時の trigger `private.handle_new_user`） | 可（表示名・コメント）。`withdrawn_at` / `auth_user_id` の変更と、表示名を「退会済みユーザ」にすることは **`withdraw_account` のみ**（直接 UPDATE は不可） | 不可（退会は墓石。行は残す） |
 | `communities` | `community_memberships`（`community_id` = この行の `id`） | 可（所属している麻雀グループだけ） | 不可（`create_community` が、麻雀グループと自分のメンバーシップをまとめて作る） | 可 | 可、かつ **空**（大会 0 かつ既定ルール 0） |
 | `community_memberships` | 同じ表（この行の `community_id` について、呼び出し人のメンバーシップがある） | 可（同じ麻雀グループのメンバー一覧。抜けた人の行は無い） | 不可（`join_community` または `create_community`） | 不可 | 可（**除名**は他人の行の直接 DELETE。**離脱**の正規経路は `leave_community`。自分の行の直接 DELETE も RLS 上は可）。**最後の 1 行**が消えたら麻雀グループごと消す（trigger。空でない麻雀グループの直接 DELETE は使わない） |
 | `community_rules` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可 |

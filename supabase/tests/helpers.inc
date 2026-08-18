@@ -26,7 +26,13 @@ BEGIN
 END;
 $$;
 
-CREATE FUNCTION omh_test.insert_auth_user(id uuid, email text)
+-- keep_profile: true なら handle_new_user が付けた profiles を残す（F-signup-01）。
+-- 既定は消す。フィクスチャは profiles.id を固定したいため。
+CREATE FUNCTION omh_test.insert_auth_user(
+  id uuid,
+  email text,
+  keep_profile boolean DEFAULT false
+)
 RETURNS void
 LANGUAGE plpgsql
 AS $$
@@ -60,6 +66,9 @@ BEGIN
     false,
     false
   );
+  IF NOT keep_profile THEN
+    DELETE FROM public.profiles WHERE auth_user_id = insert_auth_user.id;
+  END IF;
 END;
 $$;
 
@@ -242,7 +251,8 @@ BEGIN
        OR entity_id = ANY (target_communities);
 
     DELETE FROM public.profiles
-    WHERE id = ANY (profile_ids);
+    WHERE id = ANY (profile_ids)
+       OR auth_user_id = ANY (auth_ids);
 
     DELETE FROM auth.users
     WHERE id = ANY (auth_ids);

@@ -71,8 +71,43 @@
 ## 認証
 
 - Supabase Auth
-- 方式: メール + OAuth（Google / LINE。Phase 3 はメールを正。OAuth は設定まで）
-- ほぼ全ページで認証必須（未認証はログインへリダイレクト）
+- 方式: メール + OAuth（Google / LINE。メールを正。OAuth はローカル必須にしない）
+- ほぼ全ページで認証必須（未認証はログインへリダイレクト）。画面接続は Phase 4-0
+- 登録時: `auth.users` INSERT の trigger `private.handle_new_user` が利用中 `profiles` を 1 行付ける（`profiles.id` は Auth ID と別）
+- 表示名の初期値: `user_metadata.display_name` → `full_name` / `name` → メールの `@` より前。どれも無ければ登録失敗
+- アイコン: Google / LINE のみ `avatar_url` または `picture` をコピー。メール登録は空
+
+### OAuth（画面導線の前提。Phase 4-0 が呼ぶ）
+
+ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Phase 5 の Supabase Cloud。
+
+| 項目 | Google | LINE |
+|------|--------|------|
+| 種別 | 標準プロバイダ | 標準に無い。Custom OIDC |
+| クライアント | `signInWithOAuth({ provider: 'google' })` | `signInWithOAuth({ provider: 'custom:line' })` |
+| 設定場所 | `config.toml` の `[auth.external.google]`（`enabled = false`）。本番 Dashboard | 本番 Dashboard の Custom Identity Providers。identifier は `custom:line`。CLI 2.114.0 の `config.toml` には書けない |
+| シークレット | `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`（本番）。`client_id` は Google のクライアント ID | LINE チャネル ID / チャネルシークレット（Dashboard。リポジトリに置かない） |
+| メールなし | 不可（既定） | あり得る。Dashboard で email optional。表示名は `name` 必須 |
+
+LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard）:
+
+| 項目 | 値 |
+|------|-----|
+| Identifier | `custom:line` |
+| Issuer | `https://access.line.me` |
+| Authorization | `https://access.line.me/oauth2/v2.1/authorize` |
+| Token | `https://api.line.me/oauth2/v2.1/token` |
+| Userinfo | `https://api.line.me/oauth2/v2.1/userinfo` |
+
+メール登録: `signUp({ email, password, options: { data: { display_name } } })`。ログインは `signInWithPassword`。
+
+リダイレクト（許可リストは `config.toml` の `additional_redirect_urls`）:
+
+- コールバックパス: `/auth/callback`（ページは Phase 4-0）
+- ローカル: `http://127.0.0.1:3000/auth/callback`、`http://localhost:3000/auth/callback`
+- 本番: Phase 5 で Vercel URL を Dashboard に足す
+
+生成型: `supabase gen types typescript --local > web/src/lib/supabase/database.types.ts`。既存の `client.ts` / `server.ts` が `Database` を使う。
 
 ---
 
@@ -108,6 +143,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 |------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL（ローカルは `http://127.0.0.1:54321`） |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー（`supabase start` の値を `web/.env.local` へ。画面接続は Phase 4-0） |
+| `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` | Google OAuth の client secret（本番。ローカルは未設定のまま） |
 
 ---
 
@@ -156,7 +192,7 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   ├── src/
 │   │   ├── app/
 │   │   ├── components/
-│   │   └── lib/
+│   │   └── lib/              # supabase クライアントと生成型 `database.types.ts`
 │   └── package.json
 └── supabase/
     ├── config.toml

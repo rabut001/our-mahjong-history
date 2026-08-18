@@ -95,7 +95,7 @@ RLS 上、所属メンバーは自分のメンバーシップも直接 DELETE �
 
 | 関数 | 内容 |
 |------|------|
-| `handle_new_user`（`auth.users` INSERT の trigger） | 利用中の `profiles` を 1 行付ける。`auth_user_id` は Auth の ID。直接の `profiles` INSERT は認証ロールでは不可 |
+| `private.handle_new_user`（`auth.users` INSERT の trigger） | 利用中の `profiles` を 1 行付ける。`auth_user_id` は Auth の ID。`profiles.id` は新規 UUID。表示名は `user_metadata.display_name` → `full_name` / `name` → メールの `@` より前（どれも無ければ失敗）。`avatar_url` は provider が `email` 以外のとき `avatar_url` / `picture`。直接の `profiles` INSERT は認証ロールでは不可 |
 
 ---
 
