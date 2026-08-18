@@ -857,7 +857,7 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 | 作業 | 担当 |
 |------|------|
-| リポジトリ作成・`git push` | エージェント（コンテナに `gh` が無い。5-1 で入れるか、空リポジトリ URL をもらう） |
+| リポジトリ作成・`git push` | エージェント（Dev Container の `gh` 2.97.0。push には `workflow` スコープが要る） |
 | Actions の結果 | GitHub の UI で確認 |
 | Supabase プロジェクト作成 | ユーザー（Dashboard。リージョンは Northeast Asia (Tokyo)。名前は `our-mahjong-history`） |
 | `supabase link` / `db push` | エージェント（ログインまたは access token） |
@@ -880,10 +880,10 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 ### 5-1 GitHub
 
-- [ ] 公開リポジトリ `rabut001/our-mahjong-history` を作成
-- [ ] `main` を push（`git` の設定は変えない）
-- [ ] Actions（`db` / `web` / `e2e`）が走ること
-- [ ] [status.md](status.md) / [tech-stack.md](tech-stack.md) を更新
+- [x] 公開リポジトリ `rabut001/our-mahjong-history` を作成
+- [x] `main` を push（`git` の設定は変えない）
+- [x] Actions（`db` / `web` / `e2e`）が走ること
+- [x] [status.md](status.md) / [tech-stack.md](tech-stack.md) を更新
 
 ### 5-2 Supabase Cloud
 

@@ -117,7 +117,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 
 | ファイル | 役割 |
 |----------|------|
-| `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** |
+| `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** / GitHub CLI **2.97.0** |
 | `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
 | `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
 | `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job: `web/` で lint / `tsc --noEmit` / `format:check` / vitest。`e2e` job: start → Playwright（正は [e2e-cases.md](e2e-cases.md)） |
@@ -132,7 +132,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 |----------|------|
 | Vercel | Next.js アプリのホスティング（本番。コンテナ化しない） |
 | Supabase Cloud | 本番の DB・Auth・RLS |
-| GitHub | ソースコード管理。公開リポジトリ `rabut001/our-mahjong-history`（Phase 5-1 で作成） |
+| GitHub | ソースコード管理。公開リポジトリ [rabut001/our-mahjong-history](https://github.com/rabut001/our-mahjong-history) |
 | Docker | ローカル開発のみ |
 
 ### 環境変数
@@ -174,7 +174,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | アプリ静的検査 | ESLint / `tsc` / Prettier | 型と体裁。有効な `type="button"` に `onClick` が無いものを落とす | Phase 4-1（CI の `web` job） |
 | 画面 | Playwright | [e2e-cases.md](e2e-cases.md)（通常画面の到達、各表に 1 行）。権限行列の代替にしない | Phase 4-3 以降 |
 
-CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。`e2e` job は `supabase start` のあと `web/` で Playwright（`npm run test:e2e`。正は [e2e-cases.md](e2e-cases.md)）。GitHub リモートは Phase 5-1 で設定する。
+CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。`e2e` job は `supabase start` のあと `web/` で Playwright（`npm run test:e2e`。正は [e2e-cases.md](e2e-cases.md)）。リモートは [rabut001/our-mahjong-history](https://github.com/rabut001/our-mahjong-history)。
 
 見た目のピクセル一致と、全画面の Testing Library は CI にしない。確認は 375px の操作。
 
