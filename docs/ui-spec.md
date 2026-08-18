@@ -54,6 +54,7 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 
 - ページ背景 `page`、コンテンツ幅は `surface` のカラム（最大 `max-w-md`）
 - ヘッダーは sticky。戻る＋中央タイトル＋右アクション
+- 本文フォントは **Noto Sans JP**（`next/font` で自己ホスト。400 / 500）
 - 入力欄は白背景（`field`）
 - ラジオ・チェックは墨（`ink`）
 - 危険色のトークンは持たない。確認ダイアログの実行ボタンもアクセント色
@@ -80,6 +81,7 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 | `radius-ui` | `4px` | 角丸 |
 | `spacing-header` | `3.6rem` | ヘッダー高さ |
 | `spacing-header-btn` | `2.1rem` | ヘッダー内ボタンの最小高さ |
+| `font-sans` | Noto Sans JP 400 / 500 | 本文・見出し。`next/font` の `--font-noto-sans-jp` |
 | `text-heading` | `1.2rem` / 行高 1.3 | ヘッダータイトル、トップの表示名 |
 
 クラス定義の正は `web/src/components/ui.ts`。
