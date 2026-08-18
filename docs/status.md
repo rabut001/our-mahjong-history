@@ -11,7 +11,7 @@
 | 項目 | 状態 |
 |------|------|
 | フェーズ | **Phase 2 完了**（次は Phase 3） |
-| コード | `web/` に Next.js 16。モックはダミーデータ。`supabase start` は未実施。中核 6 画面とルール・ログイン・招待・メンバーのワイヤーあり。ナビは戻る＋タイトル。トーンは雀卓・カード枠。トップは「俺たちの雀歴」（`/communities`。上部が自分、下部が麻雀グループ一覧）。破壊的操作は `DangerAction`。UI の正は [ui-spec.md](ui-spec.md) |
+| コード | `web/` に Next.js 16。モックはダミーデータ。`supabase start` は未実施。中核 6 画面とルール・ログイン・招待・メンバーのワイヤーあり。ナビは戻る＋タイトル。トーンは雀卓・カード枠。トップは「俺たちの雀歴」（`/communities`。上部が自分、下部が麻雀グループ一覧）。破壊的操作は `DangerAction`。UI の正は [ui-spec.md](ui-spec.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま） |
 | Git | 初期化済み（`main`） |
 | 次のアクション | Phase 3: `supabase start`、ER を migration に落とす、Auth |
 

@@ -21,9 +21,9 @@ Phase 1-4 / 1-5。Phase 3 の migration の前提。SQL は書かない。
 | エンティティ | テーブル識別子 |
 |--------------|----------------|
 | プロフィール | `profiles` |
-| コミュニティ | `communities` |
-| コミュニティメンバーシップ | `community_memberships` |
-| コミュニティ既定ルール | `community_rules` |
+| 麻雀グループ | `communities` |
+| 麻雀グループのメンバーシップ | `community_memberships` |
+| 麻雀グループの既定ルール | `community_rules` |
 | 麻雀大会 | `tournaments` |
 | 大会ルール | `tournament_rules` |
 | 大会参加者 | `tournament_participants` |
@@ -32,6 +32,8 @@ Phase 1-4 / 1-5。Phase 3 の migration の前提。SQL は書かない。
 | 試合結果 | `match_results` |
 | 招待コード | `community_invite_codes` |
 | 操作ログ（監査。UI 非表示） | `activity_logs` |
+
+日本語のエンティティ名を変えてもテーブル識別子は変えない。麻雀グループの表は `communities` のまま。
 
 ---
 
@@ -63,7 +65,7 @@ erDiagram
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | アプリ側の人の ID。生涯不変。`auth.users.id` とは別 |
 | Auth | `auth_user_id` | UUID | 条件 | ログイン中のみ。UNIQUE。Auth 削除時は NULL（墓石）。出鱈目な値は使わない |
-| 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。退会後は「退会済みユーザ」。コミュニティ別ニックネームは MVP 外 |
+| 表示名 | `display_name` | 文字列 | ✓ | メンバーが大会に出るときの名前。退会後は「退会済みユーザ」。麻雀グループ別ニックネームは MVP 外 |
 | コメント | `comment` | 文字列 | — | 自己紹介。空なら未設定。退会後は空にする |
 | アイコン | `avatar_url` | 文字列 | — | Google / LINE ログイン時に Auth の `user_metadata.avatar_url` をコピー。メール登録は空。空なら頭文字を出す。アプリからのアップロードはしない。退会後は空 |
 | 退会日時 | `withdrawn_at` | timestamptz | — | 入っていれば墓石。ログイン不可 |
@@ -75,22 +77,22 @@ erDiagram
 - 再登録は新しい `profiles`（別人）。墓石とはつなげない
 - Auth への FK を張るなら `auth_user_id` → `auth.users` の ON DELETE SET NULL。`id` には張らない
 
-## コミュニティ `communities`
+## 麻雀グループ `communities`
 
 | 属性 | 識別子 | 型 | 必須 | 制約・備考 |
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | |
 | 名称 | `name` | 文字列 | ✓ | |
-| コメント | `comment` | 文字列 | — | コミュニティの説明。空なら未設定 |
+| コメント | `comment` | 文字列 | — | 麻雀グループの説明。空なら未設定 |
 | 作成日時 | `created_at` | timestamptz | ✓ | |
 | 更新日時 | `updated_at` | timestamptz | ✓ | |
 
-## コミュニティメンバーシップ `community_memberships`
+## 麻雀グループのメンバーシップ `community_memberships`
 
 | 属性 | 識別子 | 型 | 必須 | 制約・備考 |
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | |
-| コミュニティ | `community_id` | UUID | ✓ | FK → `communities` |
+| 麻雀グループ | `community_id` | UUID | ✓ | FK → `communities` |
 | ユーザー | `user_id` | UUID | ✓ | FK → `profiles` |
 | 参加日時 | `joined_at` | timestamptz | ✓ | 作成日時を兼ねる。`created_at` / `updated_at` は持たない |
 
@@ -125,18 +127,18 @@ erDiagram
 - `community_rules.community_id` → `communities`（必須）
 - `tournament_rules.tournament_id` → `tournaments`（必須）
 - UNIQUE (`community_id`, `name`) / UNIQUE (`tournament_id`, `name`)
-- 大会作成時、コミュニティ既定を **値コピー** して大会ルールを作る。既定が 0 件なら大会ルールも 0 件で始まり、あとから追加できる
+- 大会作成時、麻雀グループの既定を **値コピー** して大会ルールを作る。既定が 0 件なら大会ルールも 0 件で始まり、あとから追加できる
 - 試合は大会ルールを 1 つ必須とする。ルール 0 件の大会では試合を作れない
-- 1 件でも試合が紐づいた大会ルールは **修正不可**（アプリ制約。Phase 3 で trigger 可）。未使用の大会ルールとコミュニティ既定は修正できる
+- 1 件でも試合が紐づいた大会ルールは **修正不可**（アプリ制約。Phase 3 で trigger 可）。未使用の大会ルールと麻雀グループの既定は修正できる
 
 ## 麻雀大会 `tournaments`
 
 | 属性 | 識別子 | 型 | 必須 | 制約・備考 |
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | |
-| コミュニティ | `community_id` | UUID | ✓ | FK → `communities` |
+| 麻雀グループ | `community_id` | UUID | ✓ | FK → `communities` |
 | 日付 | `held_on` | date | ✓ | 開催日。時刻は持たない |
-| 大会名 | `name` | 文字列 | ✓ | 同一コミュニティ内の重複は許す |
+| 大会名 | `name` | 文字列 | ✓ | 同一麻雀グループ内の重複は許す |
 | 大会修正ポイント1〜5のタイトル | `adjustment_points_1_title` … `adjustment_points_5_title` | 文字列 | — | 例: チップ、会場優遇。空ならその枠は未使用 |
 | メモ | `memo` | 文字列 | — | |
 | 作成日時 | `created_at` | timestamptz | ✓ | |
@@ -158,9 +160,9 @@ erDiagram
 - XOR: `user_id` と `guest_display_name` のどちらか一方のみ
 - UNIQUE (`tournament_id`, `user_id`) WHERE `user_id` IS NOT NULL
 - UNIQUE (`tournament_id`, `guest_display_name`) WHERE `guest_display_name` IS NOT NULL（同一大会のゲスト同名は不可）
-- **新たに** メンバーとして載せるとき、その `user_id` は当該コミュニティの **現メンバー**（墓石でない）であること
+- **新たに** メンバーとして載せるとき、その `user_id` は当該麻雀グループの **現メンバー**（墓石でない）であること
 - 既存行は、離脱・除名・退会後も `user_id` を残してよい。ゲストへ載せ替えない。離脱・除名後の表示は現行の `profiles.display_name`。退会後は墓石の「退会済みユーザ」
-- コミュニティ所属者をゲストとして載せる二重登録はしない（アプリ制約。XOR だけでは検知しない）
+- 麻雀グループ所属者をゲストとして載せる二重登録はしない（アプリ制約。XOR だけでは検知しない）
 - 試合に出すには、先にこのリストへ載せる
 
 ## 大会修正ポイント `tournament_point_adjustments`
@@ -224,13 +226,13 @@ erDiagram
 | 属性 | 識別子 | 型 | 必須 | 制約・備考 |
 |------|--------|----|------|------------|
 | ID | `id` | UUID | ✓ | |
-| コミュニティ | `community_id` | UUID | ✓ | FK → `communities`。UNIQUE（コミュニティあたり最大 1 行） |
-| コード | `code` | 文字列 | ✓ | コミュニティ横断で UNIQUE。参加時の入力値 |
+| 麻雀グループ | `community_id` | UUID | ✓ | FK → `communities`。UNIQUE（麻雀グループあたり最大 1 行） |
+| コード | `code` | 文字列 | ✓ | 麻雀グループ横断で UNIQUE。参加時の入力値 |
 | 有効期限 | `expires_at` | timestamptz | ✓ | この時点以降は参加に使えない |
 | 作成者 | `created_by` | UUID | ✓ | 発行したメンバー（`profiles.id`）。所有関係ではないので図には描かない。退会後も墓石を指したまま |
 | 作成日時 | `created_at` | timestamptz | ✓ | 再発行したら作り直す |
 
-- 所有はコミュニティ（`community_id`）のみ。`created_by` は属性であり、ER 図のリレーションにはしない
+- 所有は麻雀グループ（`community_id`）のみ。`created_by` は属性であり、ER 図のリレーションにはしない
 - 再発行は旧行を消して新しい行を入れる（差し替え）。旧コードは無効。期限だけ延ばす操作は持たない（再発行する）
 - アプリの業務操作としては行の UPDATE は使わない（RLS 上 UPDATE を許可しても、再発行は差し替え）
 - 期限切れまで何度でも使える。使用回数の上限は持たない
@@ -251,11 +253,11 @@ erDiagram
 | 操作者 | `actor_user_id` | UUID | ✓ | FK → `profiles`。図上のリレーションはここだけ。退会後も墓石を指す（SET NULL しない） |
 | 記録日時 | `created_at` | timestamptz | ✓ | |
 
-- `community_id` は持たない（コミュニティとの FK なし。対象は `entity_type` + `entity_id`）
+- `community_id` は持たない（麻雀グループとの FK なし。対象は `entity_type` + `entity_id`）
 - 値の差分（変更前/後）は持たない
-- 子の変更は親キーに寄せる。既定ルール・招待・メンバーシップ → コミュニティ ID。大会ルール・参加者・修正ポイント → 大会 ID。試合結果 → 試合 ID
+- 子の変更は親キーに寄せる。既定ルール・招待・メンバーシップ → 麻雀グループ ID。大会ルール・参加者・修正ポイント → 大会 ID。試合結果 → 試合 ID
 - RLS: 認証済みユーザーは **INSERT のみ**。SELECT / UPDATE / DELETE は不可。開発者の確認は service role 等（RLS 外）
-- コミュニティや対象行を消してもログは残す（CASCADE しない）
+- 麻雀グループや対象行を消してもログは残す（CASCADE しない）
 - `updated_at` は持たない（追記のみ）
 
 ## 削除方針（Phase 3 の FK 用）
@@ -268,9 +270,9 @@ erDiagram
 | 大会参加者を消す | 試合結果がある間は RESTRICT。修正ポイント行は CASCADE |
 | 大会ルールを消す | 試合が紐づいている間は RESTRICT |
 | 大会を消す | 試合・参加者が残っている間は RESTRICT。アプリが子から消す |
-| コミュニティの明示削除 | **空のときだけ**（大会 0 件かつ既定ルール 0 件）。そうでなければ RESTRICT。メンバーシップ・招待コードは CASCADE。操作ログは残す |
-| 最後の 1 人の離脱 | コミュニティごと消す。大会・既定ルールが残っていても CASCADE（試合・参加者等も含む）。孤児を残さない |
-| ユーザー退会 | `profiles` は消さない（墓石）。メンバーシップは全コミュニティ分削除（最後の 1 人なら上の離脱と同じ）。`auth.users` は消す |
+| 麻雀グループの明示削除 | **空のときだけ**（大会 0 件かつ既定ルール 0 件）。そうでなければ RESTRICT。メンバーシップ・招待コードは CASCADE。操作ログは残す |
+| 最後の 1 人の離脱 | 麻雀グループごと消す。大会・既定ルールが残っていても CASCADE（試合・参加者等も含む）。孤児を残さない |
+| ユーザー退会 | `profiles` は消さない（墓石）。メンバーシップはすべての麻雀グループから削除（最後の 1 人なら上の離脱と同じ）。`auth.users` は消す |
 
 ---
 
@@ -278,7 +280,7 @@ erDiagram
 
 Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](overview.md#権限モデルphase-1-5)。
 
-コミュニティ配下は **`community_memberships` まで辿って**、呼び出し人の **利用中** プロフィール（`withdrawn_at` 空、`auth_user_id` あり）の行があるかで判定する。`user_id` を持たない表も同じ。大会に出ていなくても、所属していれば配下は読める・書ける。
+麻雀グループ配下は **`community_memberships` まで辿って**、呼び出し人の **利用中** プロフィール（`withdrawn_at` 空、`auth_user_id` あり）の行があるかで判定する。`user_id` を持たない表も同じ。大会に出ていなくても、所属していれば配下は読める・書ける。
 
 **直接**: ユーザーセッションの Supabase クライアントによる `select` / `insert` / `update` / `delete`。
 
@@ -289,17 +291,17 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 | テーブル | 判定経路 | SELECT | INSERT | UPDATE | DELETE |
 |----------|----------|--------|--------|--------|--------|
 | `profiles` | SELECT は次のいずれか。（1）この行の `auth_user_id` が呼び出し人。（2）`community_memberships` を共有する。（3）`tournament_participants.user_id` = この行の `id` かつ、その大会の `community_id` について呼び出し人のメンバーシップがある。UPDATE は (1) のみ | 可。所属メンバーは (2)。離脱・退会後の墓石は (3) のみ | 不可（Auth 登録時の trigger 等） | 可（表示名など）。墓石化は退会関数 | 不可（退会は墓石。行は残す） |
-| `communities` | `community_memberships`（`community_id` = この行の `id`） | 可（所属しているコミュニティだけ） | 不可（作成関数が、コミュニティと自分のメンバーシップをまとめて作る） | 可 | 可、かつ **空**（大会 0 かつ既定ルール 0） |
-| `community_memberships` | 同じ表（この行の `community_id` について、呼び出し人のメンバーシップがある） | 可（同じコミュニティのメンバー一覧。抜けた人の行は無い） | 不可（参加関数または作成関数） | 不可 | 可（自分の離脱・他人の除名）。**最後の 1 人**のときはコミュニティごと消す（関数または trigger。空でないコミュニティの直接 DELETE は使わない） |
+| `communities` | `community_memberships`（`community_id` = この行の `id`） | 可（所属している麻雀グループだけ） | 不可（作成関数が、麻雀グループと自分のメンバーシップをまとめて作る） | 可 | 可、かつ **空**（大会 0 かつ既定ルール 0） |
+| `community_memberships` | 同じ表（この行の `community_id` について、呼び出し人のメンバーシップがある） | 可（同じ麻雀グループのメンバー一覧。抜けた人の行は無い） | 不可（参加関数または作成関数） | 不可 | 可（自分の離脱・他人の除名）。**最後の 1 人**のときは麻雀グループごと消す（関数または trigger。空でない麻雀グループの直接 DELETE は使わない） |
 | `community_rules` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可 |
 | `community_invite_codes` | `community_memberships`（この行の `community_id`） | 可。**未所属者は不可**（参加はコードを渡す関数） | 可 | 可（実装都合。業務操作の再発行は差し替え） | 可 |
 | `tournaments` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可。試合・参加者が残っている間は FK で RESTRICT（子から消す） |
 | `tournament_rules` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可 | 可。**試合が 1 件でも紐づいていれば不可**（trigger 等） | 可。試合が紐づいている間は RESTRICT |
-| `tournament_participants` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可。`user_id` を付けるならその人は当該コミュニティの **現メンバー**（墓石不可）。ゲストは表示名 | 可。`user_id` を付ける／変える場合も現メンバーであること | 可。試合結果がある間は RESTRICT |
+| `tournament_participants` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可。`user_id` を付けるならその人は当該麻雀グループの **現メンバー**（墓石不可）。ゲストは表示名 | 可。`user_id` を付ける／変える場合も現メンバーであること | 可。試合結果がある間は RESTRICT |
 | `tournament_point_adjustments` | `tournament_participants` → `tournaments` → `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可 |
 | `matches` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可（試合結果は CASCADE） |
 | `match_results` | `matches` → `tournaments` → `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可 |
-| `activity_logs` | コミュニティは見ない。INSERT は認証済み。SELECT はアプリロールでは不可 | **不可**。開発者は service role 等（RLS 外） | 可。`actor_user_id` は呼び出し人のプロフィール | 不可 | 不可 |
+| `activity_logs` | 麻雀グループは見ない。INSERT は認証済み。SELECT はアプリロールでは不可 | **不可**。開発者は service role 等（RLS 外） | 可。`actor_user_id` は呼び出し人のプロフィール | 不可 | 不可 |
 
 `profiles` の SELECT (3) は、所属が切れたあとも対局の名前を出すため。
 
@@ -307,9 +309,9 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 
 | 関数（名前は Phase 3） | 内容 |
 |------------------------|------|
-| コミュニティ作成 | `communities` INSERT + 自分の `community_memberships` INSERT |
-| コミュニティ参加 | 招待コードを検証し、自分の `community_memberships` INSERT。既所属なら何もしない |
-| アプリ退会 | 墓石（匿名化、`auth_user_id` NULL、`withdrawn_at`）。全コミュニティから離脱（最後の 1 人ならコミュニティ削除）。続けて Auth Admin で `auth.users` 削除 |
+| 麻雀グループ作成 | `communities` INSERT + 自分の `community_memberships` INSERT |
+| 麻雀グループ参加 | 招待コードを検証し、自分の `community_memberships` INSERT。既所属なら何もしない |
+| アプリ退会 | 墓石（匿名化、`auth_user_id` NULL、`withdrawn_at`）。すべての麻雀グループから離脱（最後の 1 人なら麻雀グループ削除）。続けて Auth Admin で `auth.users` 削除 |
 
 ---
 
@@ -319,7 +321,7 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 
 - 局単位の記録、アガリ役・詳細な和了情報
 - 写真のアップロード
-- コミュニティ別ニックネーム、ゲストの名寄せ
+- 麻雀グループ別ニックネーム、ゲストの名寄せ
 - 公開ルーム
 - 通算成績・統計用の集計テーブル
 - 操作ログの値差分、`community_id`
