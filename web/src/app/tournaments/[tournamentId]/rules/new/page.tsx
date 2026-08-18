@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
-import { getTournament, listCommunityRules } from "@/mock";
+import { getTournamentDetail } from "@/lib/data/tournaments";
+import { listCommunityRuleTemplates } from "@/lib/data/rules";
 
 type NewTournamentRulePageProps = {
   params: Promise<{ tournamentId: string }>;
@@ -12,22 +13,24 @@ export async function generateMetadata({
   params,
 }: NewTournamentRulePageProps): Promise<Metadata> {
   const { tournamentId } = await params;
-  const tournament = getTournament(tournamentId);
+  const tournament = await getTournamentDetail(tournamentId);
   return {
     title: tournament ? `${tournament.name}のルールを追加` : "ルールを追加",
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function NewTournamentRulePage({
   params,
 }: NewTournamentRulePageProps) {
   const { tournamentId } = await params;
-  const tournament = getTournament(tournamentId);
+  const tournament = await getTournamentDetail(tournamentId);
   if (!tournament) {
     notFound();
   }
 
-  const templates = listCommunityRules(tournament.communityId);
+  const templates = await listCommunityRuleTemplates(tournament.communityId);
   const formHref = `/tournaments/${tournament.id}/rules/new/form`;
 
   return (
@@ -51,7 +54,7 @@ export default async function NewTournamentRulePage({
                   <span className="min-w-0">
                     <span className="block font-medium">{rule.name}</span>
                     <span className="mt-0.5 block text-sm text-muted">
-                      {rule.playerCount === 4 ? "四麻" : "三麻"}
+                      {rule.player_count === 4 ? "四麻" : "三麻"}
                     </span>
                   </span>
                   <NavButton href={`${formHref}?from=${rule.id}`}>
@@ -63,12 +66,12 @@ export default async function NewTournamentRulePage({
           </>
         ) : (
           <p className="text-sm text-muted">
-            麻雀グループに既定ルールがありません。いちから作成できます。
+            麻雀グループに既定ルールがありません。作成してください。
           </p>
         )}
         <div className="mt-6">
           <NavButton href={formHref} variant="block">
-            いちから作成
+            新規作成
           </NavButton>
         </div>
       </main>

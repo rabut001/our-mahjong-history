@@ -12,6 +12,7 @@ type RateNotesFieldsProps = {
   onRateBlur: () => void;
   notes: string;
   onNotesChange: (value: string) => void;
+  rateError?: string;
 };
 
 export function RateNotesFields({
@@ -21,10 +22,11 @@ export function RateNotesFields({
   onRateBlur,
   notes,
   onNotesChange,
+  rateError,
 }: RateNotesFieldsProps) {
   return (
     <>
-      <Field label="レート">
+      <Field label="レート" error={rateError}>
         <input
           type="text"
           inputMode="decimal"

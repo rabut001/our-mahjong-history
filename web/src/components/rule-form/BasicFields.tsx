@@ -10,6 +10,9 @@ type BasicFieldsProps = {
   onStartingScoreChange: (value: string) => void;
   returnScore: string;
   onReturnScoreChange: (value: string) => void;
+  nameError?: string;
+  startingScoreError?: string;
+  returnScoreError?: string;
 };
 
 export function BasicFields({
@@ -22,10 +25,13 @@ export function BasicFields({
   onStartingScoreChange,
   returnScore,
   onReturnScoreChange,
+  nameError,
+  startingScoreError,
+  returnScoreError,
 }: BasicFieldsProps) {
   return (
     <>
-      <Field label="表示名">
+      <Field label="表示名" error={nameError}>
         <input
           type="text"
           value={name}
@@ -53,7 +59,7 @@ export function BasicFields({
         </RadioOption>
       </RadioRow>
 
-      <Field label="持ち点">
+      <Field label="持ち点" error={startingScoreError}>
         <input
           type="number"
           inputMode="numeric"
@@ -64,7 +70,7 @@ export function BasicFields({
         />
       </Field>
 
-      <Field label="返し点">
+      <Field label="返し点" error={returnScoreError}>
         <input
           type="number"
           inputMode="numeric"

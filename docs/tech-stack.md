@@ -99,7 +99,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 | Token | `https://api.line.me/oauth2/v2.1/token` |
 | Userinfo | `https://api.line.me/oauth2/v2.1/userinfo` |
 
-メール登録: `signUp({ email, password, options: { data: { display_name } } })`。ログインは `signInWithPassword`。
+メール登録・ログイン（パスワード）は Server Action から `signUp` / `signInWithPassword` を呼ぶ。スマホの LAN プレビューでも、ブラウザが `127.0.0.1` の Auth に直接届く必要はない。OAuth はクライアントから `signInWithOAuth`。
 
 リダイレクト（許可リストは `config.toml` の `additional_redirect_urls`）:
 
@@ -143,6 +143,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 |------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL（ローカルは `http://127.0.0.1:54321`） |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー（`supabase start` の値を `web/.env.local` へ。画面接続は Phase 4-3） |
+| `SUPABASE_SERVICE_ROLE_KEY` | サーバー専用。退会時の Auth Admin 削除。クライアントに出さない。ローカルは `supabase status` の service_role |
 | `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` | Google OAuth の client secret（本番。ローカルは未設定のまま） |
 
 ---
@@ -156,11 +157,11 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | npm | パッケージ管理 |
 | pgTAP | DB / RLS の主テスト（`supabase test db`） |
 | Vitest | ポイント計算・順位・バリデーション（`web/`。権限には使わない） |
-| Playwright | 画面の煙（ログイン + トップ。権限行列の代替にしない） |
+| Playwright | 画面 E2E（通常画面の到達と、各表に 1 行入る成功経路。正は [e2e-cases.md](e2e-cases.md)。権限行列の代替にしない） |
 
 ### テスト
 
-アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。DB ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。計算ケースの正は [calc-cases.md](calc-cases.md)。層とタイミングは [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)。
+アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。DB ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。計算ケースの正は [calc-cases.md](calc-cases.md)。画面 E2E の正は [e2e-cases.md](e2e-cases.md)。層とタイミングは [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)。
 
 | 層 | ツール | 用途 | 時期 |
 |----|--------|------|------|
@@ -168,10 +169,10 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | DB 静的検査 | `supabase db lint` / `db advisors` / grants 補完 / `auth.uid()` 検査 | 型、RLS 付け忘れ、`search_path`、DEFINER の EXECUTE、本人取得 | Phase 3（方針は 3-2） |
 | PostgREST（副） | ローカル Auth の JWT + anon キー | GRANT・RPC 公開 | Phase 3（関数後） |
 | アプリ単体 | Vitest | ポイント計算・順位・整形・バリデーション。権限には使わない | Phase 4-1 |
-| アプリ静的検査 | ESLint / `tsc` / Prettier | 型と体裁 | Phase 4-1（CI の `web` job） |
-| 画面 | Playwright | 煙（ログインできる、自分の麻雀グループが見える）。権限行列の代替にしない | Phase 4-3 以降 |
+| アプリ静的検査 | ESLint / `tsc` / Prettier | 型と体裁。有効な `type="button"` に `onClick` が無いものを落とす | Phase 4-1（CI の `web` job） |
+| 画面 | Playwright | [e2e-cases.md](e2e-cases.md)（通常画面の到達、各表に 1 行）。権限行列の代替にしない | Phase 4-3 以降 |
 
-CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。`e2e` job は `supabase start` のあと `web/` で Playwright 煙（`npm run test:e2e`）。GitHub リモートは未設定。
+CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。`e2e` job は `supabase start` のあと `web/` で Playwright（`npm run test:e2e`。正は [e2e-cases.md](e2e-cases.md)）。GitHub リモートは未設定。
 
 見た目のピクセル一致と、全画面の Testing Library は CI にしない。確認は 375px の操作。
 
@@ -203,7 +204,8 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   │   │   ├── data/         # RSC / Server Action と DB 型の変換
 │   │   │   └── supabase/     # クライアントと生成型 `database.types.ts`
 │   │   └── mock/             # フィクスチャと薄い list/get。接続が進んだら消す
-│   ├── e2e/                  # Playwright 煙
+│   ├── e2e/                  # Playwright（正は docs/e2e-cases.md）
+│   ├── eslint-rules/         # ローカル ESLint（死んだ type="button"）
 │   └── package.json
 └── supabase/
     ├── config.toml

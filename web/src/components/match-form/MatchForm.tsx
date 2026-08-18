@@ -1,14 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   blockButtonClass,
   Field,
+  outlineBlockButtonClass,
   textareaClass,
   TEXTAREA_ROWS,
 } from "@/components/ui";
-import { calculateMatchPoints, formatPoints, okaPool } from "@/lib/domain";
-import type { TournamentRule } from "@/mock";
+import {
+  calculateMatchPoints,
+  formatPoints,
+  isScoreTotalMismatched,
+  okaPool,
+} from "@/lib/domain";
+import type { FormState } from "@/lib/data/types";
 import { emptyPlayer, SEATS_3, SEATS_4, seatsFromPlayers } from "./helpers";
 import { ResultRows } from "./ResultRows";
 import { RuleLinkedRows } from "./RuleLinkedRows";
@@ -16,14 +29,25 @@ import { RulePicker } from "./RulePicker";
 import { ScoreRow } from "./ScoreRow";
 import { SeatColumns } from "./SeatColumns";
 import { SummaryRows } from "./SummaryRows";
-import type { MatchFormData, MatchFormPlayer } from "./types";
+import type { MatchFormData, MatchFormPlayer, MatchFormRule } from "./types";
 
 type MatchFormProps = {
   mode: "create" | "edit";
   data: MatchFormData;
+  action?: (prev: FormState, formData: FormData) => Promise<FormState>;
+  hiddenFields?: Record<string, string>;
 };
 
-export function MatchForm({ mode, data }: MatchFormProps) {
+export function MatchForm({
+  mode,
+  data,
+  action,
+  hiddenFields,
+}: MatchFormProps) {
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    action ?? (async () => ({})),
+    {},
+  );
   const [ruleId, setRuleId] = useState(data.selectedRuleId);
   const initialRule =
     data.rules.find((item) => item.id === data.selectedRuleId) ?? data.rules[0];
@@ -35,6 +59,9 @@ export function MatchForm({ mode, data }: MatchFormProps) {
     data.manualTitles.filter((title) => title.trim() !== "").length,
   );
   const [comment, setComment] = useState(data.comment);
+  const [confirmMismatch, setConfirmMismatch] = useState(false);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const closeMismatch = useCallback(() => setConfirmMismatch(false), []);
 
   const rule = data.rules.find((item) => item.id === ruleId) ?? data.rules[0];
   const winds = rule?.playerCount === 3 ? SEATS_3 : SEATS_4;
@@ -54,13 +81,15 @@ export function MatchForm({ mode, data }: MatchFormProps) {
 
   const filled = seats.filter((seat): seat is MatchFormPlayer => seat !== null);
   const selectedIds = new Set(filled.map((player) => player.participantId));
-  const allReady =
+  const allSeated =
     Boolean(rule) &&
     seats.length === (rule?.playerCount ?? 0) &&
-    seats.every((seat) => seat !== null && seat.score !== null);
+    seats.every((seat) => seat !== null);
+  const startingScore = rule?.startingScore ?? 0;
+  const scoreOf = (player: MatchFormPlayer) => player.score ?? startingScore;
 
   const calculatedById = (() => {
-    if (!rule || !allReady) {
+    if (!rule || !allSeated) {
       return new Map<string, ReturnType<typeof calculateMatchPoints>[number]>();
     }
     const players = seats.filter(
@@ -70,7 +99,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
       players.map((player) => ({
         participantId: player.participantId,
         seat: player.seat,
-        score: player.score ?? 0,
+        score: scoreOf(player),
         tobiPoints: player.tobiPoints,
         yakitoriPoints: player.yakitoriPoints,
         otherPoints: [...player.otherPoints],
@@ -86,13 +115,14 @@ export function MatchForm({ mode, data }: MatchFormProps) {
   const calculatedRows = seats.map((seat) =>
     seat ? calculatedById.get(seat.participantId) : undefined,
   );
-  const maxScore = allReady
-    ? Math.max(...filled.map((player) => player.score ?? 0))
+  const maxScore = allSeated
+    ? Math.max(...filled.map((player) => scoreOf(player)))
     : null;
   const firstPlaceTied =
-    allReady && filled.filter((player) => player.score === maxScore).length > 1;
+    allSeated &&
+    filled.filter((player) => scoreOf(player) === maxScore).length > 1;
   const umaTiedIds = (() => {
-    if (!allReady) {
+    if (!allSeated) {
       return new Set<string>();
     }
     const counts = new Map<number, number>();
@@ -113,15 +143,14 @@ export function MatchForm({ mode, data }: MatchFormProps) {
   })();
 
   const showTobi =
-    Boolean(rule?.tobiEnabled) &&
-    filled.some((player) => player.score !== null && player.score <= 0);
+    Boolean(rule?.tobiEnabled) && filled.some((player) => scoreOf(player) <= 0);
   const editBasePt = rule?.okaTieHandling === "manual" && firstPlaceTied;
   const showUmaManual =
     Boolean(rule?.umaEnabled) &&
     rule?.umaTieHandling === "manual" &&
     umaTiedIds.size > 0;
 
-  function applyRule(nextRule: TournamentRule) {
+  function applyRule(nextRule: MatchFormRule) {
     setRuleId(nextRule.id);
     setSeats((current) => {
       const next = current.slice(0, nextRule.playerCount);
@@ -174,6 +203,62 @@ export function MatchForm({ mode, data }: MatchFormProps) {
     setManualCount(manualCount + 1);
   }
 
+  const scoreWarning =
+    allSeated && rule
+      ? isScoreTotalMismatched(
+          filled.map((player) => scoreOf(player)),
+          rule.startingScore,
+          rule.playerCount,
+        )
+      : false;
+
+  function submitForm() {
+    if (!action || !allSeated || !rule) {
+      return;
+    }
+    const players = seats.filter(
+      (seat): seat is MatchFormPlayer => seat !== null,
+    );
+    const formData = new FormData();
+    if (hiddenFields) {
+      for (const [key, value] of Object.entries(hiddenFields)) {
+        formData.set(key, value);
+      }
+    }
+    formData.set("ruleId", rule.id);
+    formData.set("comment", comment);
+    formData.set("manualTitles", JSON.stringify(manualTitles));
+    formData.set(
+      "players",
+      JSON.stringify(
+        players.map((player) => ({
+          participantId: player.participantId,
+          seat: player.seat,
+          score: scoreOf(player),
+          tobiPoints: player.tobiPoints,
+          yakitoriPoints: player.yakitoriPoints,
+          otherPoints: player.otherPoints,
+          manualPoints: player.manualPoints,
+          baseOverride: player.baseOverride,
+          umaOverride: player.umaPoints,
+        })),
+      ),
+    );
+    formAction(formData);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!action || !allSeated || !rule) {
+      return;
+    }
+    if (scoreWarning) {
+      setConfirmMismatch(true);
+      return;
+    }
+    submitForm();
+  }
+
   if (!rule) {
     return <p className="text-sm">この大会にはルールがありません。</p>;
   }
@@ -183,7 +268,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
   };
 
   return (
-    <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
+    <form className="space-y-6" onSubmit={handleSubmit}>
       <RulePicker
         rules={data.rules}
         selectedRuleId={ruleId}
@@ -238,6 +323,18 @@ export function MatchForm({ mode, data }: MatchFormProps) {
           : null}
       </p>
 
+      {data.participants.length < (rule.playerCount ?? 4) ? (
+        <p className="text-sm text-muted">
+          試合を追加するには、先に参加者を追加してください。
+        </p>
+      ) : null}
+
+      {scoreWarning ? (
+        <p className="text-sm text-muted">
+          点数の合計が持ち点×人数と違います。
+        </p>
+      ) : null}
+
       <Field label="コメント">
         <textarea
           value={comment}
@@ -247,9 +344,45 @@ export function MatchForm({ mode, data }: MatchFormProps) {
         />
       </Field>
 
-      <button type="button" className={blockButtonClass}>
+      {state.formError ? (
+        <p className="text-sm text-muted">{state.formError}</p>
+      ) : null}
+
+      <button
+        ref={submitRef}
+        type="submit"
+        disabled={pending || !allSeated}
+        className={`${blockButtonClass} disabled:opacity-60`}
+      >
         {mode === "create" ? "追加する" : "保存する"}
       </button>
+
+      <ConfirmDialog
+        open={confirmMismatch}
+        title="点数の合計が持ち点×人数と違います。"
+        body="入力を直す場合はキャンセルしてください。"
+        onCancel={closeMismatch}
+        triggerRef={submitRef}
+      >
+        {state.formError ? (
+          <p className="text-sm text-muted">{state.formError}</p>
+        ) : null}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={submitForm}
+          className={`${blockButtonClass} disabled:opacity-60`}
+        >
+          {mode === "create" ? "このまま追加する" : "このまま保存する"}
+        </button>
+        <button
+          type="button"
+          onClick={closeMismatch}
+          className={outlineBlockButtonClass}
+        >
+          キャンセル
+        </button>
+      </ConfirmDialog>
     </form>
   );
 }

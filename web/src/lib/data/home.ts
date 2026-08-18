@@ -1,39 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import type {
-  HomeCommunity,
-  HomePageData,
-  HomeProfile,
-} from "@/lib/data/types";
-
-function toProfile(row: {
-  id: string;
-  display_name: string;
-  comment: string | null;
-  avatar_url: string | null;
-}): HomeProfile {
-  return {
-    id: row.id,
-    displayName: row.display_name,
-    comment: row.comment ?? "",
-    avatarUrl: row.avatar_url,
-  };
-}
-
-function memberCountFromEmbed(value: unknown) {
-  if (!Array.isArray(value) || value.length === 0) {
-    return 0;
-  }
-  const first = value[0];
-  if (
-    typeof first === "object" &&
-    first !== null &&
-    "count" in first &&
-    typeof first.count === "number"
-  ) {
-    return first.count;
-  }
-  return 0;
-}
+import { toProfile } from "@/lib/data/mappers";
+import { countFromEmbed } from "@/lib/data/helpers";
+import type { HomeCommunity, HomePageData } from "@/lib/data/types";
 
 export async function getHomePageData(): Promise<HomePageData | null> {
   const supabase = await createClient();
@@ -67,7 +35,7 @@ export async function getHomePageData(): Promise<HomePageData | null> {
   const communities: HomeCommunity[] = (communityRows ?? []).map((row) => ({
     id: row.id,
     name: row.name,
-    memberCount: memberCountFromEmbed(row.community_memberships),
+    memberCount: countFromEmbed(row.community_memberships),
   }));
 
   return {

@@ -223,6 +223,7 @@ Phase 6: 拡張（MVP 後）
 | ER 変更時 | [docs/er.md](er.md) |
 | DB / RLS のテストケース変更時 | [docs/test-cases.md](test-cases.md)（Phase 3-3 で作成） |
 | ポイント計算ケース変更時 | `docs/calc-cases.md`（Phase 4-1 で作成） |
+| 画面 E2E のテストケース変更時 | [docs/e2e-cases.md](e2e-cases.md) |
 | モック確定時 | `docs/ui-spec.md`（新規作成） |
 | 技術選定変更時 | [docs/tech-stack.md](tech-stack.md) |
 | コーディング規約追加時 | `.cursor/rules/` |
@@ -275,7 +276,7 @@ WSL2 は NAT のため、PC の `localhost:3000` だけでは同一 Wi-Fi のス
 powershell -ExecutionPolicy Bypass -File .devcontainer/expose-lan.ps1
 ```
 
-4. スクリプトが表示する `http://<PCのIPv4>:3000` をスマホで開く。PC の `localhost` はそのまま使える。
+4. スクリプトが表示する `http://<PCのIPv4>:3000` をスマホで開く。PC の `localhost` はそのまま使える。メールのログイン／登録は Next.js 経由なので、この URL でも使える。Google / LINE は LAN IP では使わない。
 
 **元に戻す**
 

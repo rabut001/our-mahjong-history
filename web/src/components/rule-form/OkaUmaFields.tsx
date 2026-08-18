@@ -14,6 +14,8 @@ type OkaUmaFieldsProps = {
   onUmaPoints1Change: (value: string) => void;
   umaPoints2: string;
   onUmaPoints2Change: (value: string) => void;
+  umaPoints1Error?: string;
+  umaPoints2Error?: string;
 };
 
 export function OkaUmaFields({
@@ -29,6 +31,8 @@ export function OkaUmaFields({
   onUmaPoints1Change,
   umaPoints2,
   onUmaPoints2Change,
+  umaPoints1Error,
+  umaPoints2Error,
 }: OkaUmaFieldsProps) {
   return (
     <>
@@ -76,7 +80,7 @@ export function OkaUmaFields({
               </RadioOption>
             ))}
           </RadioRow>
-          <Field label="ウマ（最上位 ⇔ 最下位）">
+          <Field label="ウマ（最上位 ⇔ 最下位）" error={umaPoints1Error}>
             <input
               type="number"
               inputMode="numeric"
@@ -87,7 +91,7 @@ export function OkaUmaFields({
             />
           </Field>
           {playerCount === 4 ? (
-            <Field label="ウマ（2位 ⇔ 3位）">
+            <Field label="ウマ（2位 ⇔ 3位）" error={umaPoints2Error}>
               <input
                 type="number"
                 inputMode="numeric"

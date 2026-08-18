@@ -2,7 +2,7 @@
 
 進捗の正（Single Source of Truth）。セッション開始時に確認し、フェーズや作業が進んだら更新する。
 
-**最終更新**: 2026-08-18
+**最終更新**: 2026-08-19
 
 ---
 
@@ -10,10 +10,10 @@
 
 | 項目 | 状態 |
 |------|------|
-| フェーズ | **Phase 4 着手**。4-0 / 4-1 / 4-2 / 4-3 完了。次は 4-4 |
-| コード | `web/` に Next.js 16。ログイン・サインアップ・トップ（`/communities`）は実セッション / 実 RLS。他画面はモック。計算は `web/src/lib/domain/`（Vitest 42 件が [calc-cases.md](calc-cases.md) と 1 対 1）。共通 UI は `web/src/components/ui/`。`MatchForm` / `RuleForm` は内部ブロック分割（公開 API は従来どおり）。CI に `web` job（lint / tsc / format / vitest）と `e2e` job（Playwright 煙）。`db` job は既存（リモート未設定のため Actions は未実行）。見た目の正はモック + [ui-spec.md](ui-spec.md)。試合入力の行順は 素点 → 順位 → 基本 pt。0 でよい行（トビ・祝儀等）は空欄表示。Phase 4 は **基盤先行**（次は 4-4 から麻雀グループ CRUD）。計算の意図は [overview.md](overview.md)。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報のみ。スキーマ / RLS / RPC / `handle_new_user` の migration あり。生成型は `web/src/lib/supabase/database.types.ts`。`supabase test db` が緑。DB ケースの正は [test-cases.md](test-cases.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま）。OAuth は [tech-stack.md](tech-stack.md#認証) |
+| フェーズ | **Phase 4 実装済み（レビュー待ち）**。4-0〜4-9 の実装は完了。次はユーザー確認のあと Phase 5 |
+| コード | `web/` に Next.js 16。ログインから麻雀グループ・ルール・大会・試合・ポイント補正まで実セッション / 実 RLS。計算は `web/src/lib/domain/`（Vitest が [calc-cases.md](calc-cases.md) と 1 対 1）。共通 UI は `web/src/components/ui/`。`MatchForm` / `RuleForm` は内部ブロック分割。CI に `web` job（lint / tsc / format / vitest）と `e2e` job（Playwright が [e2e-cases.md](e2e-cases.md) と 1 対 1）。`db` job は既存（リモート未設定のため Actions は未実行）。見た目の正は [ui-spec.md](ui-spec.md)。試合入力の行順は 素点 → 順位 → 基本 pt。0 でよい行（トビ・祝儀等）は空欄表示。計算の意図は [overview.md](overview.md)。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報と退会用の service role。スキーマ / RLS / RPC / `handle_new_user` の migration あり。生成型は `web/src/lib/supabase/database.types.ts`。`supabase test db` が緑。DB ケースの正は [test-cases.md](test-cases.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま）。OAuth は [tech-stack.md](tech-stack.md#認証) |
 | Git | 初期化済み（`main`）。リモートなし |
-| 次のアクション | 4-4: 麻雀グループ CRUD + 招待 |
+| 次のアクション | 実機確認の続き。問題なければ [status.md](status.md) を Phase 4 完了・次は Phase 5 に更新 |
 
 ## ブロッカー
 
@@ -29,7 +29,7 @@
 | Phase 1: ドメイン設計 | 完了 | 1-0〜1-6 完了。ドメインの正は overview.md |
 | Phase 2: モック作成 | 完了 | 2-0 〜 2-8 完了。UI の正は ui-spec.md |
 | Phase 3: Supabase スキーマ + 認証 | 完了 | 3-0〜3-7。画面は未接続。完了条件（`supabase test db` 緑）を満たした |
-| Phase 4: MVP 実装 | 着手 | 4-0 / 4-1 / 4-2 / 4-3 完了。次は 4-4 |
+| Phase 4: MVP 実装 | 実装済み（レビュー待ち） | 4-0〜4-9 実装。完了チェックはユーザー確認後 |
 | Phase 5: デプロイ | 未着手 | 本番は Vercel（コンテナ化しない） |
 | Phase 6: 拡張 | 未着手 | MVP 後 |
 

@@ -1,8 +1,10 @@
 "use client";
 
+import { useActionState, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { blockButtonClass, outlineBlockButtonClass } from "@/components/ui";
+import type { FormState } from "@/lib/data/types";
 
 type DangerActionProps = {
   label: string;
@@ -10,6 +12,8 @@ type DangerActionProps = {
   dialogBody?: string;
   confirmLabel: string;
   doneHref: string;
+  action?: (prev: FormState, formData: FormData) => Promise<FormState>;
+  hiddenFields?: Record<string, string>;
   disabled?: boolean;
   disabledNote?: string;
 };
@@ -20,28 +24,24 @@ export function DangerAction({
   dialogBody,
   confirmLabel,
   doneHref,
+  action,
+  hiddenFields,
   disabled = false,
   disabledNote,
 }: DangerActionProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    action ?? (async () => ({})),
+    {},
+  );
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const onCancel = useCallback(() => setOpen(false), []);
 
   return (
     <div className="mt-16 text-center">
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen(true)}
@@ -52,41 +52,57 @@ export function DangerAction({
       {disabled && disabledNote ? (
         <p className="mt-2 text-sm text-muted">{disabledNote}</p>
       ) : null}
-      {open ? (
-        <div
-          className="fixed inset-0 z-20 flex items-center justify-center bg-ink/40 px-6"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={dialogTitle}
-            onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-xs rounded-ui bg-surface px-4 py-4 text-left"
-          >
-            <p className="text-sm font-medium">{dialogTitle}</p>
-            {dialogBody ? (
-              <p className="mt-2 text-sm leading-6 text-muted">{dialogBody}</p>
+      <ConfirmDialog
+        open={open}
+        title={dialogTitle}
+        body={dialogBody}
+        onCancel={onCancel}
+        triggerRef={triggerRef}
+      >
+        {action ? (
+          <form action={formAction} className="space-y-2">
+            {hiddenFields
+              ? Object.entries(hiddenFields).map(([name, value]) => (
+                  <input key={name} type="hidden" name={name} value={value} />
+                ))
+              : null}
+            {state.formError ? (
+              <p className="text-sm text-muted">{state.formError}</p>
             ) : null}
-            <div className="mt-4 space-y-2">
-              <button
-                type="button"
-                onClick={() => router.push(doneHref)}
-                className={blockButtonClass}
-              >
-                {confirmLabel}
-              </button>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className={outlineBlockButtonClass}
-              >
-                キャンセル
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            <button
+              type="submit"
+              disabled={pending}
+              className={`${blockButtonClass} disabled:opacity-60`}
+            >
+              {confirmLabel}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className={outlineBlockButtonClass}
+            >
+              キャンセル
+            </button>
+          </form>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => router.push(doneHref)}
+              className={blockButtonClass}
+            >
+              {confirmLabel}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className={outlineBlockButtonClass}
+            >
+              キャンセル
+            </button>
+          </>
+        )}
+      </ConfirmDialog>
     </div>
   );
 }

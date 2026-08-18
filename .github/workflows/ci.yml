@@ -1,7 +1,7 @@
 # 手元と同じ入口:
 # db job: supabase start → lint / advisors / auth.uid 静的検査 → test db → PostgREST
 # web job: web/ の lint / tsc / format / vitest（Supabase は起動しない）
-# e2e job: supabase start → Playwright 煙（ログイン + トップ）
+# e2e job: supabase start → Playwright（docs/e2e-cases.md）
 name: CI
 
 on:
@@ -120,7 +120,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Playwright smoke
+      - name: Playwright
         run: npm run test:e2e
         env:
           CI: true

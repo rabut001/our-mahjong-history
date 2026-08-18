@@ -2,32 +2,52 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
-import { getCommunity, listCommunityRules } from "@/mock";
-
-type NewTournamentRulesPageProps = {
-  params: Promise<{ communityId: string }>;
-};
+import { getCommunityDetail } from "@/lib/data";
+import { listCommunityRuleTemplates } from "@/lib/data/rules";
+import {
+  parseTournamentCreateDraft,
+  tournamentCreateDraftQuery,
+  type TournamentCreateDraftParams,
+} from "@/lib/tournament-create-query";
 
 export const metadata: Metadata = {
   title: "ルールを追加",
 };
 
+type PageProps = {
+  params: Promise<{ communityId: string }>;
+  searchParams: Promise<TournamentCreateDraftParams>;
+};
+
+export const dynamic = "force-dynamic";
+
+function withFrom(query: string, from: string) {
+  const params = new URLSearchParams(
+    query.startsWith("?") ? query.slice(1) : query,
+  );
+  params.set("from", from);
+  return `?${params.toString()}`;
+}
+
 export default async function NewTournamentRulesPage({
   params,
-}: NewTournamentRulesPageProps) {
+  searchParams,
+}: PageProps) {
   const { communityId } = await params;
-  const community = getCommunity(communityId);
+  const draft = parseTournamentCreateDraft(await searchParams);
+  const community = await getCommunityDetail(communityId);
   if (!community) {
     notFound();
   }
 
-  const templates = listCommunityRules(community.id);
-  const backHref = `/communities/${community.id}/tournaments/new`;
-  const formHref = `/communities/${community.id}/tournaments/new/rules/form`;
+  const templates = await listCommunityRuleTemplates(community.id);
+  const returnPath = `/communities/${community.id}/tournaments/new`;
+  const draftQuery = tournamentCreateDraftQuery(draft);
+  const formHref = `${returnPath}/rules/form${draftQuery}`;
 
   return (
     <>
-      <AppHeader title="ルールを追加" backHref={backHref} />
+      <AppHeader title="ルールを追加" backHref={`${returnPath}${draftQuery}`} />
       <main className="px-4 py-4">
         {templates.length > 0 ? (
           <>
@@ -43,10 +63,12 @@ export default async function NewTournamentRulesPage({
                   <span className="min-w-0">
                     <span className="block font-medium">{rule.name}</span>
                     <span className="mt-0.5 block text-sm text-muted">
-                      {rule.playerCount === 4 ? "四麻" : "三麻"}
+                      {rule.player_count === 4 ? "四麻" : "三麻"}
                     </span>
                   </span>
-                  <NavButton href={`${formHref}?from=${rule.id}`}>
+                  <NavButton
+                    href={`${returnPath}/rules/form${withFrom(draftQuery, rule.id)}`}
+                  >
                     コピー
                   </NavButton>
                 </li>
@@ -55,12 +77,12 @@ export default async function NewTournamentRulesPage({
           </>
         ) : (
           <p className="text-sm text-muted">
-            麻雀グループに既定ルールがありません。いちから作成できます。
+            麻雀グループに既定ルールがありません。作成してください。
           </p>
         )}
         <div className="mt-6">
           <NavButton href={formHref} variant="block">
-            いちから作成
+            新規作成
           </NavButton>
         </div>
       </main>

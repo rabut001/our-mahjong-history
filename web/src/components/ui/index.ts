@@ -4,6 +4,7 @@ export {
   cellSelectClass,
   cellTitleClass,
   compactButtonClass,
+  headerIconButtonClass,
   fieldClass,
   gridLabelClass,
   labelClass,

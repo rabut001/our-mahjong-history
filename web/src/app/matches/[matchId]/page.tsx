@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
 import { formatPoints } from "@/lib/domain";
-import { getMatchDetail, SEAT_LABEL } from "@/mock";
+import { getMatchDetail } from "@/lib/data/matches";
+import { SEAT_LABEL } from "@/components/match-form/helpers";
 
 type MatchPageProps = {
   params: Promise<{ matchId: string }>;
@@ -13,15 +14,17 @@ export async function generateMetadata({
   params,
 }: MatchPageProps): Promise<Metadata> {
   const { matchId } = await params;
-  const match = getMatchDetail(matchId);
+  const match = await getMatchDetail(matchId);
   return {
     title: match ? `#${match.number}` : "試合",
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function MatchDetailPage({ params }: MatchPageProps) {
   const { matchId } = await params;
-  const match = getMatchDetail(matchId);
+  const match = await getMatchDetail(matchId);
   if (!match) {
     notFound();
   }

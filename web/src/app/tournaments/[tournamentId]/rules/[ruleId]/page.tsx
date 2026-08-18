@@ -3,12 +3,12 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { DangerAction } from "@/components/DangerAction";
 import { RuleForm } from "@/components/RuleForm";
-import { toRuleFormData } from "@/components/rule-form-data";
+import { getTournamentRule } from "@/lib/data/rules";
+import { getTournamentDetail } from "@/lib/data/tournaments";
 import {
-  getTournament,
-  getTournamentRule,
-  isTournamentRuleInUse,
-} from "@/mock";
+  deleteTournamentRuleAction,
+  updateTournamentRuleAction,
+} from "@/lib/data/rule-actions";
 
 type TournamentRulePageProps = {
   params: Promise<{ tournamentId: string; ruleId: string }>;
@@ -17,38 +17,43 @@ type TournamentRulePageProps = {
 export async function generateMetadata({
   params,
 }: TournamentRulePageProps): Promise<Metadata> {
-  const { ruleId } = await params;
-  const rule = getTournamentRule(ruleId);
-  const inUse = rule ? isTournamentRuleInUse(rule.id) : false;
+  const { tournamentId, ruleId } = await params;
+  const rule = await getTournamentRule(tournamentId, ruleId);
   return {
-    title: rule ? (inUse ? rule.name : `${rule.name}を編集`) : "ルール",
+    title: rule
+      ? rule.inUse
+        ? rule.form.name
+        : `${rule.form.name}を編集`
+      : "ルール",
   };
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function TournamentRulePage({
   params,
 }: TournamentRulePageProps) {
   const { tournamentId, ruleId } = await params;
-  const tournament = getTournament(tournamentId);
-  const rule = getTournamentRule(ruleId);
-  if (!tournament || !rule || rule.tournamentId !== tournament.id) {
+  const tournament = await getTournamentDetail(tournamentId);
+  const rule = await getTournamentRule(tournamentId, ruleId);
+  if (!tournament || !rule) {
     notFound();
   }
-
-  const inUse = isTournamentRuleInUse(rule.id);
 
   return (
     <>
       <AppHeader
-        title={inUse ? "ルール" : "ルールを編集"}
+        title={rule.inUse ? "ルール" : "ルールを編集"}
         backHref={`/tournaments/${tournament.id}/edit`}
       />
       <main className="px-4 py-4">
         <RuleForm
-          mode={inUse ? "view" : "edit"}
-          data={toRuleFormData(rule)}
+          mode={rule.inUse ? "view" : "edit"}
+          data={rule.form}
+          action={rule.inUse ? undefined : updateTournamentRuleAction}
+          hiddenFields={{ tournamentId: tournament.id, ruleId: rule.id }}
           addRuleHref={
-            inUse ? `/tournaments/${tournament.id}/rules/new` : undefined
+            rule.inUse ? `/tournaments/${tournament.id}/rules/new` : undefined
           }
         />
         <DangerAction
@@ -57,8 +62,10 @@ export default async function TournamentRulePage({
           dialogBody="この大会のルール一覧から消えます。元に戻せません。"
           confirmLabel="削除する"
           doneHref={`/tournaments/${tournament.id}/edit`}
-          disabled={inUse}
+          disabled={rule.inUse}
           disabledNote="試合で使用中のため削除できません。"
+          action={deleteTournamentRuleAction}
+          hiddenFields={{ tournamentId: tournament.id, ruleId: rule.id }}
         />
       </main>
     </>

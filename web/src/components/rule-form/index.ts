@@ -1,3 +1,3 @@
 export { RuleForm } from "./RuleForm";
-export { emptyRuleFormData, toRuleFormData } from "./data";
+export { emptyRuleFormData } from "./data";
 export type { RuleFormData } from "./data";

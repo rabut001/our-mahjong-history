@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { RuleForm } from "@/components/RuleForm";
-import { emptyRuleFormData, toRuleFormData } from "@/components/rule-form-data";
-import { getCommunityRule, getTournament } from "@/mock";
+import { emptyRuleFormData } from "@/components/rule-form-data";
+import { getCommunityRule } from "@/lib/data/rules";
+import { getTournamentDetail } from "@/lib/data/tournaments";
+import { createTournamentRuleAction } from "@/lib/data/rule-actions";
 
 type NewTournamentRuleFormPageProps = {
   params: Promise<{ tournamentId: string }>;
@@ -14,11 +16,13 @@ export async function generateMetadata({
   params,
 }: NewTournamentRuleFormPageProps): Promise<Metadata> {
   const { tournamentId } = await params;
-  const tournament = getTournament(tournamentId);
+  const tournament = await getTournamentDetail(tournamentId);
   return {
     title: tournament ? `${tournament.name}のルールを追加` : "ルールを追加",
   };
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function NewTournamentRuleFormPage({
   params,
@@ -26,18 +30,18 @@ export default async function NewTournamentRuleFormPage({
 }: NewTournamentRuleFormPageProps) {
   const { tournamentId } = await params;
   const { from } = await searchParams;
-  const tournament = getTournament(tournamentId);
+  const tournament = await getTournamentDetail(tournamentId);
   if (!tournament) {
     notFound();
   }
 
   let data = emptyRuleFormData();
   if (from) {
-    const template = getCommunityRule(from);
-    if (!template || template.communityId !== tournament.communityId) {
+    const template = await getCommunityRule(tournament.communityId, from);
+    if (!template) {
       notFound();
     }
-    data = toRuleFormData(template);
+    data = template.form;
   }
 
   return (
@@ -47,7 +51,13 @@ export default async function NewTournamentRuleFormPage({
         backHref={`/tournaments/${tournament.id}/rules/new`}
       />
       <main className="px-4 py-4">
-        <RuleForm mode="create" data={data} />
+        <RuleForm
+          mode="create"
+          data={data}
+          action={createTournamentRuleAction}
+          hiddenFields={{ tournamentId: tournament.id }}
+          existingRuleNames={tournament.rules.map((rule) => rule.name)}
+        />
       </main>
     </>
   );

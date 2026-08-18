@@ -5,14 +5,7 @@ import { MemberIconRow } from "@/components/MemberIconRow";
 import { NavButton } from "@/components/NavButton";
 import { RowLink, rowTitleClass, SectionCard } from "@/components/ui";
 import { formatHeldOn } from "@/lib/domain";
-import {
-  countMatches,
-  describeTournamentRules,
-  getCommunity,
-  listCommunityMembers,
-  listCommunityRules,
-  listTournaments,
-} from "@/mock";
+import { getCommunityDetail } from "@/lib/data";
 
 type CommunityPageProps = {
   params: Promise<{ communityId: string }>;
@@ -22,24 +15,24 @@ export async function generateMetadata({
   params,
 }: CommunityPageProps): Promise<Metadata> {
   const { communityId } = await params;
-  const community = getCommunity(communityId);
+  const community = await getCommunityDetail(communityId);
   return {
     title: community?.name ?? "麻雀グループ",
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function CommunityDetailPage({
   params,
 }: CommunityPageProps) {
   const { communityId } = await params;
-  const community = getCommunity(communityId);
+  const community = await getCommunityDetail(communityId);
   if (!community) {
     notFound();
   }
 
-  const tournaments = listTournaments(community.id);
-  const members = listCommunityMembers(community.id);
-  const rules = listCommunityRules(community.id);
+  const from = `/communities/${community.id}`;
 
   return (
     <>
@@ -64,10 +57,7 @@ export default async function CommunityDetailPage({
             </NavButton>
           }
         >
-          <MemberIconRow
-            members={members}
-            from={`/communities/${community.id}`}
-          />
+          <MemberIconRow members={community.members} from={from} />
         </SectionCard>
         <SectionCard
           title="大会"
@@ -77,11 +67,9 @@ export default async function CommunityDetailPage({
             </NavButton>
           }
         >
-          <ul className="divide-y divide-line border-t border-line">
-            {tournaments.map((tournament) => {
-              const ruleLabel = describeTournamentRules(tournament.id);
-              const matchCount = countMatches(tournament.id);
-              return (
+          {community.tournaments.length > 0 ? (
+            <ul className="divide-y divide-line border-t border-line">
+              {community.tournaments.map((tournament) => (
                 <li key={tournament.id}>
                   <RowLink
                     href={`/tournaments/${tournament.id}`}
@@ -94,15 +82,15 @@ export default async function CommunityDetailPage({
                       {tournament.name}
                     </span>
                     <span className="mt-0.5 block text-sm text-muted">
-                      {ruleLabel}
-                      {ruleLabel ? "、" : ""}
-                      {matchCount}試合
+                      {tournament.ruleLabel}
+                      {tournament.ruleLabel ? "、" : ""}
+                      {tournament.matchCount}試合
                     </span>
                   </RowLink>
                 </li>
-              );
-            })}
-          </ul>
+              ))}
+            </ul>
+          ) : null}
         </SectionCard>
         <SectionCard
           title="ルール"
@@ -112,21 +100,25 @@ export default async function CommunityDetailPage({
             </NavButton>
           }
         >
-          <ul className="divide-y divide-line border-t border-line">
-            {rules.map((rule) => (
-              <li key={rule.id}>
-                <RowLink
-                  href={`/communities/${community.id}/rules/${rule.id}`}
-                  label={`${rule.name}の詳細`}
-                >
-                  <span className={`block ${rowTitleClass}`}>{rule.name}</span>
-                  <span className="mt-0.5 block text-sm text-muted">
-                    {rule.playerCount === 4 ? "四麻" : "三麻"}
-                  </span>
-                </RowLink>
-              </li>
-            ))}
-          </ul>
+          {community.rules.length > 0 ? (
+            <ul className="divide-y divide-line border-t border-line">
+              {community.rules.map((rule) => (
+                <li key={rule.id}>
+                  <RowLink
+                    href={`/communities/${community.id}/rules/${rule.id}`}
+                    label={`${rule.name}の詳細`}
+                  >
+                    <span className={`block ${rowTitleClass}`}>
+                      {rule.name}
+                    </span>
+                    <span className="mt-0.5 block text-sm text-muted">
+                      {rule.playerCount === 4 ? "四麻" : "三麻"}
+                    </span>
+                  </RowLink>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </SectionCard>
       </main>
     </>

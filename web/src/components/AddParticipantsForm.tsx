@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { NavButton } from "@/components/NavButton";
+import { useActionState, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { blockButtonClass, searchFieldClass } from "@/components/ui";
+import type { FormState } from "@/lib/data/types";
+import { tournamentCreateDraftQuery } from "@/lib/tournament-create-query";
 
 const SEARCH_THRESHOLD = 8;
 
@@ -13,15 +15,31 @@ type Member = {
 
 type AddParticipantsFormProps = {
   members: Member[];
-  backHref: string;
+  tournamentId?: string;
+  action?: (prev: FormState, formData: FormData) => Promise<FormState>;
+  draft?: {
+    returnPath: string;
+    heldOn: string;
+    name: string;
+    memo: string;
+    userIds: string[];
+    guestNames: string[];
+  };
 };
 
 export function AddParticipantsForm({
   members,
-  backHref,
+  tournamentId,
+  action,
+  draft,
 }: AddParticipantsFormProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    action ?? (async () => ({})),
+    {},
+  );
   const showSearch = members.length >= SEARCH_THRESHOLD;
   const filtered = useMemo(() => {
     const trimmed = query.trim();
@@ -46,7 +64,34 @@ export function AddParticipantsForm({
   }
 
   return (
-    <div>
+    <form
+      action={action ? formAction : undefined}
+      onSubmit={
+        draft
+          ? (event) => {
+              event.preventDefault();
+              if (selectedIds.length === 0) {
+                return;
+              }
+              router.push(
+                `${draft.returnPath}${tournamentCreateDraftQuery({
+                  heldOn: draft.heldOn,
+                  name: draft.name,
+                  memo: draft.memo,
+                  userIds: [...draft.userIds, ...selectedIds],
+                  guestNames: draft.guestNames,
+                })}`,
+              );
+            }
+          : undefined
+      }
+    >
+      {tournamentId ? (
+        <input type="hidden" name="tournamentId" value={tournamentId} />
+      ) : null}
+      {selectedIds.map((id) => (
+        <input key={id} type="hidden" name="userId" value={id} />
+      ))}
       {showSearch ? (
         <input
           type="search"
@@ -78,17 +123,18 @@ export function AddParticipantsForm({
       ) : (
         <p className="mt-4 text-sm text-muted">該当する人がいません。</p>
       )}
+      {state.formError ? (
+        <p className="mt-4 text-sm text-muted">{state.formError}</p>
+      ) : null}
       <div className="mt-6">
-        {canSubmit ? (
-          <NavButton href={backHref} variant="block">
-            追加する
-          </NavButton>
-        ) : (
-          <button type="button" disabled className={blockButtonClass}>
-            追加する
-          </button>
-        )}
+        <button
+          type="submit"
+          disabled={!canSubmit || pending}
+          className={`${blockButtonClass} disabled:opacity-60`}
+        >
+          追加する
+        </button>
       </div>
-    </div>
+    </form>
   );
 }

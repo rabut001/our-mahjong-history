@@ -1,10 +1,10 @@
 import { RadioOption } from "@/components/ui";
-import type { TournamentRule } from "@/mock";
+import type { MatchFormRule } from "./types";
 
 type RulePickerProps = {
-  rules: TournamentRule[];
+  rules: MatchFormRule[];
   selectedRuleId: string;
-  onSelect: (rule: TournamentRule) => void;
+  onSelect: (rule: MatchFormRule) => void;
 };
 
 export function RulePicker({

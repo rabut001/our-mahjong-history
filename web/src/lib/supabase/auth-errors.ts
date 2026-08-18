@@ -16,6 +16,9 @@ export function authErrorMessage(
   ) {
     return "このメールはすでに登録されています。";
   }
+  if (code === "weak_password" || message.includes("password should be")) {
+    return "パスワードが短すぎます。";
+  }
   if (kind === "oauth") {
     return "この方法ではログインできませんでした。";
   }

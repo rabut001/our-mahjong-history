@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { Avatar } from "@/components/Avatar";
-import { getProfile } from "@/mock";
+import { DangerAction } from "@/components/DangerAction";
+import {
+  communityIdFromPath,
+  getProfileDetail,
+  isMemberOfCommunity,
+} from "@/lib/data";
+import { removeMemberAction } from "@/lib/data/community-actions";
 
 type ProfileDetailPageProps = {
   params: Promise<{ userId: string }>;
@@ -25,11 +31,13 @@ export async function generateMetadata({
   params,
 }: ProfileDetailPageProps): Promise<Metadata> {
   const { userId } = await params;
-  const profile = getProfile(userId);
+  const profile = await getProfileDetail(userId);
   return {
     title: profile?.displayName ?? "ユーザ",
   };
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function ProfileDetailPage({
   params,
@@ -37,10 +45,17 @@ export default async function ProfileDetailPage({
 }: ProfileDetailPageProps) {
   const { userId } = await params;
   const { from } = await searchParams;
-  const profile = getProfile(userId);
+  const profile = await getProfileDetail(userId);
   if (!profile) {
     notFound();
   }
+
+  const communityId = communityIdFromPath(from);
+  const canRemove =
+    Boolean(communityId) &&
+    !profile.isCurrentUser &&
+    communityId !== null &&
+    (await isMemberOfCommunity(communityId, profile.id));
 
   return (
     <>
@@ -59,6 +74,17 @@ export default async function ProfileDetailPage({
           <p className="mt-6 whitespace-pre-wrap text-sm leading-5 text-muted">
             {profile.comment}
           </p>
+        ) : null}
+        {canRemove && communityId ? (
+          <DangerAction
+            label="このメンバーを外す"
+            dialogTitle="このメンバーを外しますか？"
+            dialogBody="外すと、この麻雀グループの大会と試合は見られなくなります。過去の記録は残ります。"
+            confirmLabel="外す"
+            doneHref={`/communities/${communityId}`}
+            action={removeMemberAction}
+            hiddenFields={{ communityId, userId: profile.id }}
+          />
         ) : null}
       </main>
     </>

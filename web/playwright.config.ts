@@ -13,7 +13,8 @@ export default defineConfig({
   globalSetup: "./e2e/global-setup.ts",
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000",
+    // 127.0.0.1 だと next dev --hostname 0.0.0.0 の allowedDevOrigins に弾かれる
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     locale: "ja-JP",
     viewport: { width: 375, height: 812 },
     trace: "on-first-retry",
@@ -29,7 +30,7 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.CI ? "npm run start" : "npm run dev",
-    url: "http://127.0.0.1:3000",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

@@ -1,2 +1,2 @@
-export { emptyRuleFormData, toRuleFormData } from "./rule-form/data";
+export { emptyRuleFormData } from "./rule-form/data";
 export type { RuleFormData } from "./rule-form/data";

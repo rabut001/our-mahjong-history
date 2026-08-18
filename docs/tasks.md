@@ -689,11 +689,11 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 | A. pgTAP | `test-cases.md` の ID | `supabase/tests/*_test.sql` | `supabase test db` | 既存 `db` job |
 | B. PostgREST | GRANT・RPC | `supabase/ci/postgrest-smoke.sh` | 同スクリプト | 既存 `db` job |
 | C. Vitest | ポイント・順位・整形・バリデーション | `web/src/lib/domain/` | `npm test` | `web` job |
-| D. 静的検査（アプリ） | lint / 型 / フォーマット | `web/` | `npm run lint` / `tsc` / `format:check` | `web` job |
-| E. Playwright | 煙（ログインできる、自分の麻雀グループが見える） | `web/e2e/` | `npm run test:e2e` | 別 job `e2e`（Supabase が要る） |
+| D. 静的検査（アプリ） | lint / 型 / フォーマット。死んだ `type="button"` | `web/` | `npm run lint` / `tsc` / `format:check` | `web` job |
+| E. Playwright | [e2e-cases.md](e2e-cases.md)（通常画面の到達、各表に 1 行） | `web/e2e/` | `npm run test:e2e` | 別 job `e2e`（Supabase が要る） |
 | 人 | 375px の見た目 | — | ブラウザ | CI にしない |
 
-`web` job は Docker の Supabase を起動しない。Playwright は 4-3 の直後に煙だけ足す。試合入力の E2E は 4-7 以降で足してよい。権限行列は画面テストにしない。
+`web` job は Docker の Supabase を起動しない。権限行列は画面テストにしない。画面 E2E の正は [e2e-cases.md](e2e-cases.md)。
 
 #### 計算ケース（4-1 で書く）
 
@@ -742,55 +742,64 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 ### 4-4 麻雀グループ CRUD + 招待
 
-- [ ] 作成（`create_community`）、一覧・詳細の SELECT、編集、招待コード（既定 7 日）、参加（`join_community`）、離脱（`leave_community`）
-- [ ] 除名・最後の 1 人の文面（ui-spec の基本フロー外）
-- [ ] プロフィール編集と退会（`withdraw_account` + Auth Admin）
-- [ ] その画面の空状態・エラー・バリデーション
-- [ ] 使わなくなった mock を削除
-- [ ] [status.md](status.md) を更新
+- [x] 作成（`create_community`）、一覧・詳細の SELECT、編集、招待コード（既定 7 日）、参加（`join_community`）、離脱（`leave_community`）
+- [x] 除名・最後の 1 人の文面（ui-spec の基本フロー外）
+- [x] プロフィール編集と退会（`withdraw_account` + Auth Admin）
+- [x] その画面の空状態・エラー・バリデーション
+- [x] 使わなくなった mock を削除
+- [x] [status.md](status.md) を更新
 
 ### 4-5 ルール設定
 
-- [ ] 麻雀グループの既定と大会ルールの CRUD。使用中は修正不可（新規登録へ）
-- [ ] 大会へのコピー選択。三麻 / 四麻の項目切り替え
-- [ ] その画面の空状態・エラー・バリデーション
-- [ ] 使わなくなった mock を削除
-- [ ] [status.md](status.md) を更新
+- [x] 麻雀グループの既定と大会ルールの CRUD。使用中は修正不可（新規登録へ）
+- [x] 大会へのコピー選択。三麻 / 四麻の項目切り替え
+- [x] その画面の空状態・エラー・バリデーション
+- [x] 使わなくなった mock を削除
+- [x] [status.md](status.md) を更新
 
 ### 4-6 大会 CRUD
 
-- [ ] 作成・編集・詳細・削除。参加者 / ゲスト / ルールのカード
-- [ ] ゲスト同名の警告。ルール 0 件の大会は試合追加を無効化
-- [ ] その画面の空状態・エラー・バリデーション
-- [ ] 使わなくなった mock を削除
-- [ ] [status.md](status.md) を更新
+- [x] 作成・編集・詳細・削除。参加者 / ゲスト / ルールのカード
+- [x] ゲスト同名の警告。ルール 0 件の大会は試合追加を無効化
+- [x] その画面の空状態・エラー・バリデーション
+- [x] 使わなくなった mock を削除
+- [x] [status.md](status.md) を更新
 
 ### 4-7 試合 CRUD
 
 計算は再実装しない。4-1 の純関数に入力を渡して保存する。
 
-- [ ] 作成・編集・詳細・削除。入力のたびに再計算
-- [ ] 点数合計の警告（保存は止めない）
-- [ ] 1 試合の結果件数が `player_count`、三麻で `north` を使わない（test-cases.md が Phase 4 に送ったアプリ制約）
-- [ ] その画面の空状態・エラー・バリデーション
-- [ ] 使わなくなった mock を削除
-- [ ] 必要なら試合入力の Playwright 煙を足す
-- [ ] [status.md](status.md) を更新
+- [x] 作成・編集・詳細・削除。入力のたびに再計算
+- [x] 点数合計の警告（保存は止めない。保存時に確認ダイアログ）
+- [x] 1 試合の結果件数が `player_count`、三麻で `north` を使わない（test-cases.md が Phase 4 に送ったアプリ制約）
+- [x] その画面の空状態・エラー・バリデーション
+- [x] 使わなくなった mock を削除
+- [x] 必要なら試合入力の Playwright 煙を足す
+- [x] [status.md](status.md) を更新
 
 ### 4-8 大会サマリー
 
-- [ ] 総合順位（最終 pt の都度集計）。ポイント補正画面の保存・読取
-- [ ] 対象は 1 試合以上出場。同位は 1, 2, 2, 4（4-1 の関数）
-- [ ] その画面の空状態・エラー・バリデーション
-- [ ] 使わなくなった mock を削除
-- [ ] [status.md](status.md) を更新
+- [x] 総合順位（最終 pt の都度集計）。ポイント補正画面の保存・読取
+- [x] 対象は 1 試合以上出場。同位は 1, 2, 2, 4（4-1 の関数）
+- [x] その画面の空状態・エラー・バリデーション
+- [x] 使わなくなった mock を削除
+- [x] [status.md](status.md) を更新
 
 ### 4-9 仕上げ
 
 接続時に入れたものの残りだけ。新しい機能は足さない。
 
-- [ ] 横断のローディング、未入力エラーの穴
-- [ ] 確認ダイアログのフォーカストラップ・背景スクロール固定（ui-spec）
-- [ ] mock が残っていれば削除
+- [x] 横断のローディング、未入力エラーの穴
+- [x] 確認ダイアログのフォーカストラップ・背景スクロール固定（ui-spec）
+- [x] mock が残っていれば削除
 - [ ] [status.md](status.md) を Phase 4 完了・次は Phase 5 に更新（ユーザーレビュー後）
+
+### e2e 強化（レビュー中）
+
+観点は通常画面を一度表示する、各アプリ表に 1 行入る成功経路を通す。権限行列は踏まない。
+
+- [x] ケースの正は [e2e-cases.md](e2e-cases.md)
+- [x] Playwright をケース ID と 1 対 1 に差し替える
+- [x] global-setup の既定ルール seed を外す（画面経路が隠れないようにする）
+- [x] 有効な `type="button"` に `onClick` が無いものを lint で落とす
 

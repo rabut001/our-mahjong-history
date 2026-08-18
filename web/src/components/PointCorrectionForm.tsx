@@ -1,27 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { formatPoints } from "@/lib/domain";
-import type { PointCorrectionParticipant, PointCorrectionRow } from "@/mock";
 import { blockButtonClass, pressableClass } from "@/components/ui";
+import type { FormState } from "@/lib/data/types";
+
+export type PointCorrectionParticipant = {
+  id: string;
+  name: string;
+  matchPoints: number;
+};
+
+export type PointCorrectionRow = {
+  title: string;
+  amounts: number[];
+};
+
+type PointCorrectionFormProps = {
+  participants: PointCorrectionParticipant[];
+  initialRows: PointCorrectionRow[];
+  tournamentId: string;
+  action: (prev: FormState, formData: FormData) => Promise<FormState>;
+};
 
 const CORRECTION_MAX = 5;
 const cellInputClass =
   "w-16 rounded-ui border border-line bg-field px-1 py-1 text-center text-sm tabular-nums";
 
-type PointCorrectionFormProps = {
-  participants: PointCorrectionParticipant[];
-  initialRows: PointCorrectionRow[];
+type DraftRow = {
+  title: string;
+  amounts: string[];
 };
 
-function emptyAmounts(participantCount: number): number[] {
-  return Array.from({ length: participantCount }, () => 0);
+function emptyAmounts(participantCount: number): string[] {
+  return Array.from({ length: participantCount }, () => "");
+}
+
+function amountToText(amount: number): string {
+  return amount === 0 ? "" : String(amount);
+}
+
+function parseAmountText(value: string): number {
+  if (value === "" || value === "-" || value === "." || value === "-.") {
+    return 0;
+  }
+  const amount = Number(value);
+  return Number.isFinite(amount) ? amount : 0;
 }
 
 function initialDraft(
   rows: PointCorrectionRow[],
   participantCount: number,
-): PointCorrectionRow[] {
+): DraftRow[] {
   const visible = rows
     .filter(
       (row) =>
@@ -30,10 +60,12 @@ function initialDraft(
     .slice(0, CORRECTION_MAX)
     .map((row) => ({
       title: row.title,
-      amounts: [...row.amounts, ...emptyAmounts(participantCount)].slice(
-        0,
-        participantCount,
-      ),
+      amounts: [
+        ...row.amounts,
+        ...Array.from({ length: participantCount }, () => 0),
+      ]
+        .slice(0, participantCount)
+        .map(amountToText),
     }));
   if (visible.length === 0) {
     return [{ title: "", amounts: emptyAmounts(participantCount) }];
@@ -44,7 +76,10 @@ function initialDraft(
 export function PointCorrectionForm({
   participants,
   initialRows,
+  tournamentId,
+  action,
 }: PointCorrectionFormProps) {
+  const [state, formAction, pending] = useActionState(action, {});
   const [draft, setDraft] = useState(() =>
     initialDraft(initialRows, participants.length),
   );
@@ -62,14 +97,13 @@ export function PointCorrectionForm({
     participantIndex: number,
     value: string,
   ) {
-    const amount = value === "" || value === "-" ? 0 : Number(value);
     setDraft((current) =>
       current.map((row, index) => {
         if (index !== rowIndex) {
           return row;
         }
         const amounts = row.amounts.slice();
-        amounts[participantIndex] = Number.isFinite(amount) ? amount : 0;
+        amounts[participantIndex] = value;
         return { ...row, amounts };
       }),
     );
@@ -85,10 +119,31 @@ export function PointCorrectionForm({
     ]);
   }
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const titles = Array.from(
+      { length: CORRECTION_MAX },
+      (_, index) => draft[index]?.title ?? "",
+    );
+    const amounts: Record<string, number[]> = {};
+    for (const [participantIndex, participant] of participants.entries()) {
+      amounts[participant.id] = Array.from(
+        { length: CORRECTION_MAX },
+        (_, index) =>
+          parseAmountText(draft[index]?.amounts[participantIndex] ?? ""),
+      );
+    }
+    const formData = new FormData();
+    formData.set("tournamentId", tournamentId);
+    formData.set("titles", JSON.stringify(titles));
+    formData.set("amounts", JSON.stringify(amounts));
+    formAction(formData);
+  }
+
   const canAdd = draft.length < CORRECTION_MAX;
 
   return (
-    <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
+    <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="-mx-4 overflow-x-auto px-4">
         <table className="border-separate border-spacing-0 text-sm">
           <thead>
@@ -131,7 +186,8 @@ export function PointCorrectionForm({
           <tbody>
             {participants.map((participant, participantIndex) => {
               const adjustmentTotal = draft.reduce(
-                (sum, row) => sum + (row.amounts[participantIndex] ?? 0),
+                (sum, row) =>
+                  sum + parseAmountText(row.amounts[participantIndex] ?? ""),
                 0,
               );
               const netTotal = participant.matchPoints + adjustmentTotal;
@@ -148,7 +204,7 @@ export function PointCorrectionForm({
                       <input
                         type="number"
                         step="0.1"
-                        value={row.amounts[participantIndex] ?? 0}
+                        value={row.amounts[participantIndex] ?? ""}
                         aria-label={`${participant.name}の${row.title || `補正${rowIndex + 1}`}`}
                         onChange={(event) =>
                           updateAmount(
@@ -171,7 +227,14 @@ export function PointCorrectionForm({
           </tbody>
         </table>
       </div>
-      <button type="button" className={blockButtonClass}>
+      {state.formError ? (
+        <p className="text-sm text-muted">{state.formError}</p>
+      ) : null}
+      <button
+        type="submit"
+        disabled={pending}
+        className={`${blockButtonClass} disabled:opacity-60`}
+      >
         保存する
       </button>
     </form>

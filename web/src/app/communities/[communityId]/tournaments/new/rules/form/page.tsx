@@ -2,45 +2,67 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { RuleForm } from "@/components/RuleForm";
-import { emptyRuleFormData, toRuleFormData } from "@/components/rule-form-data";
-import { getCommunity, getCommunityRule } from "@/mock";
-
-type NewTournamentRuleFormPageProps = {
-  params: Promise<{ communityId: string }>;
-  searchParams: Promise<{ from?: string }>;
-};
+import { emptyRuleFormData } from "@/components/rule-form-data";
+import { getCommunityDetail } from "@/lib/data";
+import { getCommunityRule } from "@/lib/data/rules";
+import { createCommunityRuleAction } from "@/lib/data/rule-actions";
+import {
+  parseTournamentCreateDraft,
+  tournamentCreateDraftQuery,
+  type TournamentCreateDraftParams,
+} from "@/lib/tournament-create-query";
 
 export const metadata: Metadata = {
   title: "ルールを追加",
 };
 
+type PageProps = {
+  params: Promise<{ communityId: string }>;
+  searchParams: Promise<TournamentCreateDraftParams>;
+};
+
+export const dynamic = "force-dynamic";
+
 export default async function NewTournamentRuleFormPage({
   params,
   searchParams,
-}: NewTournamentRuleFormPageProps) {
+}: PageProps) {
   const { communityId } = await params;
-  const { from } = await searchParams;
-  const community = getCommunity(communityId);
+  const raw = await searchParams;
+  const draft = parseTournamentCreateDraft(raw);
+  const from = Array.isArray(raw.from) ? raw.from[0] : raw.from;
+  const community = await getCommunityDetail(communityId);
   if (!community) {
     notFound();
   }
 
   let data = emptyRuleFormData();
   if (from) {
-    const template = getCommunityRule(from);
-    if (!template || template.communityId !== community.id) {
+    const template = await getCommunityRule(community.id, from);
+    if (!template) {
       notFound();
     }
-    data = toRuleFormData(template);
+    data = template.form;
   }
 
-  const backHref = `/communities/${community.id}/tournaments/new/rules`;
+  const returnPath = `/communities/${community.id}/tournaments/new`;
+  const draftQuery = tournamentCreateDraftQuery(draft);
+  const next = `${returnPath}${draftQuery}`;
 
   return (
     <>
-      <AppHeader title="ルールを追加" backHref={backHref} />
+      <AppHeader
+        title="ルールを追加"
+        backHref={`${returnPath}/rules${draftQuery}`}
+      />
       <main className="px-4 py-4">
-        <RuleForm mode="create" data={data} />
+        <RuleForm
+          mode="create"
+          data={data}
+          action={createCommunityRuleAction}
+          hiddenFields={{ communityId: community.id, next }}
+          existingRuleNames={community.rules.map((rule) => rule.name)}
+        />
       </main>
     </>
   );

@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-import { AppHeader } from "@/components/AppHeader";
+import { useActionState, useState, type FormEvent } from "react";
+import { AppHeader, HeaderIconButton } from "@/components/AppHeader";
+import { ChevronLeftIcon } from "@/components/NavIcons";
 import {
   blockButtonClass,
-  compactButtonClass,
   Field,
   fieldClass,
   outlineBlockButtonClass,
 } from "@/components/ui";
+import { signUpWithEmailAction } from "@/lib/data/auth-actions";
 import { createClient } from "@/lib/supabase/client";
 import { authErrorMessage } from "@/lib/supabase/auth-errors";
-import { CALLBACK_PATH, HOME_PATH, LOGIN_PATH } from "@/lib/supabase/paths";
+import { CALLBACK_PATH, LOGIN_PATH } from "@/lib/supabase/paths";
 
 function callbackUrl() {
   return new URL(CALLBACK_PATH, window.location.origin).toString();
@@ -26,12 +27,16 @@ export function SignupForm() {
   const [emailError, setEmailError] = useState("");
   const [displayNameError, setDisplayNameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [formError, setFormError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [oauthError, setOauthError] = useState("");
+  const [oauthBusy, setOauthBusy] = useState(false);
+  const [state, formAction, pending] = useActionState(
+    signUpWithEmailAction,
+    {},
+  );
 
   async function startOAuth(provider: "google" | "custom:line") {
-    setFormError("");
-    setBusy(true);
+    setOauthError("");
+    setOauthBusy(true);
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -41,19 +46,18 @@ export function SignupForm() {
         },
       });
       if (error || !data.url) {
-        setFormError(authErrorMessage(error, "oauth"));
+        setOauthError(authErrorMessage(error, "oauth"));
         return;
       }
       window.location.assign(data.url);
     } catch {
-      setFormError(authErrorMessage(null, "oauth"));
+      setOauthError(authErrorMessage(null, "oauth"));
     } finally {
-      setBusy(false);
+      setOauthBusy(false);
     }
   }
 
-  async function handleSignup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleSignup(event: FormEvent<HTMLFormElement>) {
     let hasError = false;
     if (!displayName.trim()) {
       setDisplayNameError("表示名を入力してください。");
@@ -68,35 +72,11 @@ export function SignupForm() {
       setPasswordError("");
     }
     if (hasError) {
-      return;
-    }
-    setFormError("");
-    setBusy(true);
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { display_name: displayName.trim() },
-          emailRedirectTo: callbackUrl(),
-        },
-      });
-      if (error) {
-        setFormError(authErrorMessage(error, "signup"));
-        return;
-      }
-      if (data.session) {
-        window.location.assign(HOME_PATH);
-        return;
-      }
-      setFormError("確認メールを送信しました。");
-    } catch {
-      setFormError(authErrorMessage(null, "signup"));
-    } finally {
-      setBusy(false);
+      event.preventDefault();
     }
   }
+
+  const busy = oauthBusy || pending;
 
   if (step === "password") {
     return (
@@ -104,26 +84,32 @@ export function SignupForm() {
         <AppHeader
           title="アカウント作成"
           back={
-            <button
-              type="button"
+            <HeaderIconButton
+              label="戻る"
               onClick={() => {
                 setStep("method");
                 setDisplayName("");
                 setPassword("");
                 setDisplayNameError("");
                 setPasswordError("");
-                setFormError("");
               }}
-              className={compactButtonClass}
             >
-              戻る
-            </button>
+              <ChevronLeftIcon />
+            </HeaderIconButton>
           }
         />
         <main className="px-4 py-4">
           <p className="text-sm text-muted">{email || "メール"}</p>
-          <form className="mt-6 space-y-6" onSubmit={handleSignup}>
-            <Field label="表示名" error={displayNameError}>
+          <form
+            className="mt-6 space-y-6"
+            action={formAction}
+            onSubmit={handleSignup}
+          >
+            <input type="hidden" name="email" value={email} />
+            <Field
+              label="表示名"
+              error={displayNameError || state.fieldErrors?.displayName}
+            >
               <input
                 type="text"
                 name="displayName"
@@ -149,8 +135,8 @@ export function SignupForm() {
             >
               登録する
             </button>
-            {formError ? (
-              <p className="text-sm text-muted">{formError}</p>
+            {state.formError ? (
+              <p className="text-sm text-muted">{state.formError}</p>
             ) : null}
           </form>
         </main>
@@ -160,10 +146,14 @@ export function SignupForm() {
 
   return (
     <>
-      <AppHeader title="アカウント作成" backHref={LOGIN_PATH} />
+      <AppHeader
+        title="アカウント作成"
+        backHref={LOGIN_PATH}
+        showHome={false}
+      />
       <main className="px-4 py-4">
         <div className="space-y-6">
-          <Field label="メール" error={emailError}>
+          <Field label="メールアドレスで登録" error={emailError}>
             <input
               type="email"
               name="email"
@@ -182,7 +172,7 @@ export function SignupForm() {
                 return;
               }
               setEmailError("");
-              setFormError("");
+              setOauthError("");
               setStep("password");
             }}
             className={`${blockButtonClass} disabled:opacity-60`}
@@ -208,8 +198,8 @@ export function SignupForm() {
             LINEで登録
           </button>
         </div>
-        {formError ? (
-          <p className="mt-3 text-sm text-muted">{formError}</p>
+        {oauthError ? (
+          <p className="mt-3 text-sm text-muted">{oauthError}</p>
         ) : null}
         <p className="mt-6 text-center text-sm">
           <Link href={LOGIN_PATH} className="underline">

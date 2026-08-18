@@ -500,7 +500,7 @@ JWT + anon キー。画面テストにはしない。GRANT と RPC 公開の通�
 - 麻雀グループ所属者を同じ大会のゲストとして二重登録しないこと
 - 点数合計が持ち点 × 人数と違うときの画面警告
 - `auth.users` 削除（Server Action + Auth Admin）
-- 画面 E2E（Playwright 煙は 4-3 済み。権限行列は再実装しない）
+- 画面 E2E（正は [e2e-cases.md](e2e-cases.md)。権限行列は再実装しない）
 - ポイント計算のケース（`docs/calc-cases.md`。4-1）
 
 ---

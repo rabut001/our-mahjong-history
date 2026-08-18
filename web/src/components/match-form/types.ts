@@ -1,4 +1,7 @@
-import type { Seat, TournamentRule } from "@/mock/types";
+import type { Seat } from "@/lib/domain";
+import type { RuleFormData } from "@/lib/domain";
+
+export type MatchFormRule = RuleFormData & { id: string };
 
 export type MatchFormPlayer = {
   participantId: string;
@@ -24,7 +27,7 @@ export type MatchFormData = {
   matchId: string | null;
   tournamentId: string;
   tournamentName: string;
-  rules: TournamentRule[];
+  rules: MatchFormRule[];
   selectedRuleId: string;
   participants: MatchFormParticipant[];
   players: MatchFormPlayer[];

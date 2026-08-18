@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { AppHeader } from "@/components/AppHeader";
+import { AppHeader, HeaderIconButton } from "@/components/AppHeader";
+import { ChevronLeftIcon } from "@/components/NavIcons";
 import {
   blockButtonClass,
-  compactButtonClass,
   Field,
   fieldClass,
   outlineBlockButtonClass,
 } from "@/components/ui";
+import { signInWithEmailAction } from "@/lib/data/auth-actions";
 import { createClient } from "@/lib/supabase/client";
 import { authErrorMessage } from "@/lib/supabase/auth-errors";
 import { CALLBACK_PATH, HOME_PATH, SIGNUP_PATH } from "@/lib/supabase/paths";
@@ -32,12 +33,16 @@ export function LoginForm({ next }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [formError, setFormError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [oauthError, setOauthError] = useState("");
+  const [oauthBusy, setOauthBusy] = useState(false);
+  const [state, formAction, pending] = useActionState(
+    signInWithEmailAction,
+    {},
+  );
 
   async function startOAuth(provider: "google" | "custom:line") {
-    setFormError("");
-    setBusy(true);
+    setOauthError("");
+    setOauthBusy(true);
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -47,43 +52,26 @@ export function LoginForm({ next }: LoginFormProps) {
         },
       });
       if (error || !data.url) {
-        setFormError(authErrorMessage(error, "oauth"));
+        setOauthError(authErrorMessage(error, "oauth"));
         return;
       }
       window.location.assign(data.url);
     } catch {
-      setFormError(authErrorMessage(null, "oauth"));
+      setOauthError(authErrorMessage(null, "oauth"));
     } finally {
-      setBusy(false);
+      setOauthBusy(false);
     }
   }
 
-  async function handlePasswordLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handlePasswordLogin(event: FormEvent<HTMLFormElement>) {
     if (!password.trim()) {
+      event.preventDefault();
       setPasswordError("パスワードを入力してください。");
-      return;
-    }
-    setPasswordError("");
-    setFormError("");
-    setBusy(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setFormError(authErrorMessage(error, "login"));
-        return;
-      }
-      window.location.assign(next);
-    } catch {
-      setFormError(authErrorMessage(null, "login"));
-    } finally {
-      setBusy(false);
     }
   }
+
+  const formError = state.formError;
+  const busy = oauthBusy || pending;
 
   if (step === "password") {
     return (
@@ -91,23 +79,27 @@ export function LoginForm({ next }: LoginFormProps) {
         <AppHeader
           title="ログイン"
           back={
-            <button
-              type="button"
+            <HeaderIconButton
+              label="戻る"
               onClick={() => {
                 setStep("email");
                 setPassword("");
                 setPasswordError("");
-                setFormError("");
               }}
-              className={compactButtonClass}
             >
-              戻る
-            </button>
+              <ChevronLeftIcon />
+            </HeaderIconButton>
           }
         />
         <main className="px-4 py-4">
           <p className="text-sm text-muted">{email || "メール"}</p>
-          <form className="mt-6 space-y-6" onSubmit={handlePasswordLogin}>
+          <form
+            className="mt-6 space-y-6"
+            action={formAction}
+            onSubmit={handlePasswordLogin}
+          >
+            <input type="hidden" name="email" value={email} />
+            <input type="hidden" name="next" value={next} />
             <Field label="パスワード" error={passwordError}>
               <input
                 type="password"
@@ -158,7 +150,7 @@ export function LoginForm({ next }: LoginFormProps) {
                 return;
               }
               setEmailError("");
-              setFormError("");
+              setOauthError("");
               setStep("password");
             }}
             className={`${blockButtonClass} disabled:opacity-60`}
@@ -184,8 +176,8 @@ export function LoginForm({ next }: LoginFormProps) {
             LINEでログイン
           </button>
         </div>
-        {formError ? (
-          <p className="mt-3 text-sm text-muted">{formError}</p>
+        {oauthError ? (
+          <p className="mt-3 text-sm text-muted">{oauthError}</p>
         ) : null}
         <p className="mt-6 text-center text-sm">
           <Link href={SIGNUP_PATH} className="underline">
