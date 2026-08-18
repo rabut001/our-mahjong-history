@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import { MockShell } from "@/components/MockShell";
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   description: "麻雀仲間のグループで、大会と試合（半荘）の記録を残すアプリ",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja" className={notoSansJp.variable}>
       <body className="bg-page font-sans text-ink antialiased">
