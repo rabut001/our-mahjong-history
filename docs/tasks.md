@@ -140,7 +140,7 @@ Phase 1 と Phase 2 の切り分け:
 - [x] 招待のデータの持ち方（招待コード、有効期限、麻雀グループあたり最大 1）
 - [x] 麻雀グループ配下（大会・試合・ルール）へのアクセス伝播（所属メンバーなら閲覧・編集）
 - [x] 麻雀グループ削除（明示削除は空のときだけ。最後の 1 人の離脱は麻雀グループごと消す）
-- [x] 操作ログ（監査テーブル。UI 非表示。INSERT のみ。community_id なし）
+- [x] 操作ログ（監査テーブル。UI 非表示。**trigger で INSERT**。アプリロールはすべて不可。community_id なし）
 - [x] 退会は墓石（`profiles` は残す。匿名化 + 全離脱 + Auth 削除。ゲスト載せ替えなし）
 - [x] 方針をドキュメントに残す（policy SQL は Phase 3）。[overview.md](overview.md) / [er.md](er.md)（SELECT / INSERT / UPDATE / DELETE の判定経路）
 
@@ -193,8 +193,8 @@ Phase 1 と Phase 2 の切り分け:
 **Phase 3 へ送るもの（モックでは触らない）**
 
 - migration SQL、RLS policy、`supabase start`
-- 招待コードの文字種・長さ、OAuth プロバイダの確定
-- 関数名（麻雀グループ作成・参加・退会）
+- 招待コードの文字種・長さ（3-3 で 10 文字 Crockford Base32）、OAuth プロバイダの確定
+- 関数名（3-3: `create_community` / `join_community` / `leave_community` / `withdraw_account`）
 
 ## Phase 2: モック作成
 
@@ -374,8 +374,8 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 **Phase 3 で触る（モックでは触らない）**
 
 - `supabase start`、migration SQL、RLS policy、関数
-- 招待コードの文字種・長さ
-- 関数名（麻雀グループ作成・参加・退会）
+- 招待コードの文字種・長さ（3-3 で 10 文字 Crockford Base32）
+- 関数名（3-3: `create_community` / `join_community` / `leave_community` / `withdraw_account`）
 - pgTAP（主）と薄い PostgREST。CI で lint / Advisors / `auth.uid()` 検査と `supabase test db`
 - Auth はメールを正。OAuth プロバイダの確定は 3-7（ローカル必須にしない）
 - テストケースの正は [test-cases.md](test-cases.md)（3-3 で作成。実装の pgTAP より先）
@@ -492,7 +492,7 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 
 - `public` の業務テーブルはすべて `ENABLE ROW LEVEL SECURITY`
 - それぞれに policy が 1 本以上ある
-- `anon` / `authenticated` の `GRANT` が意図どおり（`activity_logs` の SELECT をアプリロールに出さない等）
+- `anon` / `authenticated` の `GRANT` が意図どおり（`activity_logs` をアプリロールに出さない等）
 
 **フィクスチャ（pgTAP 内に閉じる。本番 seed と混ぜない）**
 
@@ -504,7 +504,7 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 | 離脱済み（プロフィールは利用中） | グループ 1 配下は不可。大会参加者として載っていれば A から表示名は読める |
 | 墓石 | ログインできない。参加者行は残り、A から名前だけ読める |
 
-3-3 のケースは、各テーブルで少なくとも次を ID にする: A は自分のグループだけ読める。B はグループ 1 に書けない。未所属は招待コードを SELECT できない。`community_memberships` への直接 INSERT は不可。`activity_logs` はアプリロールで SELECT / UPDATE / DELETE 不可。`profiles` の UPDATE は本人だけ。
+3-3 のケースは、各テーブルで少なくとも次を ID にする: A は自分のグループだけ読める。B はグループ 1 に書けない。未所属は招待コードを SELECT できない。`community_memberships` への直接 INSERT は不可。`activity_logs` はアプリロールで SELECT / INSERT / UPDATE / DELETE 不可（記録は trigger）。`profiles` の UPDATE は本人だけ。
 
 所属判定はヘルパー 1 つに寄せ、各表の policy は薄くする。表ごとの「B が 0 件」は残す（policy 付け忘れ用）。
 
@@ -559,17 +559,17 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 
 実装（スキーマ / RLS / 関数）より前に、断言するケースを全部書く。3-5 や 3-6 の冒頭には分割しない。
 
-- [ ] [test-cases.md](test-cases.md) を新規作成（制約・RLS・関数・メタテストを一ファイル）
-- [ ] 形式は ID・テーブルまたは関数・操作・アクター・期待・er.md の根拠
-- [ ] 関数名をここで決める（ケースが参照する）
-- [ ] 招待コードの文字種・長さをケースが書ける粒度まで決める
-- [ ] er.md と食い違う点があれば、先に er.md を直す
-- [ ] migration / policy / 関数の SQL は書かない
+- [x] [test-cases.md](test-cases.md) を新規作成（制約・RLS・関数・メタテストを一ファイル）
+- [x] 形式は ID・テーブルまたは関数・操作・アクター・期待・er.md の根拠
+- [x] 関数名をここで決める（ケースが参照する）: `create_community` / `join_community` / `leave_community` / `withdraw_account`。ヘルパー `private.is_community_member`。除名はメンバーシップ直接 DELETE
+- [x] 招待コードの文字種・長さをケースが書ける粒度まで決める（10 文字 Crockford Base32、CHECK）
+- [x] er.md と食い違う点があれば、先に er.md を直す
+- [x] migration / policy / 関数の SQL は書かない
 
 ### 3-4 スキーマ
 
-- [ ] [er.md](er.md) を migration SQL にする（テーブル、制約、FK、trigger）
-- [ ] [test-cases.md](test-cases.md) の制約 ID を pgTAP にする（空のときだけ削除、招待 UNIQUE、試合中ルールの修正不可など）
+- [ ] [er.md](er.md) を migration SQL にする（テーブル、制約、FK、trigger。操作ログは `private.trg_append_activity_log`）
+- [ ] [test-cases.md](test-cases.md) の制約 ID を pgTAP にする（空のときだけ削除、招待 UNIQUE、試合中ルールの修正不可、操作ログ trigger など）
 - [ ] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
 
 ### 3-5 RLS
@@ -582,7 +582,7 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 
 ### 3-6 関数
 
-- [ ] 麻雀グループ作成・参加・離脱（最後の 1 人ならグループごと削除）・アプリ退会（名前は 3-3）
+- [ ] 麻雀グループ作成・参加・離脱・退会（`create_community` / `join_community` / `leave_community` / `withdraw_account`）。除名は `community_memberships` 直接 DELETE
 - [ ] `community_memberships` への直接 INSERT は認証ロールでは不可
 - [ ] [test-cases.md](test-cases.md) の関数 ID を pgTAP にする
 - [ ] 薄い PostgREST 通し（JWT + GRANT + RPC）

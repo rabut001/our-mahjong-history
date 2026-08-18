@@ -123,7 +123,7 @@ Phase 6: 拡張（MVP 後）
 | ローカル実行 | Dev Container 内で `supabase start`（公式ローカルスタック。ホスト Docker を `docker.sock` 経由で使用） |
 | Migration | Phase 1 の ER を SQL 化 |
 | RLS | 麻雀グループのメンバーのみアクセス。所属判定はヘルパー関数 |
-| 関数 | 作成・参加・離脱・退会（SECURITY DEFINER）。アプリからは `supabase.rpc` |
+| 関数 | 作成・参加・離脱・退会（`create_community` / `join_community` / `leave_community` / `withdraw_account`。SECURITY DEFINER）。アプリからは `supabase.rpc` |
 | Auth | Supabase Auth。メールを正。OAuth は設定まで（ローカル必須にしない） |
 | 型生成 | `supabase gen types` → TypeScript 型（`web/` の型ファイルのみ） |
 | テスト | ケースの正は `docs/test-cases.md`（実装より前に一括）。pgTAP（主）。PostgREST の薄い通し（副）。静的検査は `db lint` / `db advisors` / grants 補完 / `auth.uid()` 検査（3-2）。CI で同じ入口 |
