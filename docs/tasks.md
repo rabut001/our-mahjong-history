@@ -889,12 +889,12 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 プロジェクトはユーザーが Dashboard で作る。クレデンシャルはチャットに貼らない。
 
-- [ ] プロジェクト作成（Tokyo、`our-mahjong-history`）
-- [ ] `supabase link` と migration 適用（`db push`）
-- [ ] メール確認を ON（既定メール）
-- [ ] Google（標準）と LINE（Custom OIDC、`custom:line`。エンドポイントは [tech-stack.md](tech-stack.md#認証)）
-- [ ] 既存クライアントのリダイレクトに `https://<project-ref>.supabase.co/auth/v1/callback`
-- [ ] [status.md](status.md) を更新
+- [x] プロジェクト作成（Tokyo、`our-mahjong-history`、ref `hmkyrdkqqjmomggekxbj`）
+- [x] `supabase link` と migration 適用（`db push`。schema / RLS / functions / auth の 4 本）
+- [x] メール確認を ON（既定メール）
+- [x] Google（標準）と LINE（Custom OIDC、`custom:line`。エンドポイントは [tech-stack.md](tech-stack.md#認証)）
+- [x] 既存クライアントのリダイレクトに `https://hmkyrdkqqjmomggekxbj.supabase.co/auth/v1/callback`
+- [x] [status.md](status.md) を更新
 
 Site URL とアプリの `/auth/callback` は Vercel URL 待ち（5-3）。
 

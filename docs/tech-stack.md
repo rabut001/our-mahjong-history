@@ -79,7 +79,7 @@
 
 ### OAuth（画面導線の前提。Phase 4-3 が呼ぶ）
 
-ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Supabase Cloud の Dashboard（Google は標準プロバイダ、LINE は Custom OIDC）。既存の Google / LINE クライアントのリダイレクト先は `https://<project-ref>.supabase.co/auth/v1/callback`。
+ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Supabase Cloud の Dashboard（Google は標準プロバイダ、LINE は Custom OIDC）。既存の Google / LINE クライアントのリダイレクト先は `https://hmkyrdkqqjmomggekxbj.supabase.co/auth/v1/callback`。
 
 | 項目 | Google | LINE |
 |------|--------|------|
@@ -131,7 +131,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | サービス | 役割 |
 |----------|------|
 | Vercel | Next.js アプリのホスティング（本番。コンテナ化しない） |
-| Supabase Cloud | 本番の DB・Auth・RLS |
+| Supabase Cloud | 本番の DB・Auth・RLS。Tokyo の `our-mahjong-history`（`hmkyrdkqqjmomggekxbj`）。メール確認あり。Google / LINE |
 | GitHub | ソースコード管理。公開リポジトリ [rabut001/our-mahjong-history](https://github.com/rabut001/our-mahjong-history) |
 | Docker | ローカル開発のみ |
 
