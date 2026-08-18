@@ -882,7 +882,7 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 - [x] 公開リポジトリ `rabut001/our-mahjong-history` を作成
 - [x] `main` を push（`git` の設定は変えない）
-- [x] Actions（`db` / `web` / `e2e`）が走ること
+- [x] Actions（`db` / `web` / `e2e`）が緑
 - [x] [status.md](status.md) / [tech-stack.md](tech-stack.md) を更新
 
 ### 5-2 Supabase Cloud
