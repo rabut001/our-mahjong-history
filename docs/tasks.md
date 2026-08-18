@@ -803,3 +803,115 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 - [x] global-setup の既定ルール seed を外す（画面経路が隠れないようにする）
 - [x] 有効な `type="button"` に `onClick` が無いものを lint で落とす
 
+## Phase 5: デプロイ
+
+**目的**: 本番 URL でログインから対局記録できること。コンテナ化しない。
+
+**完了条件**: 公開 GitHub に `main` がある。Vercel の既定 URL でアプリが動く。Supabase Cloud に schema / RLS / Auth（メール確認 + Google + LINE）がある。ユーザーが本番を動かして OK。
+
+進め方: GitHub → Supabase Cloud → Vercel（Redirect URL は Vercel URL が分かってから）。確認ケースの文書は作らない。
+
+---
+
+### キックオフ仕分け（2026-08-19）
+
+出典は [4-0 の引き渡し](#phase-5-に送るもの) / [development.md](development.md) / [tech-stack.md](tech-stack.md)。アカウント・方式は本セッションで確定。
+
+#### 決まっていること（再確認しない）
+
+| 項目 | 内容 |
+|------|------|
+| ホスティング | Vercel。本番はコンテナ化しない。Docker はローカル専用 |
+| 本番 DB / Auth | Supabase Cloud。独自 REST は作らない |
+| GitHub | 個人 `rabut001`。公開。名前 `our-mahjong-history` |
+| アカウント | GitHub / Vercel / Supabase Cloud はログイン済み |
+| ログイン | メール + Google + LINE。クライアントは既存 |
+| メール確認 | 本番はあり（Supabase 既定メール。自前 SMTP なし）。ローカルは確認なしのまま |
+| URL | Vercel 既定（`*.vercel.app`）。独自ドメインなし |
+| 確認 | ユーザーが本番を適当に動かして OK なら完了。ケース一覧は作らない |
+| 画面 | 新規機能は足さない。確認メール後の文言は既存（「確認メールを送信しました。」） |
+
+#### Phase 5 でやること
+
+| # | 項目 | セッション |
+|---|------|------------|
+| A | 範囲・順番・Dashboard と CLI の分担 | 5-0（本節） |
+| B | 公開リポジトリ作成、`main` を push、Actions | 5-1 |
+| C | Supabase プロジェクト、migration、メール確認、Google / LINE | 5-2 |
+| D | Vercel（`web/`）、環境変数、Redirect URL | 5-3 |
+| E | 本番を動かして OK | 5-4（ユーザー） |
+
+順番の依存: Vercel は GitHub と Supabase のキーが要る。Site URL / `/auth/callback` は Vercel URL が分かってから足す。OAuth のコールバックは Supabase 側（`https://<project-ref>.supabase.co/auth/v1/callback`）なので 5-2 で足せる。
+
+#### 触らない（Phase 6 / MVP 外）
+
+- 独自ドメイン、自前 SMTP、本番のコンテナ化
+- Preview デプロイ用の別 Supabase、本番 Playwright
+- 写真、統計、PC 最適化、公開ルーム
+- ローカルの `enable_confirmations`（false のまま）
+- シークレットをリポジトリやチャットに置くこと
+
+#### 誰が何をするか
+
+シークレット（service role、OAuth の client secret）はチャットに貼らない。Dashboard に直接入れる。
+
+| 作業 | 担当 |
+|------|------|
+| リポジトリ作成・`git push` | エージェント（コンテナに `gh` が無い。5-1 で入れるか、空リポジトリ URL をもらう） |
+| Actions の結果 | GitHub の UI で確認 |
+| Supabase プロジェクト作成 | ユーザー（Dashboard。リージョンは Northeast Asia (Tokyo)。名前は `our-mahjong-history`） |
+| `supabase link` / `db push` | エージェント（ログインまたは access token） |
+| メール確認 ON、Google / LINE の有効化 | ユーザー（Dashboard。手順は 5-2） |
+| 既存 Google / LINE クライアントに callback を足す | ユーザー |
+| Vercel プロジェクト | ユーザー（GitHub 連携。Root Directory は `web`。名前は `our-mahjong-history`） |
+| Vercel の環境変数 | ユーザー（Production のみ。値は Dashboard からコピー） |
+| Site URL / Redirect URLs | ユーザー（5-3。Vercel URL が分かってから） |
+| 本番を動かす | ユーザー |
+
+---
+
+### 5-0 キックオフ
+
+- [x] 公開 GitHub、Google + LINE、メール確認あり、Vercel 既定 URL、確認はユーザー判断、を固定
+- [x] セッション分割（5-0〜5-4）
+- [x] 本ファイルに Phase 5 タスクを記載
+- [x] [development.md](development.md) / [tech-stack.md](tech-stack.md) を更新
+- [x] [status.md](status.md) を Phase 5 着手・次は 5-1 に更新
+
+### 5-1 GitHub
+
+- [ ] 公開リポジトリ `rabut001/our-mahjong-history` を作成
+- [ ] `main` を push（`git` の設定は変えない）
+- [ ] Actions（`db` / `web` / `e2e`）が走ること
+- [ ] [status.md](status.md) / [tech-stack.md](tech-stack.md) を更新
+
+### 5-2 Supabase Cloud
+
+プロジェクトはユーザーが Dashboard で作る。クレデンシャルはチャットに貼らない。
+
+- [ ] プロジェクト作成（Tokyo、`our-mahjong-history`）
+- [ ] `supabase link` と migration 適用（`db push`）
+- [ ] メール確認を ON（既定メール）
+- [ ] Google（標準）と LINE（Custom OIDC、`custom:line`。エンドポイントは [tech-stack.md](tech-stack.md#認証)）
+- [ ] 既存クライアントのリダイレクトに `https://<project-ref>.supabase.co/auth/v1/callback`
+- [ ] [status.md](status.md) を更新
+
+Site URL とアプリの `/auth/callback` は Vercel URL 待ち（5-3）。
+
+### 5-3 Vercel
+
+- [ ] GitHub から Import。Root Directory は `web`。Framework は Next.js
+- [ ] 環境変数は Production のみ（`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`）。Preview には入れない（公開リポジトリのため）
+- [ ] デプロイが通ること
+- [ ] Supabase の Site URL を Vercel URL にする。Redirect URLs に `https://<vercel>/auth/callback` を足す
+- [ ] [status.md](status.md) / [tech-stack.md](tech-stack.md) を更新
+
+OAuth シークレットは Vercel に置かない（Supabase Dashboard）。
+
+### 5-4 本番確認
+
+ケース一覧は作らない。新しい機能も足さない。
+
+- [ ] ユーザーが本番 URL を動かして OK
+- [ ] [status.md](status.md) を Phase 5 完了・次は Phase 6 に更新（ユーザー確認後）
+

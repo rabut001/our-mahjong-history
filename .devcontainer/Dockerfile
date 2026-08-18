@@ -24,6 +24,15 @@ RUN ARCH="$(dpkg --print-architecture)" \
         | tar -xz -C /usr/local/bin supabase \
     && chmod +x /usr/local/bin/supabase
 
+# GitHub CLI（Phase 5-1。公開リポジトリの作成と push）
+ARG GH_CLI_VERSION=2.97.0
+RUN ARCH="$(dpkg --print-architecture)" \
+    && curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_${ARCH}.tar.gz" \
+        | tar -xz -C /tmp \
+    && mv "/tmp/gh_${GH_CLI_VERSION}_linux_${ARCH}/bin/gh" /usr/local/bin/gh \
+    && chmod +x /usr/local/bin/gh \
+    && rm -rf "/tmp/gh_${GH_CLI_VERSION}_linux_${ARCH}"
+
 # Docker-from-Docker: 公式 CLI は /usr/local/bin/supabase のまま。
 # alias で .devcontainer/supabase-workdir.sh へ向ける。
 RUN mkdir -p /usr/local/libexec

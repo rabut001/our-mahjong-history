@@ -169,12 +169,17 @@ Phase 6: 拡張（MVP 後）
 
 ### Phase 5: デプロイ
 
-- GitHub リポジトリ連携
-- Vercel デプロイ（環境変数設定）
-- Supabase Redirect URL を本番 URL に追加
-- 本番 smoke test
+**目的**: 本番 URL でログインから対局記録できること。コンテナ化しない。Docker はローカル専用。
 
-本番はコンテナ化しない。Docker はローカル開発専用。
+| 作業 | 内容 |
+|------|------|
+| GitHub | 公開リポジトリ。CI（`db` / `web` / `e2e`）が Actions で走る |
+| Supabase Cloud | migration 適用。メール確認あり（既定メール）。Google / LINE |
+| Vercel | `web/` をデプロイ。環境変数。既定の `*.vercel.app` |
+| Redirect | Site URL と `/auth/callback` を Dashboard に足す |
+| 確認 | ユーザーが本番を動かして OK なら完了（ケース一覧は作らない） |
+
+詳細とセッション分割は [tasks.md の Phase 5](tasks.md#phase-5-デプロイ)。
 
 ---
 

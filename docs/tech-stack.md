@@ -71,7 +71,7 @@
 ## 認証
 
 - Supabase Auth
-- 方式: メール + OAuth（Google / LINE。メールを正。OAuth はローカル必須にしない）
+- 方式: メール + OAuth（Google / LINE。メールを正。OAuth はローカル必須にしない。本番は Phase 5 で両方有効化）
 - ほぼ全ページで認証必須（未認証はログインへリダイレクト）。画面接続は Phase 4-3
 - 登録時: `auth.users` INSERT の trigger `private.handle_new_user` が利用中 `profiles` を 1 行付ける（`profiles.id` は Auth ID と別）
 - 表示名の初期値: `user_metadata.display_name` → `full_name` / `name` → メールの `@` より前。どれも無ければ登録失敗
@@ -79,7 +79,7 @@
 
 ### OAuth（画面導線の前提。Phase 4-3 が呼ぶ）
 
-ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Phase 5 の Supabase Cloud。
+ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Supabase Cloud の Dashboard（Google は標準プロバイダ、LINE は Custom OIDC）。既存の Google / LINE クライアントのリダイレクト先は `https://<project-ref>.supabase.co/auth/v1/callback`。
 
 | 項目 | Google | LINE |
 |------|--------|------|
@@ -105,7 +105,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 
 - コールバックパス: `/auth/callback`（ページは Phase 4-3）
 - ローカル: `http://127.0.0.1:3000/auth/callback`、`http://localhost:3000/auth/callback`
-- 本番: Phase 5 で Vercel URL を Dashboard に足す
+- 本番: Vercel の既定 URL（`https://<project>.vercel.app/auth/callback`）を Dashboard の Site URL / Redirect URLs に足す
 
 生成型: `supabase gen types typescript --local > web/src/lib/supabase/database.types.ts`。既存の `client.ts` / `server.ts` が `Database` を使う。
 
@@ -120,7 +120,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 | `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** |
 | `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
 | `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
-| `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job: `web/` で lint / `tsc --noEmit` / `format:check` / vitest。`e2e` job: start → Playwright 煙（ログイン + トップ） |
+| `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job: `web/` で lint / `tsc --noEmit` / `format:check` / vitest。`e2e` job: start → Playwright（正は [e2e-cases.md](e2e-cases.md)） |
 
 Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本番は Vercel + Supabase Cloud。ローカルでは Storage / Realtime / Vector / Edge Runtime を切る（写真は MVP 外）。
 
@@ -132,19 +132,21 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 |----------|------|
 | Vercel | Next.js アプリのホスティング（本番。コンテナ化しない） |
 | Supabase Cloud | 本番の DB・Auth・RLS |
-| GitHub | ソースコード管理 |
+| GitHub | ソースコード管理。公開リポジトリ `rabut001/our-mahjong-history`（Phase 5-1 で作成） |
 | Docker | ローカル開発のみ |
 
-### 環境変数（予定）
+### 環境変数
 
-ローカル: `.env.local`（git 管理外）
+ローカル: `web/.env.local`（git 管理外）。本番: Vercel の Production のみ（Preview には入れない）。
 
-| 変数 | 用途 |
-|------|------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL（ローカルは `http://127.0.0.1:54321`） |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー（`supabase start` の値を `web/.env.local` へ。画面接続は Phase 4-3） |
-| `SUPABASE_SERVICE_ROLE_KEY` | サーバー専用。退会時の Auth Admin 削除。クライアントに出さない。ローカルは `supabase status` の service_role |
-| `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` | Google OAuth の client secret（本番。ローカルは未設定のまま） |
+| 変数 | 置き場 | 用途 |
+|------|--------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `web/.env.local` / Vercel | プロジェクト URL（ローカルは `http://127.0.0.1:54321`） |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 同上 | 公開 anon キー |
+| `SUPABASE_SERVICE_ROLE_KEY` | 同上（サーバー専用。クライアントに出さない） | 退会時の Auth Admin。ローカルは `supabase status` の service_role |
+| Google client secret / LINE シークレット | **Supabase Dashboard**（Vercel には置かない） | 本番 OAuth。リポジトリに置かない |
+
+メール確認: ローカルは `config.toml` の `enable_confirmations = false`。本番 Dashboard では確認あり（Supabase 既定メール。自前 SMTP は使わない）。
 
 ---
 
@@ -172,7 +174,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | アプリ静的検査 | ESLint / `tsc` / Prettier | 型と体裁。有効な `type="button"` に `onClick` が無いものを落とす | Phase 4-1（CI の `web` job） |
 | 画面 | Playwright | [e2e-cases.md](e2e-cases.md)（通常画面の到達、各表に 1 行）。権限行列の代替にしない | Phase 4-3 以降 |
 
-CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。`e2e` job は `supabase start` のあと `web/` で Playwright（`npm run test:e2e`。正は [e2e-cases.md](e2e-cases.md)）。GitHub リモートは未設定。
+CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。`e2e` job は `supabase start` のあと `web/` で Playwright（`npm run test:e2e`。正は [e2e-cases.md](e2e-cases.md)）。GitHub リモートは Phase 5-1 で設定する。
 
 見た目のピクセル一致と、全画面の Testing Library は CI にしない。確認は 375px の操作。
 
