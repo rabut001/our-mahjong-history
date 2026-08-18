@@ -45,7 +45,7 @@ alwaysApply: true
 3. **MVP スコープ**: 写真・統計・PC 最適化は明示的依頼まで着手しない
 4. **フェーズ順守**: `docs/development.md` のフェーズに従う
 5. **DB 変更**: migration SQL で管理する
-6. **ドキュメント**: 進捗変更時は `docs/status.md`、ドメイン変更時は `docs/overview.md`、ER 変更時は `docs/er.md`、DB テストケース変更時は `docs/test-cases.md`、UI 変更時は `docs/ui-spec.md` を更新する
+6. **ドキュメント**: 進捗変更時は `docs/status.md`、ドメイン変更時は `docs/overview.md`、ER 変更時は `docs/er.md`、DB テストケース変更時は `docs/test-cases.md`、ポイント計算ケース変更時は `docs/calc-cases.md`（Phase 4-1 で作成）、UI 変更時は `docs/ui-spec.md` を更新する
 
 ## 参照ドキュメント
 
@@ -54,6 +54,7 @@ alwaysApply: true
 - `docs/overview.md` — 要件・ドメイン
 - `docs/er.md` — ER（属性・制約・Mermaid）
 - `docs/test-cases.md` — DB / RLS テストケース（Phase 3-3 で作成）
+- `docs/calc-cases.md` — ポイント計算ケース（Phase 4-1 で作成）
 - `docs/development.md` — フェーズ定義
 - `docs/ui-spec.md` — 画面遷移・部品・トークン
 - `docs/tech-stack.md` — 技術選定

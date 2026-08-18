@@ -72,12 +72,12 @@
 
 - Supabase Auth
 - 方式: メール + OAuth（Google / LINE。メールを正。OAuth はローカル必須にしない）
-- ほぼ全ページで認証必須（未認証はログインへリダイレクト）。画面接続は Phase 4-0
+- ほぼ全ページで認証必須（未認証はログインへリダイレクト）。画面接続は Phase 4-3
 - 登録時: `auth.users` INSERT の trigger `private.handle_new_user` が利用中 `profiles` を 1 行付ける（`profiles.id` は Auth ID と別）
 - 表示名の初期値: `user_metadata.display_name` → `full_name` / `name` → メールの `@` より前。どれも無ければ登録失敗
 - アイコン: Google / LINE のみ `avatar_url` または `picture` をコピー。メール登録は空
 
-### OAuth（画面導線の前提。Phase 4-0 が呼ぶ）
+### OAuth（画面導線の前提。Phase 4-3 が呼ぶ）
 
 ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Phase 5 の Supabase Cloud。
 
@@ -103,7 +103,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 
 リダイレクト（許可リストは `config.toml` の `additional_redirect_urls`）:
 
-- コールバックパス: `/auth/callback`（ページは Phase 4-0）
+- コールバックパス: `/auth/callback`（ページは Phase 4-3）
 - ローカル: `http://127.0.0.1:3000/auth/callback`、`http://localhost:3000/auth/callback`
 - 本番: Phase 5 で Vercel URL を Dashboard に足す
 
@@ -120,7 +120,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 | `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** |
 | `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
 | `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
-| `.github/workflows/ci.yml` | `supabase start` → lint / Advisors / `auth.uid()` 検査 → `test db`（CLI 2.114.0） |
+| `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job は 4-1（lint / tsc / format / vitest）。Playwright 煙は 4-3 |
 
 Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本番は Vercel + Supabase Cloud。ローカルでは Storage / Realtime / Vector / Edge Runtime を切る（写真は MVP 外）。
 
@@ -142,7 +142,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | 変数 | 用途 |
 |------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL（ローカルは `http://127.0.0.1:54321`） |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー（`supabase start` の値を `web/.env.local` へ。画面接続は Phase 4-0） |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 公開 anon キー（`supabase start` の値を `web/.env.local` へ。画面接続は Phase 4-3） |
 | `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` | Google OAuth の client secret（本番。ローカルは未設定のまま） |
 
 ---
@@ -155,26 +155,31 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | Prettier | コードフォーマット |
 | npm | パッケージ管理 |
 | pgTAP | DB / RLS の主テスト（`supabase test db`） |
+| Vitest | ポイント計算・順位・バリデーション（`web/`。権限には使わない） |
+| Playwright | 画面の煙（ログイン + トップ。権限行列の代替にしない） |
 
 ### テスト
 
-アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。層とタイミングは [tasks.md のテスト方針](tasks.md#テスト方針)。
+アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。DB ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。計算ケースの正は 4-1 の `docs/calc-cases.md`。層とタイミングは [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)。
 
 | 層 | ツール | 用途 | 時期 |
 |----|--------|------|------|
 | DB / RLS（主） | pgTAP（`supabase test db`） | 権限行列、制約、SECURITY DEFINER 関数 | Phase 3 |
 | DB 静的検査 | `supabase db lint` / `db advisors` / grants 補完 / `auth.uid()` 検査 | 型、RLS 付け忘れ、`search_path`、DEFINER の EXECUTE、本人取得 | Phase 3（方針は 3-2） |
 | PostgREST（副） | ローカル Auth の JWT + anon キー | GRANT・RPC 公開 | Phase 3（関数後） |
-| 画面 | Playwright 等 | 煙。権限行列の代替にしない | Phase 4 以降 |
-| アプリ単体 | Vitest 等 | ポイント計算・バリデーション。権限には使わない | Phase 4 |
+| アプリ単体 | Vitest | ポイント計算・順位・整形・バリデーション。権限には使わない | Phase 4-1 |
+| アプリ静的検査 | ESLint / `tsc` / Prettier | 型と体裁 | Phase 4-1（CI の `web` job） |
+| 画面 | Playwright | 煙（ログインできる、自分の麻雀グループが見える）。権限行列の代替にしない | Phase 4-3 以降 |
 
-CI（Phase 3）: `.github/workflows/ci.yml` が手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db`）。GitHub リモートは未設定。
+CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は 4-1 で足す（Docker の Supabase は不要）。Playwright は 4-3 で別 job。GitHub リモートは未設定。
+
+見た目のピクセル一致と、全画面の Testing Library は CI にしない。確認は 375px の操作。
 
 ---
 
 ## ディレクトリ構成（予定）
 
-Phase 0 の前提として確定。`supabase/tests/` は Phase 3。
+Phase 0 の前提として確定。`supabase/tests/` は Phase 3。`web/src/lib/domain/` は 4-1、`components/ui/` の寄せは 4-2、`lib/data/` は 4-3 以降。
 
 ```
 our-mahjong-history/            # リポジトリ名（Our Mahjong History）
@@ -187,12 +192,16 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   ├── devcontainer.json
 │   ├── supabase-alias.sh     # alias supabase=ラッパー
 │   └── supabase-workdir.sh   # --workdir を付けて公式 CLI を呼ぶ
-├── .github/workflows/ci.yml  # start → lint / advisors / auth.uid → test db
+├── .github/workflows/ci.yml  # db job。web job は 4-1。e2e は 4-3
 ├── web/                      # Next.js アプリ
 │   ├── src/
-│   │   ├── app/
-│   │   ├── components/
-│   │   └── lib/              # supabase クライアントと生成型 `database.types.ts`
+│   │   ├── app/              # ルート。読む・並べるだけ
+│   │   ├── components/       # 見た目。計算も fetch もしない
+│   │   ├── lib/
+│   │   │   ├── domain/       # 純関数。React / Supabase / mock に依存しない（4-1）
+│   │   │   ├── data/         # RSC / Server Action と DB 型の変換（4-3 以降）
+│   │   │   └── supabase/     # クライアントと生成型 `database.types.ts`
+│   │   └── mock/             # フィクスチャと薄い list/get。接続が進んだら消す
 │   └── package.json
 └── supabase/
     ├── config.toml
@@ -200,6 +209,8 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
     ├── migrations/           # Phase 3-4
     └── tests/                # pgTAP。ファイル名は *_test.sql
 ```
+
+UI は camelCase のドメイン型だけを見る。`database.types.ts` は `lib/data/` と `lib/supabase/` の外に出さない。
 
 ---
 

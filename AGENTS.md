@@ -48,6 +48,7 @@
 | 技術スタック・言語・プラットフォーム | [docs/tech-stack.md](docs/tech-stack.md) |
 | 具体タスク（Phase 0 以降） | [docs/tasks.md](docs/tasks.md) |
 | DB / RLS テストケース | [docs/test-cases.md](docs/test-cases.md)（Phase 3-3 で作成） |
+| ポイント計算ケース | [docs/calc-cases.md](docs/calc-cases.md)（Phase 4-1 で作成） |
 | UI 仕様（画面・部品・トークン） | [docs/ui-spec.md](docs/ui-spec.md) |
 | コア方針（Cursor 常時適用） | [.cursor/rules/00-core.mdc](.cursor/rules/00-core.mdc) |
 
@@ -78,6 +79,7 @@
 - DB 変更は migration SQL として管理する
 - RLS の権限テストは `supabase test db`（pgTAP）。画面やモッククライアントでは代替しない
 - テストケースの正は [docs/test-cases.md](docs/test-cases.md)（Phase 3-3 で作成。実装より前）
+- ポイント計算ケースの正は [docs/calc-cases.md](docs/calc-cases.md)（Phase 4-1 で作成。実装より前）
 - フェーズや作業が進んだら [docs/status.md](docs/status.md) を更新する
 - ドメイン用語に変更があれば [docs/overview.md](docs/overview.md) を更新する
 - ER の属性・制約に変更があれば [docs/er.md](docs/er.md) を更新する

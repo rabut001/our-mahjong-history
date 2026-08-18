@@ -2,7 +2,7 @@
 
 UI の正（画面遷移・部品・トークン・基本フロー外の方針）。見た目の正は `web/` のモック。ドメインの正は [overview.md](overview.md)。属性・制約・RLS は [er.md](er.md)。進捗は [status.md](status.md)。
 
-Phase 4 はモックと本ファイルを見て実装に入る。データ方針は変えない。
+Phase 4 の見た目はモックと本ファイルを正とする。コンポーネント分割と計算の置き場は再整理する（[tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)）。データ方針は変えない。
 
 ---
 
@@ -13,6 +13,7 @@ Phase 4 はモックと本ファイルを見て実装に入る。データ方針
 | 用語・保存 vs 計算・誰が何をできるか | [overview.md](overview.md) |
 | 属性・制約・ER | [er.md](er.md) |
 | 画面の配置・遷移・文言・トーン | 本ファイル + `web/` のモック |
+| コンポーネント分割・CSS の重複 | 正にしない。4-2 で寄せる |
 | ピクセル完全再現 | しない。迷う点は本ファイル、見た目の感覚はモック |
 
 モックはダミーデータで、入力は見せるだけで保存しない。Phase 4 で保存する。
@@ -274,7 +275,7 @@ flowchart TD
 - 次画面: パスワード → 「ログイン」。戻るは初画面へ
 - 下部に「アカウントを作成」
 - メールは `signInWithPassword`（パスワードは 2 画面目）。Google / LINE は初画面から OAuth
-- Phase 4-0 が呼ぶ API: Google は `signInWithOAuth({ provider: 'google' })`。LINE は `signInWithOAuth({ provider: 'custom:line' })`。戻り先は `/auth/callback`（ページも 4-0）
+- Phase 4-3 が呼ぶ API: Google は `signInWithOAuth({ provider: 'google' })`。LINE は `signInWithOAuth({ provider: 'custom:line' })`。戻り先は `/auth/callback`（ページも 4-3）
 
 **アカウント作成**（`/signup`）
 
@@ -372,7 +373,7 @@ flowchart TD
 
 ## ポイント計算（画面）
 
-計算の正は `web/src/lib/match-points.ts`。入力項目と保存方針は [overview.md](overview.md)。
+画面上の行構成・入力の正は本ファイル。計算の意図は [overview.md](overview.md)。ケースの正は 4-1 の `docs/calc-cases.md`（現行実装 `web/src/lib/match-points.ts` は正にしない。4-1 で `lib/domain/` へ移す）。入力項目と保存方針は overview。
 
 | 項目 | 画面 |
 |------|------|
@@ -427,7 +428,7 @@ flowchart TD
 
 ### エラー・未入力
 
-フィールド下の一文を原則とする。トーストは導入しない。バリデーション一式は Phase 4-6。
+フィールド下の一文を原則とする。トーストは導入しない。バリデーションは接続する機能のセッションで入れる。残りは 4-9。
 
 ---
 
@@ -459,8 +460,9 @@ UI の正は本ファイル。見た目の正は `web/` のモック。ドメイ
 
 **Phase 4 で触る**
 
-- **4-0**: 本番のログイン + トップを実セッション / 実 RLS に接続（テスト専用画面は作らない）
-- モックの画面を Server Action / RSC で保存・読取に差し替える
-- 基本フロー外の方針（空状態・警告・除名・最後の 1 人の文面）
-- バリデーション、エラー表示、ローディング（4-6）
-- 確認ダイアログのフォーカストラップ等
+- 詳細は [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)
+- 見た目はモックと本ファイル。構造は 4-2 で整理。計算は 4-1
+- **4-3**: 本番のログイン + トップを実セッション / 実 RLS に接続（テスト専用画面は作らない）
+- 4-4 以降: モックの画面を Server Action / RSC で保存・読取に差し替える
+- 基本フロー外の方針（空状態・警告・除名・最後の 1 人の文面）は接続する機能のセッション
+- 確認ダイアログのフォーカストラップ等は 4-9（または該当画面の接続時）

@@ -10,10 +10,10 @@
 
 | 項目 | 状態 |
 |------|------|
-| フェーズ | **Phase 3 完了**。次は 4-0 |
-| コード | `web/` に Next.js 16。モックはダミーデータ。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報のみ（画面は未接続）。スキーマ / RLS / RPC / `handle_new_user` の migration あり。生成型は `web/src/lib/supabase/database.types.ts`（`client.ts` / `server.ts` が使用）。`supabase test db` が緑。PostgREST 通しは `supabase/ci/postgrest-smoke.sh`。CI は `start` → lint / Advisors（0029 除外）/ DEFINER の GRANT 補完 / `auth.uid()` 静的検査 → `test db` → PostgREST（リモート未設定のため Actions は未実行）。ケースの正は [test-cases.md](test-cases.md)（操作ログは trigger。アプリロールは直 INSERT 不可。登録は `handle_new_user`）。中核 6 画面とルール・ログイン・招待・メンバーのワイヤーあり。ナビは戻る＋タイトル。トーンは雀卓・カード枠。トップは「俺たちの雀歴」（`/communities`。上部が自分、下部が麻雀グループ一覧）。破壊的操作は `DangerAction`。UI の正は [ui-spec.md](ui-spec.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま）。OAuth は Google が `config.toml` の disabled スタブ、LINE は Custom OIDC（`custom:line`）を [tech-stack.md](tech-stack.md#認証) に書いた。ローカルでは有効化していない |
+| フェーズ | **Phase 4 着手**。4-0 完了。次は 4-1 |
+| コード | `web/` に Next.js 16。モックはダミーデータ。画面は未接続。Phase 4 は **基盤先行**（4-1 ドメイン + Vitest + CI の `web` job → 4-2 共通 UI → 4-3 から実データ接続）。見た目の正はモック + [ui-spec.md](ui-spec.md)。構造と現行 `match-points.ts` は正にしない。計算の意図は [overview.md](overview.md)。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報のみ。スキーマ / RLS / RPC / `handle_new_user` の migration あり。生成型は `web/src/lib/supabase/database.types.ts`。`supabase test db` が緑。CI の `db` job は既存（リモート未設定のため Actions は未実行）。ケースの正は [test-cases.md](test-cases.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま）。OAuth は [tech-stack.md](tech-stack.md#認証) |
 | Git | 初期化済み（`main`）。リモートなし |
-| 次のアクション | 4-0: 本番のログイン + トップの SELECT（実セッション / 実 RLS） |
+| 次のアクション | 4-1: `docs/calc-cases.md` → `lib/domain/` + Vitest + CI の `web` job（見た目は変えない） |
 
 ## ブロッカー
 
@@ -29,7 +29,7 @@
 | Phase 1: ドメイン設計 | 完了 | 1-0〜1-6 完了。ドメインの正は overview.md |
 | Phase 2: モック作成 | 完了 | 2-0 〜 2-8 完了。UI の正は ui-spec.md |
 | Phase 3: Supabase スキーマ + 認証 | 完了 | 3-0〜3-7。画面は未接続。完了条件（`supabase test db` 緑）を満たした |
-| Phase 4: MVP 実装 | 未着手 | |
+| Phase 4: MVP 実装 | 着手 | 4-0 完了。基盤先行。次は 4-1 |
 | Phase 5: デプロイ | 未着手 | 本番は Vercel（コンテナ化しない） |
 | Phase 6: 拡張 | 未着手 | MVP 後 |
 

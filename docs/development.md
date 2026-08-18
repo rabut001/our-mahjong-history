@@ -128,7 +128,7 @@ Phase 6: 拡張（MVP 後）
 | 型生成 | `supabase gen types` → TypeScript 型（`web/` の型ファイルのみ） |
 | テスト | ケースの正は `docs/test-cases.md`（実装より前に一括）。pgTAP（主）。PostgREST の薄い通し（副）。静的検査は `db lint` / `db advisors` / grants 補完 / `auth.uid()` 検査（3-2）。CI で同じ入口 |
 
-`web/` の画面は触らない。テスト専用画面も作らない。ログイン〜一覧の実データ接続は Phase 4-0。
+`web/` の画面は触らない。テスト専用画面も作らない。ログイン〜一覧の実データ接続は Phase 4-3（基盤の 4-1 / 4-2 のあと）。
 
 本番の DB / Auth は Phase 5 で Supabase Cloud を使う。
 
@@ -140,21 +140,30 @@ Phase 6: 拡張（MVP 後）
 
 ### Phase 4: MVP 実装
 
-モック（`docs/ui-spec.md`）に沿って **1 機能 = 1 セッション** で実装。Phase 3 の DB / RLS / 型をここで初めて画面が消費する。
+**目的**: モックの見た目を正として残し、コンポーネント構成と計算は整理したうえで、Phase 3 の DB / RLS / 型を画面が消費する。
+
+見た目の正は `docs/ui-spec.md` と `web/` のモック。構造（CSS の重複、コンポーネント分割、`mock/` の神モジュール）は正にしない。計算の意図は [overview.md](overview.md)。ケースの正は 4-1 の `docs/calc-cases.md`。
+
+基盤（ドメイン・テスト・共通 UI）を先に固定し、そのあと機能単位で接続する。
 
 | 順番 | 機能 | 依存 |
 |------|------|------|
-| 4-0 | Auth 接続（ログイン + トップの SELECT） | Phase 3 の Auth / RLS / 型 |
-| 4-1 | 麻雀グループ CRUD + 招待 | 4-0 |
-| 4-2 | ルール設定 | 麻雀グループ |
-| 4-3 | 大会 CRUD | 麻雀グループ |
-| 4-4 | 試合 CRUD + ポイント計算 | 大会 + ルール |
-| 4-5 | 大会サマリー（順位・ポイント集計） | 試合 |
-| 4-6 | 仕上げ | バリデーション、エラー表示、ローディング |
+| 4-0 | キックオフ（方針・層・CI・セッション分割） | Phase 3 完了 |
+| 4-1 | ドメイン切り出し + Vitest + CI の `web` job | 4-0。見た目は変えない |
+| 4-2 | 共通 UI の整理（`MatchForm` / `RuleForm` の分割） | 4-1。ダミーのまま |
+| 4-3 | Auth 接続（ログイン + トップの SELECT）+ Playwright 煙 | 4-2 + Phase 3 の Auth / RLS / 型 |
+| 4-4 | 麻雀グループ CRUD + 招待 | 4-3 |
+| 4-5 | ルール設定 | 麻雀グループ |
+| 4-6 | 大会 CRUD | 麻雀グループ |
+| 4-7 | 試合 CRUD（ポイント計算は 4-1 の純関数） | 大会 + ルール |
+| 4-8 | 大会サマリー（順位・ポイント集計） | 試合 |
+| 4-9 | 仕上げ | 横断の空状態・エラー・ローディングの残り |
 
-4-0 は本番のログイン画面と `/communities` を実セッションに繋ぐ。テスト専用の画面は作らない。
+4-3 は本番のログイン画面と `/communities` を実セッションに繋ぐ。テスト専用の画面は作らない。バリデーションは接続する機能のセッションで入れ、4-9 は残りだけ。
 
-各ステップでスマホ実機または DevTools のモバイル表示で確認する。
+接続した画面はスマホ実機または DevTools のモバイル表示で確認する。4-1 はブラウザ不要。4-2 は 375px で試合入力とルールを踏む。
+
+詳細は [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)。
 
 ---
 
@@ -188,7 +197,7 @@ Phase 6: 拡張（MVP 後）
 | 4 | Phase 2 | モック（主要画面） | スマホ幅でスクロール確認 |
 | 5 | Phase 2 | モック（試合入力・ルール） | 入力フロー walkthrough |
 | 6 | Phase 3 | DB + RLS + 自動テスト（`supabase start`） | `supabase test db` が緑 |
-| 7 | Phase 4 | 4-0 でログイン接続。大会・試合 CRUD | 実データで記録 |
+| 7 | Phase 4 | 基盤（計算・CI・共通 UI）のあとログイン接続。大会・試合 CRUD | 実データで記録。計算は Vitest |
 | 8 | Phase 5 | デプロイ | 本番 URL で確認 |
 
 ---
@@ -213,6 +222,7 @@ Phase 6: 拡張（MVP 後）
 | ドメイン変更時 | [docs/overview.md](overview.md) |
 | ER 変更時 | [docs/er.md](er.md) |
 | DB / RLS のテストケース変更時 | [docs/test-cases.md](test-cases.md)（Phase 3-3 で作成） |
+| ポイント計算ケース変更時 | `docs/calc-cases.md`（Phase 4-1 で作成） |
 | モック確定時 | `docs/ui-spec.md`（新規作成） |
 | 技術選定変更時 | [docs/tech-stack.md](tech-stack.md) |
 | コーディング規約追加時 | `.cursor/rules/` |
@@ -247,7 +257,7 @@ Dev Container は `.devcontainer/docker-compose.yml` を参照する（[ci-cd-st
 | テスト | `supabase test db`（ファイル名は `*_test.sql`）。静的検査は `supabase db lint` / `supabase db advisors` / grants 補完 / `auth.uid()` 検査（方針は 3-2） |
 | 未使用サービス | Storage / Realtime / Vector / Edge Runtime は切ってある |
 
-`web/.env.local` は URL と anon キーのみ。画面への接続は Phase 4-0。
+`web/.env.local` は URL と anon キーのみ。画面への接続は Phase 4-3。
 
 ### 同一 LAN のスマホから見る
 

@@ -383,10 +383,10 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 
 **Phase 4 で触る**
 
-- **4-0**: 本番のログイン + トップを実セッション / 実 RLS に接続（テスト専用画面は作らない）
-- モック画面を保存・読取に差し替える
-- 基本フロー外の方針（空状態、点数合計の警告、除名、最後の 1 人の文面）
-- バリデーション、エラー表示、ローディング
+- 詳細は [Phase 4](#phase-4-mvp-実装)
+- 基盤（4-1 ドメイン・4-2 共通 UI）のあと、**4-3** で本番ログイン + トップを接続
+- 4-4 以降でモックを保存・読取に差し替える
+- 基本フロー外の方針とバリデーションは、接続する機能のセッション（残りは 4-9）
 
 ## Phase 3: Supabase スキーマ + 認証
 
@@ -408,7 +408,7 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 |------|------|
 | 範囲 | DB・RLS・関数・Auth・型・自動テスト。`web/` のページ・コンポーネントは触らない |
 | 中間物 | Phase 3 と Phase 4 の間に、双方の成果を受ける画面は置かない。テスト専用アプリも作らない |
-| ログイン〜一覧 | Phase 4-0。本番の `LoginForm` と `/communities` を実セッションに接続する |
+| ログイン〜一覧 | Phase 4-3。本番の `LoginForm` と `/communities` を実セッションに接続する（その前に 4-1 / 4-2） |
 | 権限の正 | RLS 一点。所属メンバーなら配下を閲覧・編集。作成・参加・退会は関数 |
 | テストの正 | 本物の Postgres（RLS 有効）。クライアントのモックでは権限を担保しない |
 | ケースの正 | [test-cases.md](test-cases.md)（3-3 で一括作成。制約・RLS・関数） |
@@ -442,14 +442,15 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 #### Phase 4 に送るもの
 
 - 生成型、RLS、関数、ローカル Auth
-- 4-0: 本番ログイン + トップの SELECT（cookie → RSC → クライアント → RLS）
-- 4-1 以降: モックを保存・読取に差し替え
+- 4-1: ドメイン切り出し + Vitest（画面接続の前）
+- 4-3: 本番ログイン + トップの SELECT（cookie → RSC → クライアント → RLS）
+- 4-4 以降: モックを保存・読取に差し替え
 
 ---
 
 ### 3-0 キックオフ
 
-- [x] Phase 3 の範囲（画面を触らない。専用テスト画面なし。ログイン骨格は Phase 4-0）
+- [x] Phase 3 の範囲（画面を触らない。専用テスト画面なし。ログイン骨格は当時 4-0 と書いた。番号は 4-3）
 - [x] テスト層（pgTAP 主、PostgREST 副、画面 E2E は後）
 - [x] テストケースは `docs/test-cases.md` に独立。実装より前（3-3）に一括作成
 - [x] 本ファイルに Phase 3 タスクを記載
@@ -485,7 +486,7 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 |----|----------------|----------|----------|
 | A. pgTAP（主） | `test-cases.md` の ID | `supabase/tests/*_test.sql` | `supabase test db` |
 | B. PostgREST（副） | JWT・`GRANT`・RPC が API に出ていること | 3-6 で置く。`web/` の画面テストにはしない | ローカル Auth の JWT + anon キー |
-| C. 画面 E2E | 煙 | Phase 4 以降 | 権限行列は再実装しない |
+| C. 画面 E2E | 煙 | Phase 4-3 以降 | 権限行列は再実装しない |
 | D. 静的検査 | 定義の形（RLS 有無、`search_path`、`EXECUTE`、型） | CI。方針は 3-2 | `supabase db lint` / `supabase db advisors` |
 
 **メタテスト（改修事故）** — 3-3 の `test-cases.md` に ID を付ける
@@ -590,9 +591,200 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 
 ### 3-7 Auth と型
 
-ログイン〜一覧の画面接続ではない（それは Phase 4-0）。
+ログイン〜一覧の画面接続ではない（それは Phase 4-3）。
 
 - [x] メール Auth。登録時に `profiles` が付く trigger
 - [x] OAuth（Google / LINE）は設定と画面導線の前提まで。ローカル必須にしない
 - [x] `supabase gen types` → `web/` の型ファイルのみ（ページは触らない）
 - [x] [status.md](status.md) を Phase 3 完了・次は Phase 4-0 に更新（ユーザーレビュー後）
+
+## Phase 4: MVP 実装
+
+**目的**: モックの見た目を正として残し、コンポーネント構成と計算は整理したうえで、Phase 3 の DB / RLS / 型を画面が消費する。
+
+**完了条件**: ログインから試合記録まで実データで一通りできる。ドメイン計算の Vitest が緑。CI に `web` job（lint / `tsc` / format / vitest）と既存の `db` job、4-3 以降に Playwright 煙がある。テスト専用画面は無い。
+
+進め方: キックオフ → ドメイン + Vitest + CI → 共通 UI → ログイン接続 → 機能ごと接続。モックのファイル分割は正にしない。
+
+---
+
+### キックオフ仕分け（2026-08-18）
+
+出典は [3-7](#37-auth-と型) / [2-8 の引き渡し](#phase-3--4-への引き渡し) / 本セッションの方針確定。見た目の正は [ui-spec.md](ui-spec.md) と `web/` のモック。計算の意図は [overview.md](overview.md)。権限の正は [test-cases.md](test-cases.md)。
+
+#### 決まっていること（再確認しない）
+
+| 項目 | 内容 |
+|------|------|
+| 見た目 | 配置・文言・遷移・トーンはモック + ui-spec。ピクセル完全再現はしない |
+| 構造 | コンポーネント分割、CSS の重複、`mock/index.ts` の神モジュールは正にしない。4-1 / 4-2 で整理する |
+| 計算の意図 | overview の同着（上家取り / 折半 / 手動）など。現行 `match-points.ts` は正にしない。違えば 4-1 で直す |
+| スタイリング基盤 | Tailwind と既存トークン（`globals.css` / `ui.ts`）を維持する。CSS Modules 化やトークンの作り直しはしない |
+| 権限 | RLS 一点。画面 E2E で権限行列を再実装しない。クライアントのモックでは権限を担保しない |
+| データアクセス | 読み取りは RSC→Supabase、更新は Server Action。循環する操作は `supabase.rpc`。独自 REST は作らない |
+| テスト専用画面 | 作らない。4-3 は本番の `LoginForm` と `/communities` |
+| 媒体 | 375px を基準。PC 最適化は MVP 外 |
+
+#### Phase 4 で決める / 作ること
+
+| # | 項目 | セッション |
+|---|------|------------|
+| A | 層・ディレクトリ・テスト・CI・セッション分割 | 4-0（本節） |
+| B | 計算ケースを `docs/calc-cases.md` に書く。`lib/domain/` + Vitest + CI の `web` job | 4-1 |
+| C | 共通部品を `components/ui/` へ。`MatchForm` / `RuleForm` を視覚ブロックで分割 | 4-2 |
+| D | ログイン + トップの SELECT。`/auth/callback`。Playwright 煙 | 4-3 |
+| E | 麻雀グループ CRUD + 招待 | 4-4 |
+| F | ルール設定 | 4-5 |
+| G | 大会 CRUD | 4-6 |
+| H | 試合 CRUD（計算は 4-1 の純関数） | 4-7 |
+| I | 大会サマリー | 4-8 |
+| J | 横断の空状態・ローディング・フォーカストラップの残り | 4-9 |
+
+接続セッション（4-3 以降）の型: 読み取り（RSC）→ 更新（Server Action / RPC）→ その機能の空状態・エラー・バリデーション → 使わなくなった mock を削除 → 新しい純ロジックがあれば Vitest。
+
+#### 触らない（MVP 外 / 後のフェーズ）
+
+- Tailwind やトークンの作り直し、CSS Modules 化
+- 全ページの作り直し、全画面の Testing Library、スクリーンショット回帰
+- Playwright で全画面・権限行列を踏むこと
+- 接続前の repository パターン一式
+- 写真、統計、PC 最適化、公開ルーム
+
+#### Phase 5 に送るもの
+
+- Vercel デプロイ、Supabase Cloud、Redirect URL、本番 smoke
+
+---
+
+### 4-0 キックオフ
+
+- [x] 見た目はモック + ui-spec、構造は再整理、計算の意図は overview（実装が違えば 4-1 で直す）
+- [x] セッション分割（4-0〜4-9）。ログイン接続は 4-3
+- [x] 4-2 の厚さは共通部品 + `MatchForm` / `RuleForm` の分割まで（全ページ再分割はしない）
+- [x] テスト層と CI（`db` と `web` を分ける。Playwright 煙は 4-3）
+- [x] ディレクトリ契約（`lib/domain/` / `lib/data/` / `components/` / `mock/`）
+- [x] 本ファイルに Phase 4 タスクを記載
+- [x] [development.md](development.md) / [tech-stack.md](tech-stack.md) / [ui-spec.md](ui-spec.md) / [overview.md](overview.md) を更新
+- [x] [status.md](status.md) を Phase 4 着手・次は 4-1 に更新
+
+#### コードの層
+
+| 置き場 | 役割 | 依存してよいもの |
+|--------|------|------------------|
+| `app/` | ルート。読む・並べる | `lib/data/`（4-3 以降）、`components/`、接続前は `mock/` |
+| `components/` | 見た目 | ドメイン型と表示用 props。計算も fetch もしない |
+| `lib/domain/` | 純関数（ポイント、順位、整形、バリデーション） | なし（React / Supabase / mock 禁止） |
+| `lib/data/` | RSC / Server Action と DB 型の変換 | `lib/supabase/`、`lib/domain/` |
+| `lib/supabase/` | クライアントと生成型 | Supabase SDK |
+| `mock/` | フィクスチャと薄い list/get | `lib/domain/`。接続が進んだら消す |
+
+UI は camelCase のドメイン型だけを見る。`database.types.ts` は `lib/data/` と `lib/supabase/` の外に出さない。
+
+#### テスト方針（Phase 4）
+
+権限の正は引き続き pgTAP。[test-cases.md](test-cases.md) は触らない（アプリ制約は「Phase 4 に送る」のまま）。計算は Phase 3 と同じく **ケースを先に書く**（4-1 の `docs/calc-cases.md`）。Vitest はケース ID を実行するだけ。
+
+| 層 | 何を担保するか | 置き場所 | コマンド | CI |
+|----|----------------|----------|----------|-----|
+| A. pgTAP | `test-cases.md` の ID | `supabase/tests/*_test.sql` | `supabase test db` | 既存 `db` job |
+| B. PostgREST | GRANT・RPC | `supabase/ci/postgrest-smoke.sh` | 同スクリプト | 既存 `db` job |
+| C. Vitest | ポイント・順位・整形・バリデーション | `web/`（4-1） | `npm test`（4-1 で足す） | `web` job（4-1） |
+| D. 静的検査（アプリ） | lint / 型 / フォーマット | `web/` | `npm run lint` / `tsc` / `format:check` | `web` job（4-1） |
+| E. Playwright | 煙（ログインできる、自分の麻雀グループが見える） | 4-3 で置く | 4-3 で決める | 別 job（4-3。Supabase が要る） |
+| 人 | 375px の見た目 | — | ブラウザ | CI にしない |
+
+`web` job は Docker の Supabase を起動しない。Playwright は 4-3 の直後に煙だけ足す。試合入力の E2E は 4-7 以降で足してよい。権限行列は画面テストにしない。
+
+#### 計算ケース（4-1 で書く）
+
+正は overview の意図。特にウマ・オカの同着（上家取り / 折半 / 手動）と大会の 1, 2, 2, 4。現行実装が違えばケースに合わせて直す。SQL や画面テストは書かない。
+
+### 4-1 ドメイン切り出し + Vitest + CI
+
+見た目は変えない。ブラウザ確認は不要。
+
+- [ ] [calc-cases.md](calc-cases.md) を新規作成（試合ポイント、同位、大会最終ポイント・最終順位、点数合計の警告判定）。overview と食い違う点があれば先に overview を直す
+- [ ] `web/src/lib/domain/` に純関数を移す（型、`match-points`、順位、大会サマリーの式、整形）。React / Supabase / mock に依存しない
+- [ ] `mock/` はドメインを呼ぶアダプタに縮める。フォーム DTO は mock 神モジュールから外す
+- [ ] Vitest。ケース ID と 1 対 1。このセッションでケースを増やさない。不足は `calc-cases.md` を先に直す
+- [ ] CI に `web` job（`web/` で lint / `tsc --noEmit` / `format:check` / vitest）。`db` job は触らない
+- [ ] [tech-stack.md](tech-stack.md) / [status.md](status.md) を更新
+
+### 4-2 共通 UI の整理
+
+ダミーデータのまま。配置・文言・色は変えない。Tailwind / トークンは作り直さない。
+
+- [ ] 共通部品を `components/ui/` に寄せる（Field、Radio、表セル、既存の SectionCard / RowLink / ボタンクラス）
+- [ ] `MatchForm` / `RuleForm` を視覚上のブロックで分割する（家の列、素点行、ルール連動行など）
+- [ ] 重複クラスを `ui.ts` / `globals.css` に戻す（例: `MatchForm` 内の `labelClass`）
+- [ ] 全ページの再分割はしない。大会作成と編集のルートは仕様どおり分ける
+- [ ] 375px で試合入力とルールを踏む（ユーザー確認）
+- [ ] [ui-spec.md](ui-spec.md) の部品一覧が実ファイルと食い違う点を直す
+- [ ] [status.md](status.md) を更新
+
+### 4-3 Auth 接続 + Playwright 煙
+
+旧「4-0」。テスト専用画面は作らない。
+
+- [ ] 未ログインはログインへ。メール `signInWithPassword`。Google / LINE の呼び出しは [tech-stack.md の認証](tech-stack.md#認証)
+- [ ] `/auth/callback`。cookie セッション（`@supabase/ssr`）
+- [ ] `/communities` を実セッション / 実 RLS の SELECT に繋ぐ（上部が自分、下部が所属麻雀グループ）
+- [ ] トップとログインに使っていた mock を削除（または未接続画面だけ残す）
+- [ ] Playwright 煙: ログインできる、自分の麻雀グループが見える。権限行列は踏まない
+- [ ] CI に e2e job（ローカルスタックが要る）。`web` / `db` とは分ける
+- [ ] [status.md](status.md) を更新
+
+### 4-4 麻雀グループ CRUD + 招待
+
+- [ ] 作成（`create_community`）、一覧・詳細の SELECT、編集、招待コード（既定 7 日）、参加（`join_community`）、離脱（`leave_community`）
+- [ ] 除名・最後の 1 人の文面（ui-spec の基本フロー外）
+- [ ] プロフィール編集と退会（`withdraw_account` + Auth Admin）
+- [ ] その画面の空状態・エラー・バリデーション
+- [ ] 使わなくなった mock を削除
+- [ ] [status.md](status.md) を更新
+
+### 4-5 ルール設定
+
+- [ ] 麻雀グループの既定と大会ルールの CRUD。使用中は修正不可（新規登録へ）
+- [ ] 大会へのコピー選択。三麻 / 四麻の項目切り替え
+- [ ] その画面の空状態・エラー・バリデーション
+- [ ] 使わなくなった mock を削除
+- [ ] [status.md](status.md) を更新
+
+### 4-6 大会 CRUD
+
+- [ ] 作成・編集・詳細・削除。参加者 / ゲスト / ルールのカード
+- [ ] ゲスト同名の警告。ルール 0 件の大会は試合追加を無効化
+- [ ] その画面の空状態・エラー・バリデーション
+- [ ] 使わなくなった mock を削除
+- [ ] [status.md](status.md) を更新
+
+### 4-7 試合 CRUD
+
+計算は再実装しない。4-1 の純関数に入力を渡して保存する。
+
+- [ ] 作成・編集・詳細・削除。入力のたびに再計算
+- [ ] 点数合計の警告（保存は止めない）
+- [ ] 1 試合の結果件数が `player_count`、三麻で `north` を使わない（test-cases.md が Phase 4 に送ったアプリ制約）
+- [ ] その画面の空状態・エラー・バリデーション
+- [ ] 使わなくなった mock を削除
+- [ ] 必要なら試合入力の Playwright 煙を足す
+- [ ] [status.md](status.md) を更新
+
+### 4-8 大会サマリー
+
+- [ ] 総合順位（最終 pt の都度集計）。ポイント補正画面の保存・読取
+- [ ] 対象は 1 試合以上出場。同位は 1, 2, 2, 4（4-1 の関数）
+- [ ] その画面の空状態・エラー・バリデーション
+- [ ] 使わなくなった mock を削除
+- [ ] [status.md](status.md) を更新
+
+### 4-9 仕上げ
+
+接続時に入れたものの残りだけ。新しい機能は足さない。
+
+- [ ] 横断のローディング、未入力エラーの穴
+- [ ] 確認ダイアログのフォーカストラップ・背景スクロール固定（ui-spec）
+- [ ] mock が残っていれば削除
+- [ ] [status.md](status.md) を Phase 4 完了・次は Phase 5 に更新（ユーザーレビュー後）
+
