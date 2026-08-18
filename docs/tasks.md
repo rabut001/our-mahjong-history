@@ -373,13 +373,186 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 
 **Phase 3 で触る（モックでは触らない）**
 
-- `supabase start`、migration SQL、RLS policy
-- 招待コードの文字種・長さ、OAuth プロバイダの確定
+- `supabase start`、migration SQL、RLS policy、関数
+- 招待コードの文字種・長さ
 - 関数名（麻雀グループ作成・参加・退会）
-- ログイン〜トップまでの骨格を実データへ
+- pgTAP（主）と薄い PostgREST。CI で `supabase test db`
+- Auth はメールを正。OAuth プロバイダの確定は 3-6（ローカル必須にしない）
+- テストケースの正は [test-cases.md](test-cases.md)（3-2 で作成。実装の pgTAP より先）
 
 **Phase 4 で触る**
 
+- **4-0**: 本番のログイン + トップを実セッション / 実 RLS に接続（テスト専用画面は作らない）
 - モック画面を保存・読取に差し替える
 - 基本フロー外の方針（空状態、点数合計の警告、除名、最後の 1 人の文面）
 - バリデーション、エラー表示、ローディング
+
+## Phase 3: Supabase スキーマ + 認証
+
+**目的**: ER を migration にし、RLS と関数を自動テストで固定する。Auth（メール）と生成型まで。`web/` の画面は触らない。
+
+**完了条件**: `supabase test db`（pgTAP）が緑。薄い PostgREST 通しがある。業務テーブルは RLS 有効。生成型がある。画面の実データ接続はまだしない。
+
+進め方: ランナー（3-1）→ **全テストケースを `docs/test-cases.md` に固定（3-2）** → スキーマ → RLS → 関数 → Auth。ケースは実装セッションの冒頭に分けて書かない。
+
+---
+
+### キックオフ仕分け（2026-08-18）
+
+出典は [2-8 の引き渡し](#phase-3--4-への引き渡し) / [development.md](development.md) / [er.md](er.md)。権限の正は [overview.md の権限モデル](overview.md#権限モデルphase-1-5) と [er.md の RLS 方針](er.md#rls-方針)。
+
+#### 決まっていること（再確認しない）
+
+| 項目 | 内容 |
+|------|------|
+| 範囲 | DB・RLS・関数・Auth・型・自動テスト。`web/` のページ・コンポーネントは触らない |
+| 中間物 | Phase 3 と Phase 4 の間に、双方の成果を受ける画面は置かない。テスト専用アプリも作らない |
+| ログイン〜一覧 | Phase 4-0。本番の `LoginForm` と `/communities` を実セッションに接続する |
+| 権限の正 | RLS 一点。所属メンバーなら配下を閲覧・編集。作成・参加・退会は関数 |
+| テストの正 | 本物の Postgres（RLS 有効）。クライアントのモックでは権限を担保しない |
+| ケースの正 | [test-cases.md](test-cases.md)（3-2 で一括作成。制約・RLS・関数） |
+| 主テスト | pgTAP。`supabase/tests/`。`supabase test db`。ケース ID と 1 対 1 |
+| 副テスト | JWT + anon キーで PostgREST を薄く叩く（GRANT・RPC 公開） |
+| 画面 E2E | Phase 3 ではやらない。権限行列の再実装にも使わない |
+| service role | seed と操作ログ確認のみ。業務操作の成功判定には使わない |
+| 役割 | 全員同等。役割カラムなし |
+
+#### Phase 3 で決める / 作ること
+
+| # | 項目 | セッション |
+|---|------|------------|
+| A | テストの層・置き方・CI の入口 | 3-0 |
+| B | `supabase start`。空でも `supabase test db`。CI で同じ入口 | 3-1 |
+| C | **全テストケース**を `docs/test-cases.md` に書く。関数名。SQL は書かない | 3-2 |
+| D | テーブル・制約・FK・trigger。制約ケースの pgTAP | 3-3 |
+| E | 所属判定ヘルパー + 全表 RLS。RLS ケースの pgTAP | 3-4 |
+| F | 作成・参加・離脱・退会の関数。関数ケースの pgTAP。薄い PostgREST | 3-5 |
+| G | メール Auth、`profiles` trigger、型生成。OAuth は設定まで | 3-6 |
+
+#### 触らない（Phase 4 / MVP 外）
+
+- `web/` の画面・ナビ・モックデータの差し替え
+- テスト専用の画面や別アプリ
+- 大会・試合・ルールの Server Action
+- Playwright 等の画面 E2E で権限行列を踏むこと
+- 写真、統計、PC 最適化、公開ルーム
+
+#### Phase 4 に送るもの
+
+- 生成型、RLS、関数、ローカル Auth
+- 4-0: 本番ログイン + トップの SELECT（cookie → RSC → クライアント → RLS）
+- 4-1 以降: モックを保存・読取に差し替え
+
+---
+
+### 3-0 キックオフ
+
+- [x] Phase 3 の範囲（画面を触らない。専用テスト画面なし。ログイン骨格は Phase 4-0）
+- [x] テスト層（pgTAP 主、PostgREST 副、画面 E2E は後）
+- [x] テストケースは `docs/test-cases.md` に独立。実装より前（3-2）に一括作成
+- [x] 本ファイルに Phase 3 タスクを記載
+- [x] [development.md](development.md) / [tech-stack.md](tech-stack.md) / [ui-spec.md](ui-spec.md) の引き渡しを更新
+- [x] [status.md](status.md) を Phase 3 着手に更新
+
+#### テスト方針
+
+権限仕様の正は [er.md の RLS 方針](er.md#rls-方針)。断言するケースの正は [test-cases.md](test-cases.md)（3-2 で作成）。pgTAP はケース ID を実行するだけ。成功より **他グループ・未ログイン・墓石・未所属が失敗すること** を厚くする。
+
+**関連資料の作成タイミング**
+
+ケースは 3-4 / 3-5 の冒頭に分割しない。スキーマ・RLS・関数の実装（3-3 以降）より前に、一ファイルへ全部書く。
+
+| 資料 | いつ | 中身 | やらないこと |
+|------|------|------|----------------|
+| 本節（層・アクター・入口） | 3-0 済み | 方針 | ケース ID の列挙 |
+| ランナー | 3-1 | 空の pgTAP が緑。CI | 業務ケースの SQL |
+| [test-cases.md](test-cases.md) | **3-2** | 制約・RLS・関数・メタテストの全ケース。関数名。日本語の表 | migration / policy / 関数の SQL |
+| 制約の pgTAP | 3-3 | `test-cases.md` の制約 ID を実装 | ケースの新規発明 |
+| RLS の pgTAP | 3-4 | 同・RLS ID | ケースの新規発明 |
+| 関数の pgTAP + PostgREST | 3-5 | 同・関数 ID | ケースの新規発明 |
+| Auth・型 | 3-6 | 生成型。`profiles` trigger | 原則ケース追加。要れば `test-cases.md` を先に直す |
+
+3-1 と 3-2 は互いに独立だが、どちらもスキーマ実装より前。先にランナーを通してからケースを固定する。
+
+実装中にケースが足りなければ、SQL を足す前に `test-cases.md`（必要なら `er.md`）を更新する。
+
+**層**
+
+| 層 | 何を担保するか | 置き場所 | コマンド |
+|----|----------------|----------|----------|
+| A. pgTAP（主） | `test-cases.md` の ID | `supabase/tests/*.sql` | `supabase test db` |
+| B. PostgREST（副） | JWT・`GRANT`・RPC が API に出ていること | 3-5 で置く。`web/` の画面テストにはしない | ローカル Auth の JWT + anon キー |
+| C. 画面 E2E | 煙 | Phase 4 以降 | 権限行列は再実装しない |
+
+**メタテスト（改修事故）** — 3-2 の `test-cases.md` に ID を付ける
+
+- `public` の業務テーブルはすべて `ENABLE ROW LEVEL SECURITY`
+- それぞれに policy が 1 本以上ある
+- `anon` / `authenticated` の `GRANT` が意図どおり（`activity_logs` の SELECT をアプリロールに出さない等）
+
+**フィクスチャ（pgTAP 内に閉じる。本番 seed と混ぜない）**
+
+| アクター | 役割 |
+|----------|------|
+| メンバー A | 麻雀グループ 1 に所属 |
+| メンバー B | 麻雀グループ 2 のみ（1 は見えない） |
+| 未ログイン | すべて不可 |
+| 離脱済み（プロフィールは利用中） | グループ 1 配下は不可。大会参加者として載っていれば A から表示名は読める |
+| 墓石 | ログインできない。参加者行は残り、A から名前だけ読める |
+
+3-2 のケースは、各テーブルで少なくとも次を ID にする: A は自分のグループだけ読める。B はグループ 1 に書けない。未所属は招待コードを SELECT できない。`community_memberships` への直接 INSERT は不可。`activity_logs` はアプリロールで SELECT / UPDATE / DELETE 不可。`profiles` の UPDATE は本人だけ。
+
+所属判定はヘルパー 1 つに寄せ、各表の policy は薄くする。表ごとの「B が 0 件」は残す（policy 付け忘れ用）。
+
+`SECURITY DEFINER` は関数ケースに書く: `search_path` 固定、`auth.uid()` を関数内で検証。期限切れ参加・最後の 1 人離脱・墓石。スーパーユーザーで通ったことを成功と数えない。
+
+CI は手元と同じ入口（`supabase start` のあと `supabase test db`）。3-1 で足す。
+
+### 3-1 ローカルスタック
+
+- [ ] Dev Container 内で `supabase start`
+- [ ] Studio / 接続確認。`web/.env.local` は接続情報まで（画面は繋がない）
+- [ ] `supabase test db` が空でも緑
+- [ ] CI で同じコマンドが走る
+
+### 3-2 テストケース一覧
+
+実装（スキーマ / RLS / 関数）より前に、断言するケースを全部書く。3-4 や 3-5 の冒頭には分割しない。
+
+- [ ] [test-cases.md](test-cases.md) を新規作成（制約・RLS・関数・メタテストを一ファイル）
+- [ ] 形式は ID・テーブルまたは関数・操作・アクター・期待・er.md の根拠
+- [ ] 関数名をここで決める（ケースが参照する）
+- [ ] 招待コードの文字種・長さをケースが書ける粒度まで決める
+- [ ] er.md と食い違う点があれば、先に er.md を直す
+- [ ] migration / policy / 関数の SQL は書かない
+
+### 3-3 スキーマ
+
+- [ ] [er.md](er.md) を migration SQL にする（テーブル、制約、FK、trigger）
+- [ ] [test-cases.md](test-cases.md) の制約 ID を pgTAP にする（空のときだけ削除、招待 UNIQUE、試合中ルールの修正不可など）
+- [ ] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
+
+### 3-4 RLS
+
+- [ ] 所属判定ヘルパー（利用中プロフィール + `community_memberships`）
+- [ ] 全業務テーブルの RLS policy（判定経路は er.md）
+- [ ] [test-cases.md](test-cases.md) の RLS ID とメタテストを pgTAP にする
+- [ ] ポリシーと pgTAP を同じセッションで。落ちるテストから書いてよい
+- [ ] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
+
+### 3-5 関数
+
+- [ ] 麻雀グループ作成・参加・離脱（最後の 1 人ならグループごと削除）・アプリ退会（名前は 3-2）
+- [ ] `community_memberships` への直接 INSERT は認証ロールでは不可
+- [ ] [test-cases.md](test-cases.md) の関数 ID を pgTAP にする
+- [ ] 薄い PostgREST 通し（JWT + GRANT + RPC）
+- [ ] このセッションでケースを増やさない。不足は `test-cases.md` を先に直す
+
+### 3-6 Auth と型
+
+ログイン〜一覧の画面接続ではない（それは Phase 4-0）。
+
+- [ ] メール Auth。登録時に `profiles` が付く trigger
+- [ ] OAuth（Google / LINE）は設定と画面導線の前提まで。ローカル必須にしない
+- [ ] `supabase gen types` → `web/` の型ファイルのみ（ページは触らない）
+- [ ] [status.md](status.md) を Phase 3 完了・次は Phase 4-0 に更新（ユーザーレビュー後）

@@ -47,6 +47,7 @@
 | 開発フェーズの定義・進め方 | [docs/development.md](docs/development.md) |
 | 技術スタック・言語・プラットフォーム | [docs/tech-stack.md](docs/tech-stack.md) |
 | 具体タスク（Phase 0 以降） | [docs/tasks.md](docs/tasks.md) |
+| DB / RLS テストケース | [docs/test-cases.md](docs/test-cases.md)（Phase 3-2 で作成） |
 | UI 仕様（画面・部品・トークン） | [docs/ui-spec.md](docs/ui-spec.md) |
 | コア方針（Cursor 常時適用） | [.cursor/rules/00-core.mdc](.cursor/rules/00-core.mdc) |
 
@@ -62,7 +63,7 @@
 4. **モバイルファースト**: スマホ利用を主とする。PC 表示は妥協可
 5. **ドメイン用語**: 「点数」= 半荘終了時の持ち点、「基本ポイント」= 点数＋オカ、「ポイント」= ウマ・レート等を加味した合計（混同しない）
 6. **記録単位**: 局単位は不要。試合（半荘）単位のみ
-7. **セキュリティ**: Supabase RLS を必ず使用。麻雀グループのメンバーのみデータにアクセス可能
+7. **セキュリティ**: Supabase RLS を必ず使用。麻雀グループのメンバーのみデータにアクセス可能。検証は本物の Postgres に対する自動テスト（pgTAP）。クライアントのモックでは権限を担保しない
 8. **開発スタイル**: 小さく区切って確認しながら進める（1 機能 = 1 セッション推奨）
 9. **スコープ管理**: MVP 外（写真、統計、PC 最適化等）は明示的に依頼されるまで着手しない
 10. **開発実行環境**: ホストに Node は置かない。Dev Container 内、または `docker compose -f .devcontainer/docker-compose.yml exec app`。同一 LAN のスマホ確認は [docs/development.md](docs/development.md#同一-lan-のスマホから見る)
@@ -75,6 +76,8 @@
 - 「金額」「賭け」「精算」「支払い」「円」などの語を UI・コード・提案に使わない。値は点数・基本ポイント・ポイントで話す
 - フェーズを飛ばさず、[docs/development.md](docs/development.md) の順序に従う
 - DB 変更は migration SQL として管理する
+- RLS の権限テストは `supabase test db`（pgTAP）。画面やモッククライアントでは代替しない
+- テストケースの正は [docs/test-cases.md](docs/test-cases.md)（Phase 3-2 で作成。実装より前）
 - フェーズや作業が進んだら [docs/status.md](docs/status.md) を更新する
 - ドメイン用語に変更があれば [docs/overview.md](docs/overview.md) を更新する
 - ER の属性・制約に変更があれば [docs/er.md](docs/er.md) を更新する

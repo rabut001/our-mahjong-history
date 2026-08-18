@@ -10,10 +10,10 @@
 
 | 項目 | 状態 |
 |------|------|
-| フェーズ | **Phase 2 完了**（次は Phase 3） |
+| フェーズ | **Phase 3 着手**（3-0 完了。次は 3-1） |
 | コード | `web/` に Next.js 16。モックはダミーデータ。`supabase start` は未実施。中核 6 画面とルール・ログイン・招待・メンバーのワイヤーあり。ナビは戻る＋タイトル。トーンは雀卓・カード枠。トップは「俺たちの雀歴」（`/communities`。上部が自分、下部が麻雀グループ一覧）。破壊的操作は `DangerAction`。UI の正は [ui-spec.md](ui-spec.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま） |
 | Git | 初期化済み（`main`） |
-| 次のアクション | Phase 3: `supabase start`、ER を migration に落とす、Auth |
+| 次のアクション | 3-1: `supabase start`。空でも `supabase test db` が回ること。CI で同じ入口 |
 
 ## ブロッカー
 
@@ -28,7 +28,7 @@
 | Phase 0: プロジェクト土台 | 完了 | 0-1 / 0-2 完了。空アプリ確認済み |
 | Phase 1: ドメイン設計 | 完了 | 1-0〜1-6 完了。ドメインの正は overview.md |
 | Phase 2: モック作成 | 完了 | 2-0 〜 2-8 完了。UI の正は ui-spec.md |
-| Phase 3: Supabase スキーマ + 認証 | 未着手 | `supabase start` はここ |
+| Phase 3: Supabase スキーマ + 認証 | 着手 | 3-0 完了。画面は触らない。完了条件は RLS 自動テストが緑 |
 | Phase 4: MVP 実装 | 未着手 | |
 | Phase 5: デプロイ | 未着手 | 本番は Vercel（コンテナ化しない） |
 | Phase 6: 拡張 | 未着手 | MVP 後 |

@@ -71,7 +71,7 @@
 ## 認証
 
 - Supabase Auth
-- 方式: メール + OAuth（Google 等、Phase 3 で具体化）
+- 方式: メール + OAuth（Google / LINE。Phase 3 はメールを正。OAuth は設定まで）
 - ほぼ全ページで認証必須（未認証はログインへリダイレクト）
 
 ---
@@ -112,21 +112,33 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3。本番
 
 ---
 
-## 開発ツール（予定）
+## 開発ツール
 
 | ツール | 用途 |
 |--------|------|
 | ESLint | 静的解析 |
 | Prettier | コードフォーマット |
 | npm | パッケージ管理 |
+| pgTAP | DB / RLS の主テスト（`supabase test db`） |
 
-テスト（Vitest / Playwright 等）は MVP 実装時に必要性を判断する。
+### テスト
+
+アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。ケースの正は [test-cases.md](test-cases.md)（3-2 で作成）。層とタイミングは [tasks.md のテスト方針](tasks.md#テスト方針)。
+
+| 層 | ツール | 用途 | 時期 |
+|----|--------|------|------|
+| DB / RLS（主） | pgTAP（`supabase test db`） | 権限行列、制約、SECURITY DEFINER 関数 | Phase 3 |
+| PostgREST（副） | ローカル Auth の JWT + anon キー | GRANT・RPC 公開 | Phase 3（関数後） |
+| 画面 | Playwright 等 | 煙。権限行列の代替にしない | Phase 4 以降 |
+| アプリ単体 | Vitest 等 | ポイント計算・バリデーション。権限には使わない | Phase 4 |
+
+CI（Phase 3）: `supabase start` のあと `supabase test db`。手元と同じ入口にする。
 
 ---
 
 ## ディレクトリ構成（予定）
 
-Phase 0 の前提として確定:
+Phase 0 の前提として確定。`supabase/tests/` は Phase 3。
 
 ```
 our-mahjong-history/            # リポジトリ名（Our Mahjong History）
@@ -143,7 +155,9 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   │   ├── components/
 │   │   └── lib/
 │   └── package.json
-└── supabase/                 # Phase 0-1 で init。migrations は Phase 3
+└── supabase/                 # Phase 0-1 で init
+    ├── migrations/           # Phase 3
+    └── tests/                # pgTAP。Phase 3
 ```
 
 ---

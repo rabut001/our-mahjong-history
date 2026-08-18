@@ -449,13 +449,15 @@ UI の正は本ファイル。見た目の正は `web/` のモック。ドメイ
 
 **Phase 3 で触る（モックでは触らない）**
 
-- `supabase start`、migration SQL、RLS policy
-- 招待コードの文字種・長さ、OAuth プロバイダの確定（画面上の Google / LINE は残す）
-- 関数名（麻雀グループ作成・参加・退会）
-- ログイン〜トップまでの骨格を実データへ
+- `supabase start`、migration SQL、RLS policy、関数
+- テストケースは `docs/test-cases.md`（実装より前に一括。pgTAP はケース ID を実行）
+- 招待コードの文字種・長さ、関数名（3-2 のケース一覧で決める）
+- pgTAP と薄い PostgREST。CI で `supabase test db`
+- Auth はメールを正。OAuth（画面上の Google / LINE）は設定まで
 
 **Phase 4 で触る**
 
+- **4-0**: 本番のログイン + トップを実セッション / 実 RLS に接続（テスト専用画面は作らない）
 - モックの画面を Server Action / RSC で保存・読取に差し替える
 - 基本フロー外の方針（空状態・警告・除名・最後の 1 人の文面）
 - バリデーション、エラー表示、ローディング（4-6）

@@ -116,34 +116,43 @@ Phase 6: 拡張（MVP 後）
 
 ### Phase 3: Supabase スキーマ + 認証 ★
 
-**目的**: モックとドメイン設計を反映した DB・認証基盤
+**目的**: モックとドメイン設計を反映した DB・認証基盤。アクセス制御（RLS）を自動テストで固定する。
 
 | 作業 | 内容 |
 |------|------|
 | ローカル実行 | Dev Container 内で `supabase start`（公式ローカルスタック。ホスト Docker を `docker.sock` 経由で使用） |
 | Migration | Phase 1 の ER を SQL 化 |
-| RLS | 麻雀グループのメンバーのみアクセス |
-| Auth | Supabase Auth（メール + OAuth） |
-| 型生成 | `supabase gen types` → TypeScript 型 |
+| RLS | 麻雀グループのメンバーのみアクセス。所属判定はヘルパー関数 |
+| 関数 | 作成・参加・離脱・退会（SECURITY DEFINER）。アプリからは `supabase.rpc` |
+| Auth | Supabase Auth。メールを正。OAuth は設定まで（ローカル必須にしない） |
+| 型生成 | `supabase gen types` → TypeScript 型（`web/` の型ファイルのみ） |
+| テスト | ケースの正は `docs/test-cases.md`（実装より前に一括）。pgTAP（主）。PostgREST の薄い通し（副）。CI で `supabase test db` |
+
+`web/` の画面は触らない。テスト専用画面も作らない。ログイン〜一覧の実データ接続は Phase 4-0。
 
 本番の DB / Auth は Phase 5 で Supabase Cloud を使う。
 
-**成果物**: マイグレーション SQL、ログイン〜麻雀グループ一覧までの骨格
+**成果物**: `docs/test-cases.md`、マイグレーション SQL、RLS policy、関数、生成型、RLS の自動テストが緑
+
+セッション分割とテスト方針の詳細は [tasks.md の Phase 3](tasks.md#phase-3-supabase-スキーマ--認証)。
 
 ---
 
 ### Phase 4: MVP 実装
 
-モック（`docs/ui-spec.md`）に沿って **1 機能 = 1 セッション** で実装。
+モック（`docs/ui-spec.md`）に沿って **1 機能 = 1 セッション** で実装。Phase 3 の DB / RLS / 型をここで初めて画面が消費する。
 
 | 順番 | 機能 | 依存 |
 |------|------|------|
-| 4-1 | 麻雀グループ CRUD + 招待 | Auth |
+| 4-0 | Auth 接続（ログイン + トップの SELECT） | Phase 3 の Auth / RLS / 型 |
+| 4-1 | 麻雀グループ CRUD + 招待 | 4-0 |
 | 4-2 | ルール設定 | 麻雀グループ |
 | 4-3 | 大会 CRUD | 麻雀グループ |
 | 4-4 | 試合 CRUD + ポイント計算 | 大会 + ルール |
 | 4-5 | 大会サマリー（順位・ポイント集計） | 試合 |
 | 4-6 | 仕上げ | バリデーション、エラー表示、ローディング |
+
+4-0 は本番のログイン画面と `/communities` を実セッションに繋ぐ。テスト専用の画面は作らない。
 
 各ステップでスマホ実機または DevTools のモバイル表示で確認する。
 
@@ -178,8 +187,8 @@ Phase 6: 拡張（MVP 後）
 | 3 | Phase 1 | ドメイン設計・ER 図 | ドキュメントレビュー |
 | 4 | Phase 2 | モック（主要画面） | スマホ幅でスクロール確認 |
 | 5 | Phase 2 | モック（試合入力・ルール） | 入力フロー walkthrough |
-| 6 | Phase 3 | DB + 認証（`supabase start`） | ログイン動作 |
-| 7 | Phase 4 | 大会・試合 CRUD | 実データで記録 |
+| 6 | Phase 3 | DB + RLS + 自動テスト（`supabase start`） | `supabase test db` が緑 |
+| 7 | Phase 4 | 4-0 でログイン接続。大会・試合 CRUD | 実データで記録 |
 | 8 | Phase 5 | デプロイ | 本番 URL で確認 |
 
 ---
@@ -203,6 +212,7 @@ Phase 6: 拡張（MVP 後）
 | 具体タスクの追加・完了時 | `docs/tasks.md`（Phase 0 以降） |
 | ドメイン変更時 | [docs/overview.md](overview.md) |
 | ER 変更時 | [docs/er.md](er.md) |
+| DB / RLS のテストケース変更時 | [docs/test-cases.md](test-cases.md)（Phase 3-2 で作成） |
 | モック確定時 | `docs/ui-spec.md`（新規作成） |
 | 技術選定変更時 | [docs/tech-stack.md](tech-stack.md) |
 | コーディング規約追加時 | `.cursor/rules/` |
@@ -268,3 +278,5 @@ powershell -ExecutionPolicy Bypass -File .devcontainer/unexpose-lan.ps1
 - RLS だけでは循環する更新（麻雀グループ参加・作成、退会など）は、同じ経路で **`supabase.rpc`（Postgres 関数）** を呼ぶ。独自 REST ではない
 - 認証セッション: `@supabase/ssr`（cookie）
 - 利用者の Auth 削除だけは Supabase Auth Admin（Server Action から service role）
+
+アクセス制御の検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。ケースの正は [test-cases.md](test-cases.md)（3-2 で作成）。層とタイミングは [tasks.md のテスト方針](tasks.md#テスト方針)。
