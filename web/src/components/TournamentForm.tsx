@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { NavButton } from "@/components/NavButton";
 import { ParticipantPicker } from "@/components/ParticipantPicker";
-import { RowLink } from "@/components/RowLink";
-import { SectionCard } from "@/components/SectionCard";
 import {
   blockButtonClass,
   compactButtonClass,
+  Field,
   fieldClass,
-  labelClass,
+  RowLink,
   rowTitleClass,
+  SectionCard,
   textareaClass,
   TEXTAREA_ROWS,
 } from "@/components/ui";
@@ -74,12 +74,10 @@ function HeldOnInput({ defaultValue }: { defaultValue: string }) {
 export function TournamentForm({ mode, values }: TournamentFormProps) {
   return (
     <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
-      <label className={labelClass}>
-        開催日
+      <Field label="開催日">
         <HeldOnInput defaultValue={values.heldOn} />
-      </label>
-      <label className={labelClass}>
-        大会名
+      </Field>
+      <Field label="大会名">
         <input
           type="text"
           name="name"
@@ -87,16 +85,15 @@ export function TournamentForm({ mode, values }: TournamentFormProps) {
           placeholder="例: 第13回金曜麻雀"
           className={fieldClass}
         />
-      </label>
-      <label className={labelClass}>
-        メモ
+      </Field>
+      <Field label="メモ">
         <textarea
           name="memo"
           defaultValue={values.memo}
           rows={TEXTAREA_ROWS}
           className={textareaClass}
         />
-      </label>
+      </Field>
       <ParticipantPicker
         members={values.members}
         initialSelectedUserIds={values.members

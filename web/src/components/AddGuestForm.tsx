@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { NavButton } from "@/components/NavButton";
-import { fieldClass, labelClass } from "@/components/ui";
+import { Field, fieldClass } from "@/components/ui";
 
 type AddGuestFormProps = {
   backHref: string;
@@ -13,8 +13,7 @@ export function AddGuestForm({ backHref }: AddGuestFormProps) {
 
   return (
     <div className="space-y-6">
-      <label className={labelClass}>
-        表示名
+      <Field label="表示名">
         <input
           type="text"
           name="displayName"
@@ -23,7 +22,7 @@ export function AddGuestForm({ backHref }: AddGuestFormProps) {
           placeholder="例: 山田"
           className={fieldClass}
         />
-      </label>
+      </Field>
       <p className="text-sm text-muted">
         アカウントを持っていない人を、名前だけで追加します。
       </p>

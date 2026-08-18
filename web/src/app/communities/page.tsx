@@ -3,9 +3,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { Avatar } from "@/components/Avatar";
 import { NavButton } from "@/components/NavButton";
-import { RowLink } from "@/components/RowLink";
-import { SectionCard } from "@/components/SectionCard";
-import { rowTitleClass } from "@/components/ui";
+import { RowLink, rowTitleClass, SectionCard } from "@/components/ui";
 import { countMembers, getCurrentProfile, listCommunities } from "@/mock";
 
 export const metadata: Metadata = {

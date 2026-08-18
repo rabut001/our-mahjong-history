@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
 import {
+  Field,
   fieldClass,
-  labelClass,
   textareaClass,
   TEXTAREA_ROWS,
 } from "@/components/ui";
@@ -18,24 +18,22 @@ export default function NewCommunityPage() {
       <AppHeader title="麻雀グループを作成" backHref="/communities" />
       <main className="px-4 py-4">
         <div className="space-y-6">
-          <label className={labelClass}>
-            麻雀グループ名
+          <Field label="麻雀グループ名">
             <input
               type="text"
               name="name"
               placeholder="例: ○○株式会社 麻雀仲間"
               className={fieldClass}
             />
-          </label>
-          <label className={labelClass}>
-            コメント
+          </Field>
+          <Field label="コメント">
             <textarea
               name="comment"
               rows={TEXTAREA_ROWS}
               placeholder="例: 社内の有志で、月に数回集まっています"
               className={textareaClass}
             />
-          </label>
+          </Field>
           <NavButton href="/communities" variant="block">
             作成する
           </NavButton>

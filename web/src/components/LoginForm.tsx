@@ -7,8 +7,8 @@ import { NavButton } from "@/components/NavButton";
 import {
   blockButtonClass,
   compactButtonClass,
+  Field,
   fieldClass,
-  labelClass,
 } from "@/components/ui";
 
 export function LoginForm() {
@@ -33,15 +33,14 @@ export function LoginForm() {
         <main className="px-4 py-4">
           <p className="text-sm text-muted">{email || "メール"}</p>
           <div className="mt-6 space-y-6">
-            <label className={labelClass}>
-              パスワード
+            <Field label="パスワード">
               <input
                 type="password"
                 name="password"
                 autoComplete="current-password"
                 className={fieldClass}
               />
-            </label>
+            </Field>
             <NavButton href="/communities" variant="block">
               ログイン
             </NavButton>
@@ -56,8 +55,7 @@ export function LoginForm() {
       <AppHeader title="ログイン" />
       <main className="px-4 py-4">
         <div className="space-y-6">
-          <label className={labelClass}>
-            メール
+          <Field label="メール">
             <input
               type="email"
               name="email"
@@ -66,7 +64,7 @@ export function LoginForm() {
               onChange={(event) => setEmail(event.target.value)}
               className={fieldClass}
             />
-          </label>
+          </Field>
           <button
             type="button"
             onClick={() => setStep("password")}

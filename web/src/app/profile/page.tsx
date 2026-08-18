@@ -4,8 +4,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { DangerAction } from "@/components/DangerAction";
 import { NavButton } from "@/components/NavButton";
 import {
+  Field,
   fieldClass,
-  labelClass,
   textareaClass,
   TEXTAREA_ROWS,
 } from "@/components/ui";
@@ -36,17 +36,15 @@ export default function ProfilePage() {
               </p>
             )}
           </div>
-          <label className={labelClass}>
-            表示名
+          <Field label="表示名">
             <input
               type="text"
               name="displayName"
               defaultValue={profile?.displayName ?? ""}
               className={fieldClass}
             />
-          </label>
-          <label className={labelClass}>
-            コメント
+          </Field>
+          <Field label="コメント">
             <textarea
               name="comment"
               rows={TEXTAREA_ROWS}
@@ -54,7 +52,7 @@ export default function ProfilePage() {
               placeholder="例: 金曜はだいたい参加します"
               className={textareaClass}
             />
-          </label>
+          </Field>
           <NavButton href="/communities" variant="block">
             保存する
           </NavButton>

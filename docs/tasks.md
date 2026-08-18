@@ -617,9 +617,9 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 | 項目 | 内容 |
 |------|------|
 | 見た目 | 配置・文言・遷移・トーンはモック + ui-spec。ピクセル完全再現はしない |
-| 構造 | コンポーネント分割、CSS の重複、`mock/index.ts` の神モジュールは正にしない。4-1 / 4-2 で整理する |
+| 構造 | コンポーネント分割とクラスの寄せは 4-1 / 4-2 済み。`mock/` は接続が進んだ画面から消す |
 | 計算の意図 | overview の同着（上家取り / 折半 / 手動）など。現行 `match-points.ts` は正にしない。違えば 4-1 で直す |
-| スタイリング基盤 | Tailwind と既存トークン（`globals.css` / `ui.ts`）を維持する。CSS Modules 化やトークンの作り直しはしない |
+| スタイリング基盤 | Tailwind と既存トークン（`globals.css` / `components/ui/classes.ts`）を維持する。CSS Modules 化やトークンの作り直しはしない |
 | 権限 | RLS 一点。画面 E2E で権限行列を再実装しない。クライアントのモックでは権限を担保しない |
 | データアクセス | 読み取りは RSC→Supabase、更新は Server Action。循環する操作は `supabase.rpc`。独自 REST は作らない |
 | テスト専用画面 | 作らない。4-3 は本番の `LoginForm` と `/communities` |
@@ -720,13 +720,13 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 ダミーデータのまま。配置・文言・色は変えない。Tailwind / トークンは作り直さない。
 
-- [ ] 共通部品を `components/ui/` に寄せる（Field、Radio、表セル、既存の SectionCard / RowLink / ボタンクラス）
-- [ ] `MatchForm` / `RuleForm` を視覚上のブロックで分割する（家の列、素点行、ルール連動行など）
-- [ ] 重複クラスを `ui.ts` / `globals.css` に戻す（例: `MatchForm` 内の `labelClass`）
-- [ ] 全ページの再分割はしない。大会作成と編集のルートは仕様どおり分ける
-- [ ] 375px で試合入力とルールを踏む（ユーザー確認）
-- [ ] [ui-spec.md](ui-spec.md) の部品一覧が実ファイルと食い違う点を直す
-- [ ] [status.md](status.md) を更新
+- [x] 共通部品を `components/ui/` に寄せる（Field、Radio、表セル、既存の SectionCard / RowLink / ボタンクラス）
+- [x] `MatchForm` / `RuleForm` を視覚上のブロックで分割する（家の列、素点行、ルール連動行など）
+- [x] 重複クラスを `ui/classes.ts` に戻す（試合入力の行ラベルは `gridLabelClass`。共通 `labelClass` には混ぜない）
+- [x] 全ページの再分割はしない。大会作成と編集のルートは仕様どおり分ける
+- [x] 375px で試合入力とルールを踏む（ユーザー確認。LAN スマホ含む）
+- [x] [ui-spec.md](ui-spec.md) の部品一覧が実ファイルと食い違う点を直す
+- [x] [status.md](status.md) を更新
 
 ### 4-3 Auth 接続 + Playwright 煙
 

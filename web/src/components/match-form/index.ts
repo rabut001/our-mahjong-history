@@ -1,5 +1,6 @@
+export { MatchForm } from "./MatchForm";
 export type {
   MatchFormData,
   MatchFormParticipant,
   MatchFormPlayer,
-} from "./match-form/types";
+} from "./types";

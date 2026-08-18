@@ -179,7 +179,7 @@ CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase s
 
 ## ディレクトリ構成（予定）
 
-Phase 0 の前提として確定。`supabase/tests/` は Phase 3。`web/src/lib/domain/` は 4-1 済み、`components/ui/` の寄せは 4-2、`lib/data/` は 4-3 以降。
+Phase 0 の前提として確定。`supabase/tests/` は Phase 3。`web/src/lib/domain/` は 4-1 済み、`components/ui/` の寄せは 4-2 済み、`lib/data/` は 4-3 以降。
 
 ```
 our-mahjong-history/            # リポジトリ名（Our Mahjong History）
@@ -196,7 +196,7 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 ├── web/                      # Next.js アプリ
 │   ├── src/
 │   │   ├── app/              # ルート。読む・並べるだけ
-│   │   ├── components/       # 見た目。計算も fetch もしない
+│   │   ├── components/       # 見た目。計算も fetch もしない。共通は `ui/`
 │   │   ├── lib/
 │   │   │   ├── domain/       # 純関数。React / Supabase / mock に依存しない
 │   │   │   ├── data/         # RSC / Server Action と DB 型の変換（4-3 以降）

@@ -13,7 +13,7 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 | 用語・保存 vs 計算・誰が何をできるか | [overview.md](overview.md) |
 | 属性・制約・ER | [er.md](er.md) |
 | 画面の配置・遷移・文言・トーン | 本ファイル + `web/` のモック |
-| コンポーネント分割・CSS の重複 | 正にしない。4-2 で寄せる |
+| コンポーネント分割・クラスの置き場 | `web/src/components/ui/`（クラスは `classes.ts`）。`MatchForm` / `RuleForm` の内部は `match-form/` / `rule-form/`。見た目はモック + 本ファイル |
 | ピクセル完全再現 | しない。迷う点は本ファイル、見た目の感覚はモック |
 
 モックはダミーデータで、入力は見せるだけで保存しない。Phase 4 で保存する。
@@ -84,7 +84,7 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 | `font-sans` | Noto Sans JP 400 / 500 | 本文・見出し。`next/font` の `--font-noto-sans-jp` |
 | `text-heading` | `1.2rem` / 行高 1.3 | ヘッダータイトル、トップの表示名 |
 
-クラス定義の正は `web/src/components/ui.ts`。
+クラス定義の正は `web/src/components/ui/classes.ts`（`@/components/ui` から re-export）。
 
 | クラス | 用途 |
 |--------|------|
@@ -92,6 +92,10 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 | `searchFieldClass` | 検索 |
 | `textareaClass` | 複数行。既定行数は `TEXTAREA_ROWS` = 3 |
 | `labelClass` | フィールドラベル（`text-sm`） |
+| `gridLabelClass` | 試合入力テーブルの行ラベル（`text-xs` / `muted`） |
+| `cellInputClass` | 試合入力の数値セル |
+| `cellSelectClass` | 試合入力の参加者セレクト |
+| `cellTitleClass` | 試合個別ptのタイトル |
 | `rowTitleClass` | 一覧行の主テキスト |
 | `pressableClass` | ごく薄い影。タップで 1px 沈む |
 | `pressableStrongClass` | 主ボタン用の少し濃い影 |
@@ -132,10 +136,11 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 
 ### 入力
 
-- ラベルはフィールドの上
+- ラベルはフィールドの上。共通部品は `Field`
 - 日付は表示が `YYYY/MM/DD`、入力は `type="date"`
 - 開催日などの表示は `N年N月N日`
 - ポイント表示は符号付き小数 1 桁（例: `+12.0`、`-4.5`）
+- 試合入力のトビ・焼き鳥・その他ポイント・試合個別pt・手動ウマは、値が 0 のとき空欄。空は 0 として計算する
 
 ### 破壊的操作
 
@@ -171,24 +176,29 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 
 ## 共通部品
 
-| 部品 | 役割 |
-|------|------|
-| `MockShell` | コンテンツ幅と `surface` 背景。Phase 4 でも同等の枠を維持する |
-| `AppHeader` | 戻る・タイトル・右アクション |
-| `SectionCard` | カード枠。`title` / `action` / children |
-| `RowLink` | 行タップ＋シェブロン |
-| `NavButton` | リンクボタン。`compact` / `block` / `outline` |
-| `DangerAction` | 破壊的操作。`label` / `dialogTitle` / `dialogBody` / `confirmLabel` / `doneHref` / `disabled` / `disabledNote` |
-| `Avatar` | 丸。画像があれば表示、なければ表示名の頭文字。アップロードはしない |
-| `MemberIconRow` | メンバーの横スクロール。自分はラベル「自分」 |
-| `TournamentForm` | 大会の作成・編集 |
-| `ParticipantPicker` | 参加者 / ゲスト参加者カード |
-| `AddParticipantsForm` | メンバーから複数選択。8 人以上で検索 |
-| `AddGuestForm` | ゲストの表示名 |
-| `MatchForm` | 試合の 1 画面入力 |
-| `RuleForm` | ルール 1 画面。`create` / `edit` / `view` |
-| `PointCorrectionForm` | 大会修正ポイント |
-| `TournamentResults` | 総合順位リスト |
+置き場は `web/src/components/`。`ui/` は薄い共通部品。`MatchForm` / `RuleForm` の公開 API は従来どおりで、内部は `match-form/` / `rule-form/`。
+
+| 部品 | 置き場 | 役割 |
+|------|--------|------|
+| `Field` | `ui/` | ラベル＋子。1 行入力・複数行 |
+| `RadioRow` / `RadioOption` | `ui/` | ラジオの fieldset と選択肢 |
+| `CellInput` / `CellRead` / `CellSelect` / `GridRow` | `ui/` | 試合入力テーブルのセルと行 |
+| `SectionCard` | `ui/` | カード枠。`title` / `action` / children |
+| `RowLink` | `ui/` | 行タップ＋シェブロン |
+| `MockShell` | `components/` | コンテンツ幅と `surface` 背景。Phase 4 でも同等の枠を維持する |
+| `AppHeader` | `components/` | 戻る・タイトル・右アクション |
+| `NavButton` | `components/` | リンクボタン。`compact` / `block` / `outline` |
+| `DangerAction` | `components/` | 破壊的操作。`label` / `dialogTitle` / `dialogBody` / `confirmLabel` / `doneHref` / `disabled` / `disabledNote` |
+| `Avatar` | `components/` | 丸。画像があれば表示、なければ表示名の頭文字。アップロードはしない |
+| `MemberIconRow` | `components/` | メンバーの横スクロール。自分はラベル「自分」 |
+| `TournamentForm` | `components/` | 大会の作成・編集 |
+| `ParticipantPicker` | `components/` | 参加者 / ゲスト参加者カード |
+| `AddParticipantsForm` | `components/` | メンバーから複数選択。8 人以上で検索 |
+| `AddGuestForm` | `components/` | ゲストの表示名 |
+| `MatchForm` | `match-form/` | 試合の 1 画面入力 |
+| `RuleForm` | `rule-form/` | ルール 1 画面。`create` / `edit` / `view` |
+| `PointCorrectionForm` | `components/` | 大会修正ポイント |
+| `TournamentResults` | `components/` | 総合順位リスト |
 
 ---
 
@@ -463,7 +473,7 @@ UI の正は本ファイル。見た目の正は `web/` のモック。ドメイ
 **Phase 4 で触る**
 
 - 詳細は [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)
-- 見た目はモックと本ファイル。構造は 4-2 で整理。計算は 4-1
+- 見た目はモックと本ファイル。計算は 4-1。共通 UI の寄せは 4-2 済み
 - **4-3**: 本番のログイン + トップを実セッション / 実 RLS に接続（テスト専用画面は作らない）
 - 4-4 以降: モックの画面を Server Action / RSC で保存・読取に差し替える
 - 基本フロー外の方針（空状態・警告・除名・最後の 1 人の文面）は接続する機能のセッション

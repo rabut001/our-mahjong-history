@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { NavButton } from "@/components/NavButton";
-import { SectionCard } from "@/components/SectionCard";
-import { compactButtonClass, rowTitleClass } from "@/components/ui";
+import {
+  compactButtonClass,
+  rowTitleClass,
+  SectionCard,
+} from "@/components/ui";
 
 export type CommunityMember = {
   userId: string;

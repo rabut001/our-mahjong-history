@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { MemberIconRow } from "@/components/MemberIconRow";
 import { NavButton } from "@/components/NavButton";
-import { RowLink } from "@/components/RowLink";
-import { SectionCard } from "@/components/SectionCard";
-import { rowTitleClass } from "@/components/ui";
+import { RowLink, rowTitleClass, SectionCard } from "@/components/ui";
 import { formatHeldOn } from "@/lib/domain";
 import {
   countMatches,

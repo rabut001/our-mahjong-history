@@ -7,8 +7,8 @@ import { NavButton } from "@/components/NavButton";
 import {
   blockButtonClass,
   compactButtonClass,
+  Field,
   fieldClass,
-  labelClass,
 } from "@/components/ui";
 
 export function SignupForm() {
@@ -33,19 +33,17 @@ export function SignupForm() {
         <main className="px-4 py-4">
           <p className="text-sm text-muted">{email || "メール"}</p>
           <div className="mt-6 space-y-6">
-            <label className={labelClass}>
-              表示名
+            <Field label="表示名">
               <input type="text" name="displayName" className={fieldClass} />
-            </label>
-            <label className={labelClass}>
-              パスワード
+            </Field>
+            <Field label="パスワード">
               <input
                 type="password"
                 name="password"
                 autoComplete="new-password"
                 className={fieldClass}
               />
-            </label>
+            </Field>
             <NavButton href="/communities" variant="block">
               登録する
             </NavButton>
@@ -60,8 +58,7 @@ export function SignupForm() {
       <AppHeader title="アカウント作成" backHref="/login" />
       <main className="px-4 py-4">
         <div className="space-y-6">
-          <label className={labelClass}>
-            メール
+          <Field label="メール">
             <input
               type="email"
               name="email"
@@ -70,7 +67,7 @@ export function SignupForm() {
               onChange={(event) => setEmail(event.target.value)}
               className={fieldClass}
             />
-          </label>
+          </Field>
           <button
             type="button"
             onClick={() => setStep("password")}

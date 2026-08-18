@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
-import { RowLink } from "@/components/RowLink";
-import { SectionCard } from "@/components/SectionCard";
 import { TournamentResults } from "@/components/TournamentResults";
-import { rowTitleClass } from "@/components/ui";
+import { RowLink, rowTitleClass, SectionCard } from "@/components/ui";
 import { formatHeldOn, formatPoints } from "@/lib/domain";
 import {
   describeTournamentRules,

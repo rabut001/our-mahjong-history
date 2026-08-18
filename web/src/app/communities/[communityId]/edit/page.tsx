@@ -4,8 +4,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { DangerAction } from "@/components/DangerAction";
 import { NavButton } from "@/components/NavButton";
 import {
+  Field,
   fieldClass,
-  labelClass,
   textareaClass,
   TEXTAREA_ROWS,
 } from "@/components/ui";
@@ -42,17 +42,15 @@ export default async function EditCommunityPage({
       />
       <main className="px-4 py-4">
         <div className="space-y-6">
-          <label className={labelClass}>
-            麻雀グループ名
+          <Field label="麻雀グループ名">
             <input
               type="text"
               name="name"
               defaultValue={community.name}
               className={fieldClass}
             />
-          </label>
-          <label className={labelClass}>
-            コメント
+          </Field>
+          <Field label="コメント">
             <textarea
               name="comment"
               rows={TEXTAREA_ROWS}
@@ -60,7 +58,7 @@ export default async function EditCommunityPage({
               placeholder="例: 毎週金曜の夜に集まっています"
               className={textareaClass}
             />
-          </label>
+          </Field>
           <NavButton href={`/communities/${community.id}`} variant="block">
             保存する
           </NavButton>

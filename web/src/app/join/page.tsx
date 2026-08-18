@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
-import { fieldClass, labelClass } from "@/components/ui";
+import { Field, fieldClass } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "招待コードで参加",
@@ -13,8 +13,7 @@ export default function JoinPage() {
       <AppHeader title="招待コードで参加" backHref="/communities" />
       <main className="px-4 py-4">
         <div className="space-y-6">
-          <label className={labelClass}>
-            招待コード
+          <Field label="招待コード">
             <input
               type="text"
               name="code"
@@ -23,7 +22,7 @@ export default function JoinPage() {
               spellCheck={false}
               className={fieldClass}
             />
-          </label>
+          </Field>
           <p className="text-sm leading-6 text-muted">
             招待コードを入力し「参加する」ボタンを押してください。
             <br />
