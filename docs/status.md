@@ -11,7 +11,7 @@
 | 項目 | 状態 |
 |------|------|
 | フェーズ | **Phase 3 着手**（3-2 完了。次は 3-3） |
-| コード | `web/` に Next.js 16。モックはダミーデータ。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報のみ（画面は未接続）。空の pgTAP が緑。CI は `start` → lint / Advisors（0029 除外）/ `auth.uid()` 静的検査 → `test db`（リモート未設定のため Actions は未実行）。中核 6 画面とルール・ログイン・招待・メンバーのワイヤーあり。ナビは戻る＋タイトル。トーンは雀卓・カード枠。トップは「俺たちの雀歴」（`/communities`。上部が自分、下部が麻雀グループ一覧）。破壊的操作は `DangerAction`。UI の正は [ui-spec.md](ui-spec.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま） |
+| コード | `web/` に Next.js 16。モックはダミーデータ。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報のみ（画面は未接続）。空の pgTAP が緑。CI は `start` → lint / Advisors（0029 除外）/ DEFINER の GRANT 補完 / `auth.uid()` 静的検査 → `test db`（リモート未設定のため Actions は未実行）。中核 6 画面とルール・ログイン・招待・メンバーのワイヤーあり。ナビは戻る＋タイトル。トーンは雀卓・カード枠。トップは「俺たちの雀歴」（`/communities`。上部が自分、下部が麻雀グループ一覧）。破壊的操作は `DangerAction`。UI の正は [ui-spec.md](ui-spec.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま） |
 | Git | 初期化済み（`main`）。リモートなし |
 | 次のアクション | 3-3: 全テストケースを `docs/test-cases.md` に書く（SQL は書かない） |
 

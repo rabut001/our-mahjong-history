@@ -127,12 +127,12 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | 層 | ツール | 用途 | 時期 |
 |----|--------|------|------|
 | DB / RLS（主） | pgTAP（`supabase test db`） | 権限行列、制約、SECURITY DEFINER 関数 | Phase 3 |
-| DB 静的検査 | `supabase db lint` / `db advisors` | 型、RLS 付け忘れ、`search_path`、公開範囲 | Phase 3（方針は 3-2） |
+| DB 静的検査 | `supabase db lint` / `db advisors` / grants 補完 / `auth.uid()` 検査 | 型、RLS 付け忘れ、`search_path`、DEFINER の EXECUTE、本人取得 | Phase 3（方針は 3-2） |
 | PostgREST（副） | ローカル Auth の JWT + anon キー | GRANT・RPC 公開 | Phase 3（関数後） |
 | 画面 | Playwright 等 | 煙。権限行列の代替にしない | Phase 4 以降 |
 | アプリ単体 | Vitest 等 | ポイント計算・バリデーション。権限には使わない | Phase 4 |
 
-CI（Phase 3）: `.github/workflows/ci.yml` が手元と同じ入口（`supabase start` のあと lint / Advisors / `auth.uid()` 静的検査 → `supabase test db`）。GitHub リモートは未設定。
+CI（Phase 3）: `.github/workflows/ci.yml` が手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db`）。GitHub リモートは未設定。
 
 ---
 

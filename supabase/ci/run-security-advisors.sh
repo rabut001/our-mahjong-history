@@ -21,6 +21,7 @@ if [[ "$status" -ne 0 ]]; then
 fi
 cat "$tmp.err" >&2
 
+set +e
 node --input-type=module - "$root/supabase/ci/allowlist.json" "$tmp" <<'EOF'
 import fs from "node:fs";
 
@@ -75,3 +76,12 @@ for (const item of kept) {
 }
 process.exit(1);
 EOF
+json_status=$?
+
+bash "$root/supabase/ci/check-definer-grants.sh"
+grants_status=$?
+set -e
+
+if [[ "$json_status" -ne 0 || "$grants_status" -ne 0 ]]; then
+  exit 1
+fi

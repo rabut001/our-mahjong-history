@@ -510,7 +510,7 @@ UI の正は [ui-spec.md](ui-spec.md)。見た目の正は `web/` のモック�
 
 `SECURITY DEFINER` は関数ケースに書く: `search_path` 固定、`auth.uid()` を関数内で検証。期限切れ参加・最後の 1 人離脱・墓石。スーパーユーザーで通ったことを成功と数えない。
 
-CI は手元と同じ入口（`supabase start` のあと、静的検査 → `supabase test db`）。3-1 で pgTAP、3-2 で Lint / Advisors / `auth.uid()` 静的検査を足した。
+CI は手元と同じ入口（`supabase start` のあと、静的検査 → `supabase test db`）。3-1 で pgTAP、3-2 で Lint / Advisors / grants 補完 / `auth.uid()` 静的検査を足した。
 
 ### 3-1 ローカルスタック
 
@@ -527,9 +527,10 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 
 | コマンド | 実体 | 見ること | 見ないこと |
 |----------|------|----------|------------|
-| `supabase db lint` | plpgsql_check | 型、未使用変数、`EXECUTE` の連結（インジェクション） | RLS、`auth.uid()`、引数名 |
-| `supabase db advisors --type security` | splinter（Studio の Security Advisor と同じ） | RLS 未設定、`search_path` 未固定、anon が DEFINER を呼べる 等 | 関数が本人を `auth.uid()` から取っているか |
-| 自前静的チェック | 業務関数の `pg_proc` / ソース | ユーザー ID 引数禁止、本体に `auth.uid()` がある | 呼んだあと無視する誤用 |
+| `supabase db lint` | plpgsql_check | 型、未使用変数、`EXECUTE` の連結（インジェクション） | RLS、`auth.uid()`、引数名、GRANT |
+| `supabase db advisors --type security` | splinter | RLS 未設定、`search_path` 未固定 等 | CLI では `pgrst.db_schemas` が空のため **0028/0029 は出ない** |
+| `check-definer-grants.sh` | 自前（0028/0029 相当） | anon / authenticated が DEFINER を `EXECUTE` できること。0029 は許可リスト外だけ落とす | `auth.uid()`、引数名 |
+| `check-definer-auth-uid.sh` | 自前 | ユーザー ID 引数禁止、本体に `auth.uid()` がある | 呼んだあと無視する誤用 |
 | pgTAP | 実行 | 未ログイン失敗、他人のグループを触れない | — |
 
 **ベースライン（2026-08-18、業務テーブルなし）**
@@ -542,9 +543,9 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 
 1. CI（`supabase start` のあと、`test db` の前）
    - `supabase db lint --local --schema public --fail-on warning`
-   - `bash supabase/ci/run-security-advisors.sh`（Advisors の JSON から **0029 だけ** 業務 RPC を除外）
+   - `bash supabase/ci/run-security-advisors.sh`（Advisors JSON の 0029 除外 ＋ `check-definer-grants.sh`）
    - `bash supabase/ci/check-definer-auth-uid.sh`（対象関数が 0 件ならスキップ）
-2. 0029 の許可リスト: `create_community` / `join_community` / `leave_community` / `withdraw_account`（`allowlist.json` の `advisor0029Functions`）。authenticated が DEFINER を呼んでよい明示オプトイン。**新しい DEFINER RPC は 0029 で落ちる**（意図した公開だけ足す）。**0028**（anon が呼べる）は落とす
+2. 0029 の許可リスト: `create_community` / `join_community` / `leave_community` / `withdraw_account`（`allowlist.json` の `advisor0029Functions`）。authenticated が DEFINER を呼んでよい明示オプトイン。**新しい DEFINER RPC は 0029 で落ちる**（意図した公開だけ足す）。**0028**（anon が呼べる）は落とす。CLI の `db advisors` は `pgrst.db_schemas` が空のため 0028/0029 を出さないので、同じ判定を `check-definer-grants.sh` で補う
 3. `auth.uid()` 検査は `public` / `private` の **SECURITY DEFINER**（sql / plpgsql。trigger 以外）をすべて見る。新規追加はリスト更新なしで対象。例外だけ `allowlist.json` の `authUidExclude`（`schema.function` または関数名）。引数名 `user_id` / `auth_user_id` / `uid` および `p_` 付きは禁止。本体に `auth.uid()` が無いと失敗
 4. 標準検査は pgTAP の代わりにしない
 
@@ -552,7 +553,7 @@ CI は手元と同じ入口（`supabase start` のあと、静的検査 → `sup
 - [x] 空スキーマのベースラインを取った
 - [x] CI の fail-on・許可リストを確定した
 - [x] 自前 `auth.uid()` チェックを 3-2 の CI に入れた（関数 0 件はスキップ）
-- [x] CI に lint / Advisors 除外ラッパー / `auth.uid()` 検査を足した
+- [x] CI に lint / Advisors 除外ラッパー / grants 補完 / `auth.uid()` 検査を足した
 
 ### 3-3 テストケース一覧
 
