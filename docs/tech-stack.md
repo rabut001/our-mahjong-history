@@ -120,7 +120,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 | `.devcontainer/Dockerfile` | Node 24 開発イメージ。git / Docker CLI / supabase CLI **2.114.0** |
 | `.devcontainer/docker-compose.yml` | Dev Container とホスト CLI で共有。`docker.sock`、`network_mode: host` |
 | `.devcontainer/devcontainer.json` | Cursor 用。上記 compose の `app` サービスを参照 |
-| `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job は 4-1（lint / tsc / format / vitest）。Playwright 煙は 4-3 |
+| `.github/workflows/ci.yml` | `db` job: start → lint / advisors / auth.uid → test db → PostgREST。`web` job: `web/` で lint / `tsc --noEmit` / `format:check` / vitest。Playwright 煙は 4-3 |
 
 Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本番は Vercel + Supabase Cloud。ローカルでは Storage / Realtime / Vector / Edge Runtime を切る（写真は MVP 外）。
 
@@ -160,7 +160,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 
 ### テスト
 
-アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。DB ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。計算ケースの正は 4-1 の `docs/calc-cases.md`。層とタイミングは [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)。
+アクセス制御の正は RLS。検証は本物の Postgres（RLS 有効）に対して行う。Supabase クライアントのモックでは権限を担保しない。DB ケースの正は [test-cases.md](test-cases.md)（3-3 で作成）。計算ケースの正は [calc-cases.md](calc-cases.md)。層とタイミングは [tasks.md の Phase 4](tasks.md#phase-4-mvp-実装)。
 
 | 層 | ツール | 用途 | 時期 |
 |----|--------|------|------|
@@ -171,7 +171,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 | アプリ静的検査 | ESLint / `tsc` / Prettier | 型と体裁 | Phase 4-1（CI の `web` job） |
 | 画面 | Playwright | 煙（ログインできる、自分の麻雀グループが見える）。権限行列の代替にしない | Phase 4-3 以降 |
 
-CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は 4-1 で足す（Docker の Supabase は不要）。Playwright は 4-3 で別 job。GitHub リモートは未設定。
+CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase start` のあと lint / Advisors / grants 補完 / `auth.uid()` 静的検査 → `supabase test db` → PostgREST）。`web` job は `web/` の lint / `tsc --noEmit` / `format:check` / vitest（Docker の Supabase は不要）。Playwright は 4-3 で別 job。GitHub リモートは未設定。
 
 見た目のピクセル一致と、全画面の Testing Library は CI にしない。確認は 375px の操作。
 
@@ -179,7 +179,7 @@ CI: `.github/workflows/ci.yml`。`db` job は手元と同じ入口（`supabase s
 
 ## ディレクトリ構成（予定）
 
-Phase 0 の前提として確定。`supabase/tests/` は Phase 3。`web/src/lib/domain/` は 4-1、`components/ui/` の寄せは 4-2、`lib/data/` は 4-3 以降。
+Phase 0 の前提として確定。`supabase/tests/` は Phase 3。`web/src/lib/domain/` は 4-1 済み、`components/ui/` の寄せは 4-2、`lib/data/` は 4-3 以降。
 
 ```
 our-mahjong-history/            # リポジトリ名（Our Mahjong History）
@@ -192,13 +192,13 @@ our-mahjong-history/            # リポジトリ名（Our Mahjong History）
 │   ├── devcontainer.json
 │   ├── supabase-alias.sh     # alias supabase=ラッパー
 │   └── supabase-workdir.sh   # --workdir を付けて公式 CLI を呼ぶ
-├── .github/workflows/ci.yml  # db job。web job は 4-1。e2e は 4-3
+├── .github/workflows/ci.yml  # db job と web job。e2e は 4-3
 ├── web/                      # Next.js アプリ
 │   ├── src/
 │   │   ├── app/              # ルート。読む・並べるだけ
 │   │   ├── components/       # 見た目。計算も fetch もしない
 │   │   ├── lib/
-│   │   │   ├── domain/       # 純関数。React / Supabase / mock に依存しない（4-1）
+│   │   │   ├── domain/       # 純関数。React / Supabase / mock に依存しない
 │   │   │   ├── data/         # RSC / Server Action と DB 型の変換（4-3 以降）
 │   │   │   └── supabase/     # クライアントと生成型 `database.types.ts`
 │   │   └── mock/             # フィクスチャと薄い list/get。接続が進んだら消す

@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { calculateMatchPoints, okaPool } from "@/lib/match-points";
-import { formatPoints } from "@/mock";
-import type { MatchFormData, MatchFormPlayer } from "@/mock";
-import type { TournamentRule } from "@/mock";
+import type {
+  MatchFormData,
+  MatchFormPlayer,
+} from "@/components/match-form-types";
 import {
   blockButtonClass,
   textareaClass,
   TEXTAREA_ROWS,
 } from "@/components/ui";
+import { calculateMatchPoints, formatPoints, okaPool } from "@/lib/domain";
+import type { TournamentRule } from "@/mock";
 
 const cellInputClass =
   "w-full min-w-0 rounded-ui border border-line bg-field px-0.5 py-1 text-center text-sm tabular-nums disabled:border-transparent disabled:bg-transparent disabled:text-muted";
@@ -146,6 +148,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
     const rows = calculateMatchPoints(
       players.map((player) => ({
         participantId: player.participantId,
+        seat: player.seat,
         score: player.score ?? 0,
         tobiPoints: player.tobiPoints,
         yakitoriPoints: player.yakitoriPoints,
@@ -350,14 +353,25 @@ export function MatchForm({ mode, data }: MatchFormProps) {
           ))}
         </GridRow>
 
+        <GridRow label="順位">
+          {seats.map((seat, index) => {
+            const calc = seat
+              ? calculatedById.get(seat.participantId)
+              : undefined;
+            return (
+              <CellRead key={`rank-${index}`}>
+                {calc ? `${calc.rank}位` : "—"}
+              </CellRead>
+            );
+          })}
+        </GridRow>
+
         <GridRow label="基本pt">
           {seats.map((seat, index) => {
             const calc = seat
               ? calculatedById.get(seat.participantId)
               : undefined;
-            const editable = Boolean(
-              editBasePt && seat && seat.score === maxScore,
-            );
+            const editable = Boolean(editBasePt && seat);
             if (!editable) {
               return (
                 <CellRead key={`base-${index}`}>
@@ -380,19 +394,6 @@ export function MatchForm({ mode, data }: MatchFormProps) {
                 }}
                 className={cellInputClass}
               />
-            );
-          })}
-        </GridRow>
-
-        <GridRow label="順位">
-          {seats.map((seat, index) => {
-            const calc = seat
-              ? calculatedById.get(seat.participantId)
-              : undefined;
-            return (
-              <CellRead key={`rank-${index}`}>
-                {calc ? `${calc.rank}位` : "—"}
-              </CellRead>
             );
           })}
         </GridRow>
@@ -620,7 +621,7 @@ export function MatchForm({ mode, data }: MatchFormProps) {
         0 のままでよい行は触らなくて大丈夫です。
         {showTobi ? " トビは素点が 0 以下のときに使います。" : null}
         {editBasePt
-          ? ` 素点同点のため、オカ込みの基本ptを入力してください（オカ合計 ${formatPoints(okaPool(rule))}）。`
+          ? ` 素点の1位が同点のため、オカ込みの基本ptを全員入力してください（オカ合計 ${formatPoints(okaPool(rule))}）。`
           : null}
       </p>
 

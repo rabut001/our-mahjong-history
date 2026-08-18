@@ -42,9 +42,7 @@ export function AddParticipantsForm({
   }
 
   if (members.length === 0) {
-    return (
-      <p className="text-sm text-muted">全員すでに参加しています。</p>
-    );
+    return <p className="text-sm text-muted">全員すでに参加しています。</p>;
   }
 
   return (

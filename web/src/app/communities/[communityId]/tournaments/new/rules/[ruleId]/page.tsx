@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { DangerAction } from "@/components/DangerAction";
 import { RuleForm } from "@/components/RuleForm";
-import { getCommunity, getCommunityRule, toRuleFormData } from "@/mock";
+import { toRuleFormData } from "@/components/rule-form-data";
+import { getCommunity, getCommunityRule } from "@/mock";
 
 type NewTournamentRuleEditPageProps = {
   params: Promise<{ communityId: string; ruleId: string }>;

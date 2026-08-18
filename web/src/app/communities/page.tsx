@@ -41,9 +41,7 @@ export default function TopPage() {
 
         <SectionCard
           title="麻雀グループ"
-          action={
-            <NavButton href="/communities/new">追加</NavButton>
-          }
+          action={<NavButton href="/communities/new">追加</NavButton>}
         >
           <ul className="divide-y divide-line border-y border-line">
             {communities.map((community) => (
@@ -67,10 +65,7 @@ export default function TopPage() {
           </div>
         </SectionCard>
         <p className="mt-3 px-1 text-right">
-          <Link
-            href="/help/community"
-            className="text-sm text-muted underline"
-          >
+          <Link href="/help/community" className="text-sm text-muted underline">
             麻雀グループってなに？
           </Link>
         </p>

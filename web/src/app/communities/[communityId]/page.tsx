@@ -6,10 +6,10 @@ import { NavButton } from "@/components/NavButton";
 import { RowLink } from "@/components/RowLink";
 import { SectionCard } from "@/components/SectionCard";
 import { rowTitleClass } from "@/components/ui";
+import { formatHeldOn } from "@/lib/domain";
 import {
   countMatches,
   describeTournamentRules,
-  formatHeldOn,
   getCommunity,
   listCommunityMembers,
   listCommunityRules,

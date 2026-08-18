@@ -688,8 +688,8 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 |----|----------------|----------|----------|-----|
 | A. pgTAP | `test-cases.md` の ID | `supabase/tests/*_test.sql` | `supabase test db` | 既存 `db` job |
 | B. PostgREST | GRANT・RPC | `supabase/ci/postgrest-smoke.sh` | 同スクリプト | 既存 `db` job |
-| C. Vitest | ポイント・順位・整形・バリデーション | `web/`（4-1） | `npm test`（4-1 で足す） | `web` job（4-1） |
-| D. 静的検査（アプリ） | lint / 型 / フォーマット | `web/` | `npm run lint` / `tsc` / `format:check` | `web` job（4-1） |
+| C. Vitest | ポイント・順位・整形・バリデーション | `web/src/lib/domain/` | `npm test` | `web` job |
+| D. 静的検査（アプリ） | lint / 型 / フォーマット | `web/` | `npm run lint` / `tsc` / `format:check` | `web` job |
 | E. Playwright | 煙（ログインできる、自分の麻雀グループが見える） | 4-3 で置く | 4-3 で決める | 別 job（4-3。Supabase が要る） |
 | 人 | 375px の見た目 | — | ブラウザ | CI にしない |
 
@@ -697,18 +697,24 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 
 #### 計算ケース（4-1 で書く）
 
-正は overview の意図。特にウマ・オカの同着（上家取り / 折半 / 手動）と大会の 1, 2, 2, 4。現行実装が違えばケースに合わせて直す。SQL や画面テストは書かない。
+正は [calc-cases.md](calc-cases.md)。意図は overview。特にウマ・オカの同着（上家取り / 折半 / 手動）と大会の 1, 2, 2, 4。試合順位は **素点**。現行実装が違えばケースに合わせて直す。SQL や画面テストは書かない。
 
 ### 4-1 ドメイン切り出し + Vitest + CI
 
-見た目は変えない。ブラウザ確認は不要。
+見た目は変えない。例外: 試合入力の行順を 素点 → 順位 → 基本 pt にする。ブラウザ確認は不要。
 
-- [ ] [calc-cases.md](calc-cases.md) を新規作成（試合ポイント、同位、大会最終ポイント・最終順位、点数合計の警告判定）。overview と食い違う点があれば先に overview を直す
-- [ ] `web/src/lib/domain/` に純関数を移す（型、`match-points`、順位、大会サマリーの式、整形）。React / Supabase / mock に依存しない
-- [ ] `mock/` はドメインを呼ぶアダプタに縮める。フォーム DTO は mock 神モジュールから外す
-- [ ] Vitest。ケース ID と 1 対 1。このセッションでケースを増やさない。不足は `calc-cases.md` を先に直す
-- [ ] CI に `web` job（`web/` で lint / `tsc --noEmit` / `format:check` / vitest）。`db` job は触らない
-- [ ] [tech-stack.md](tech-stack.md) / [status.md](status.md) を更新
+決めたこと（2026-08-18）:
+
+- ウマ折半は順位スロットの合計を同着者で分配。端数 0.1 は上家（東→南→西→北）が多く取る。オカ折半も同じ（M リーグ第6章第2条6）
+- 試合順位は素点。大会の最終順位・試合ポイント合計も `lib/domain/` に置く
+- オカ手動は 1 位同着のとき出場者全員の基本 pt を手入力
+
+- [x] [calc-cases.md](calc-cases.md) を新規作成（試合ポイント、同位、大会最終ポイント・最終順位、点数合計の警告判定）。overview と食い違う点があれば先に overview を直す
+- [x] `web/src/lib/domain/` に純関数を移す（型、`match-points`、順位、大会サマリーの式、整形）。React / Supabase / mock に依存しない
+- [x] `mock/` はドメインを呼ぶアダプタに縮める。フォーム DTO は mock 神モジュールから外す
+- [x] Vitest。ケース ID と 1 対 1。このセッションでケースを増やさない。不足は `calc-cases.md` を先に直す
+- [x] CI に `web` job（`web/` で lint / `tsc --noEmit` / `format:check` / vitest）。`db` job は触らない
+- [x] [tech-stack.md](tech-stack.md) / [status.md](status.md) を更新
 
 ### 4-2 共通 UI の整理
 

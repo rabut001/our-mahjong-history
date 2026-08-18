@@ -12,7 +12,9 @@ type PageProps = {
   params: Promise<{ tournamentId: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { tournamentId } = await params;
   const tournament = getTournament(tournamentId);
   return {

@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { DangerAction } from "@/components/DangerAction";
 import { RuleForm } from "@/components/RuleForm";
+import { toRuleFormData } from "@/components/rule-form-data";
 import {
   getTournament,
   getTournamentRule,
   isTournamentRuleInUse,
-  toRuleFormData,
 } from "@/mock";
 
 type TournamentRulePageProps = {

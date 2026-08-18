@@ -10,7 +10,7 @@ import {
   textareaClass,
   TEXTAREA_ROWS,
 } from "@/components/ui";
-import type { RuleFormData } from "@/mock";
+import type { RuleFormData } from "@/components/rule-form-data";
 
 const OTHER_MAX = 5;
 

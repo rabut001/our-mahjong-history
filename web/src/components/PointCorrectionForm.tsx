@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatPoints } from "@/mock";
+import { formatPoints } from "@/lib/domain";
 import type { PointCorrectionParticipant, PointCorrectionRow } from "@/mock";
 import { blockButtonClass, pressableClass } from "@/components/ui";
 

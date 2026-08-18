@@ -10,10 +10,10 @@
 
 | 項目 | 状態 |
 |------|------|
-| フェーズ | **Phase 4 着手**。4-0 完了。次は 4-1 |
-| コード | `web/` に Next.js 16。モックはダミーデータ。画面は未接続。Phase 4 は **基盤先行**（4-1 ドメイン + Vitest + CI の `web` job → 4-2 共通 UI → 4-3 から実データ接続）。見た目の正はモック + [ui-spec.md](ui-spec.md)。構造と現行 `match-points.ts` は正にしない。計算の意図は [overview.md](overview.md)。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報のみ。スキーマ / RLS / RPC / `handle_new_user` の migration あり。生成型は `web/src/lib/supabase/database.types.ts`。`supabase test db` が緑。CI の `db` job は既存（リモート未設定のため Actions は未実行）。ケースの正は [test-cases.md](test-cases.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま）。OAuth は [tech-stack.md](tech-stack.md#認証) |
+| フェーズ | **Phase 4 着手**。4-0 / 4-1 完了。次は 4-2 |
+| コード | `web/` に Next.js 16。モックはダミーデータ。画面は未接続。計算は `web/src/lib/domain/`（Vitest 42 件が [calc-cases.md](calc-cases.md) と 1 対 1）。CI に `web` job（lint / tsc / format / vitest）。`db` job は既存（リモート未設定のため Actions は未実行）。見た目の正はモック + [ui-spec.md](ui-spec.md)。試合入力の行順は 素点 → 順位 → 基本 pt。Phase 4 は **基盤先行**（次は 4-2 共通 UI → 4-3 から実データ接続）。計算の意図は [overview.md](overview.md)。ローカル Supabase 起動済み（Studio `http://127.0.0.1:54323`）。`web/.env.local` は接続情報のみ。スキーマ / RLS / RPC / `handle_new_user` の migration あり。生成型は `web/src/lib/supabase/database.types.ts`。`supabase test db` が緑。DB ケースの正は [test-cases.md](test-cases.md)。ドメインの日本語は **麻雀グループ**（表・パス・カラムは `community` のまま）。OAuth は [tech-stack.md](tech-stack.md#認証) |
 | Git | 初期化済み（`main`）。リモートなし |
-| 次のアクション | 4-1: `docs/calc-cases.md` → `lib/domain/` + Vitest + CI の `web` job（見た目は変えない） |
+| 次のアクション | 4-2: 共通 UI の整理（`MatchForm` / `RuleForm` の分割。ダミーのまま。375px で確認） |
 
 ## ブロッカー
 

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { NavButton } from "@/components/NavButton";
-import { formatPoints, getMatchDetail, SEAT_LABEL } from "@/mock";
+import { formatPoints } from "@/lib/domain";
+import { getMatchDetail, SEAT_LABEL } from "@/mock";
 
 type MatchPageProps = {
   params: Promise<{ matchId: string }>;

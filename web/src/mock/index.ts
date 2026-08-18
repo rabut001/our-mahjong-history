@@ -1,3 +1,8 @@
+import type {
+  MatchFormData,
+  MatchFormParticipant,
+} from "@/components/match-form-types";
+import { SEAT_ORDER, summarizeTournament } from "@/lib/domain";
 import {
   communities,
   communityInviteCodes,
@@ -17,7 +22,6 @@ import type {
   CommunityRule,
   Match,
   Profile,
-  Rule,
   Seat,
   Tournament,
   TournamentParticipant,
@@ -146,54 +150,6 @@ export function isTournamentRuleInUse(ruleId: string): boolean {
   return matches.some((match) => match.tournamentRuleId === ruleId);
 }
 
-export type RuleFormData = Omit<Rule, "id">;
-
-export function toRuleFormData(rule: Rule): RuleFormData {
-  return {
-    name: rule.name,
-    playerCount: rule.playerCount,
-    startingScore: rule.startingScore,
-    returnScore: rule.returnScore,
-    okaTieHandling: rule.okaTieHandling,
-    umaEnabled: rule.umaEnabled,
-    umaTieHandling: rule.umaTieHandling,
-    umaPoints1: rule.umaPoints1,
-    umaPoints2: rule.umaPoints2,
-    tobiEnabled: rule.tobiEnabled,
-    yakitoriEnabled: rule.yakitoriEnabled,
-    otherPoints1Name: rule.otherPoints1Name,
-    otherPoints2Name: rule.otherPoints2Name,
-    otherPoints3Name: rule.otherPoints3Name,
-    otherPoints4Name: rule.otherPoints4Name,
-    otherPoints5Name: rule.otherPoints5Name,
-    rate: rule.rate,
-    notes: rule.notes,
-  };
-}
-
-export function emptyRuleFormData(): RuleFormData {
-  return {
-    name: "",
-    playerCount: 4,
-    startingScore: 25000,
-    returnScore: 30000,
-    okaTieHandling: "kamicha",
-    umaEnabled: true,
-    umaTieHandling: "kamicha",
-    umaPoints1: 30,
-    umaPoints2: 10,
-    tobiEnabled: true,
-    yakitoriEnabled: false,
-    otherPoints1Name: "",
-    otherPoints2Name: "",
-    otherPoints3Name: "",
-    otherPoints4Name: "",
-    otherPoints5Name: "",
-    rate: 1,
-    notes: "",
-  };
-}
-
 export function listTournaments(communityId: string): Tournament[] {
   return tournaments
     .filter((tournament) => tournament.communityId === communityId)
@@ -258,16 +214,6 @@ export function participantAvatarUrl(
   }
   const profile = profiles.find((item) => item.id === participant.userId);
   return profile?.avatarUrl ?? null;
-}
-
-export function formatHeldOn(heldOn: string): string {
-  const [year, month, day] = heldOn.split("-");
-  return `${Number(year)}年${Number(month)}月${Number(day)}日`;
-}
-
-export function formatPoints(value: number): string {
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(1)}`;
 }
 
 export function listMatches(tournamentId: string): MatchListItem[] {
@@ -337,18 +283,6 @@ function adjustmentLines(
   });
 }
 
-function assignRanks(finalPoints: number[]): number[] {
-  const ranks: number[] = [];
-  for (let index = 0; index < finalPoints.length; index += 1) {
-    if (index > 0 && finalPoints[index] === finalPoints[index - 1]) {
-      ranks.push(ranks[index - 1] ?? index);
-    } else {
-      ranks.push(index + 1);
-    }
-  }
-  return ranks;
-}
-
 export function getTournamentSummary(tournamentId: string): {
   ranked: RankingRow[];
   unplayed: UnplayedRow[];
@@ -365,63 +299,57 @@ export function getTournamentSummary(tournamentId: string): {
       .map((match) => match.id),
   );
 
-  const played: RankingRow[] = [];
-  const unplayed: UnplayedRow[] = [];
+  const summary = summarizeTournament(
+    participants.map((participant) => ({
+      id: participant.id,
+      matchPoints: matchResults
+        .filter(
+          (result) =>
+            result.tournamentParticipantId === participant.id &&
+            tournamentMatchIds.has(result.matchId),
+        )
+        .map((result) => result.points),
+      adjustments: adjustmentLines(tournament, participant.id).map(
+        (line) => line.amount,
+      ),
+    })),
+  );
 
-  for (const participant of participants) {
-    const name = participantDisplayName(participant);
-    const avatarUrl = participantAvatarUrl(participant);
-    const adjustments = adjustmentLines(tournament, participant.id);
-    const adjustmentTotal = adjustments.reduce(
-      (sum, line) => sum + line.amount,
-      0,
-    );
-    const matchPoints = matchResults
-      .filter(
-        (result) =>
-          result.tournamentParticipantId === participant.id &&
-          tournamentMatchIds.has(result.matchId),
-      )
-      .reduce((sum, result) => sum + result.points, 0);
-    const playedCount = matchResults.filter(
-      (result) =>
-        result.tournamentParticipantId === participant.id &&
-        tournamentMatchIds.has(result.matchId),
-    ).length;
+  const byId = new Map(
+    participants.map((participant) => [participant.id, participant]),
+  );
 
-    if (playedCount === 0) {
-      unplayed.push({
-        participantId: participant.id,
-        userId: participant.userId,
-        name,
-        avatarUrl,
-        adjustments,
-        adjustmentTotal,
-      });
-      continue;
-    }
-
-    played.push({
-      participantId: participant.id,
-      userId: participant.userId,
-      name,
-      avatarUrl,
-      rank: 0,
-      matchPoints,
-      adjustments,
-      adjustmentTotal,
-      finalPoints: matchPoints + adjustmentTotal,
-    });
-  }
-
-  played.sort((a, b) => b.finalPoints - a.finalPoints);
-  const ranks = assignRanks(played.map((row) => row.finalPoints));
-  const ranked = played.map((row, index) => ({
-    ...row,
-    rank: ranks[index] ?? index + 1,
-  }));
-
-  return { ranked, unplayed };
+  return {
+    ranked: summary.ranked.map((row) => {
+      const participant = byId.get(row.id);
+      return {
+        participantId: row.id,
+        userId: participant?.userId ?? null,
+        name: participant ? participantDisplayName(participant) : "不明",
+        avatarUrl: participant ? participantAvatarUrl(participant) : null,
+        rank: row.rank,
+        matchPoints: row.matchPointTotal,
+        adjustments: participant
+          ? adjustmentLines(tournament, participant.id)
+          : [],
+        adjustmentTotal: row.adjustmentTotal,
+        finalPoints: row.finalPoints,
+      };
+    }),
+    unplayed: summary.unplayed.map((row) => {
+      const participant = byId.get(row.id);
+      return {
+        participantId: row.id,
+        userId: participant?.userId ?? null,
+        name: participant ? participantDisplayName(participant) : "不明",
+        avatarUrl: participant ? participantAvatarUrl(participant) : null,
+        adjustments: participant
+          ? adjustmentLines(tournament, participant.id)
+          : [],
+        adjustmentTotal: row.adjustmentTotal,
+      };
+    }),
+  };
 }
 
 export type PointCorrectionParticipant = {
@@ -479,38 +407,6 @@ export function getPointCorrectionData(tournamentId: string): {
   };
 }
 
-export type MatchFormPlayer = {
-  participantId: string;
-  name: string;
-  seat: Seat;
-  score: number | null;
-  tobiPoints: number;
-  yakitoriPoints: number;
-  otherPoints: [number, number, number, number, number];
-  manualPoints: [number, number, number];
-  umaPoints: number;
-  baseOverride: number | null;
-  points: number;
-  rank: number | null;
-};
-
-export type MatchFormParticipant = {
-  id: string;
-  name: string;
-};
-
-export type MatchFormData = {
-  matchId: string | null;
-  tournamentId: string;
-  tournamentName: string;
-  rules: TournamentRule[];
-  selectedRuleId: string;
-  participants: MatchFormParticipant[];
-  players: MatchFormPlayer[];
-  manualTitles: [string, string, string];
-  comment: string;
-};
-
 function tournamentParticipantsForForm(
   tournamentId: string,
 ): MatchFormParticipant[] {
@@ -523,8 +419,6 @@ function tournamentParticipantsForForm(
 export function getMatch(matchId: string): Match | undefined {
   return matches.find((match) => match.id === matchId);
 }
-
-const SEAT_ORDER: Seat[] = ["east", "south", "west", "north"];
 
 export type MatchDetailResult = {
   participantId: string;

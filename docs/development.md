@@ -142,7 +142,7 @@ Phase 6: 拡張（MVP 後）
 
 **目的**: モックの見た目を正として残し、コンポーネント構成と計算は整理したうえで、Phase 3 の DB / RLS / 型を画面が消費する。
 
-見た目の正は `docs/ui-spec.md` と `web/` のモック。構造（CSS の重複、コンポーネント分割、`mock/` の神モジュール）は正にしない。計算の意図は [overview.md](overview.md)。ケースの正は 4-1 の `docs/calc-cases.md`。
+見た目の正は `docs/ui-spec.md` と `web/` のモック。構造（CSS の重複、コンポーネント分割、`mock/` の神モジュール）は正にしない。計算の意図は [overview.md](overview.md)。ケースの正は [calc-cases.md](calc-cases.md)。
 
 基盤（ドメイン・テスト・共通 UI）を先に固定し、そのあと機能単位で接続する。
 

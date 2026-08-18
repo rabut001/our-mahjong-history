@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { formatPoints } from "@/mock";
+import { formatPoints } from "@/lib/domain";
 import type { RankingRow, UnplayedRow } from "@/mock";
 import { rowTitleClass } from "@/components/ui";
 

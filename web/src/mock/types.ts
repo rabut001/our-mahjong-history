@@ -1,3 +1,7 @@
+import type { Seat } from "@/lib/domain";
+
+export type { Seat };
+
 export type Profile = {
   id: string;
   displayName: string;
@@ -80,8 +84,6 @@ export type Match = {
   comment: string;
   createdAt: string;
 };
-
-export type Seat = "east" | "south" | "west" | "north";
 
 export type MatchResult = {
   id: string;

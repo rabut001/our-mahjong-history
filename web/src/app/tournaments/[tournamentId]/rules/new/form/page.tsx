@@ -2,12 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { RuleForm } from "@/components/RuleForm";
-import {
-  emptyRuleFormData,
-  getCommunityRule,
-  getTournament,
-  toRuleFormData,
-} from "@/mock";
+import { emptyRuleFormData, toRuleFormData } from "@/components/rule-form-data";
+import { getCommunityRule, getTournament } from "@/mock";
 
 type NewTournamentRuleFormPageProps = {
   params: Promise<{ tournamentId: string }>;

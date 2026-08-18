@@ -1,6 +1,83 @@
-# 手元と同じ入口: supabase start → lint / advisors / auth.uid 静的検査 → test db → PostgREST
-# Node の lint / 画面 E2E は後のフェーズ。
+# 手元と同じ入口: db job は supabase start → lint / advisors / auth.uid 静的検査 → test db → PostgREST。
+# web job は web/ の lint / tsc / format / vitest（Supabase は起動しない）。
 name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.114.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Lint database functions
+        run: supabase db lint --local --schema public --fail-on warning
+
+      - name: Security advisors
+        run: bash supabase/ci/run-security-advisors.sh
+
+      - name: Check DEFINER functions use auth.uid
+        run: bash supabase/ci/check-definer-auth-uid.sh
+
+      - name: Run database tests
+        run: supabase test db
+
+      - name: PostgREST smoke
+        run: bash supabase/ci/postgrest-smoke.sh
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Test
+        run: npm test
+
 
 on:
   pull_request:

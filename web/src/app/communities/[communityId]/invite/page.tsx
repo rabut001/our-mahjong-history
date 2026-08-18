@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { blockButtonClass, outlineBlockButtonClass } from "@/components/ui";
+import { formatHeldOn } from "@/lib/domain";
 import {
-  formatHeldOn,
   getCommunity,
   getCommunityInviteCode,
   INVITE_DEFAULT_DAYS,

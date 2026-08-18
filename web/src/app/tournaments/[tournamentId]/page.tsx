@@ -6,10 +6,9 @@ import { RowLink } from "@/components/RowLink";
 import { SectionCard } from "@/components/SectionCard";
 import { TournamentResults } from "@/components/TournamentResults";
 import { rowTitleClass } from "@/components/ui";
+import { formatHeldOn, formatPoints } from "@/lib/domain";
 import {
   describeTournamentRules,
-  formatHeldOn,
-  formatPoints,
   getTournament,
   getTournamentSummary,
   listMatches,

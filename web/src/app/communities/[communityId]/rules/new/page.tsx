@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { RuleForm } from "@/components/RuleForm";
-import { emptyRuleFormData, getCommunity } from "@/mock";
+import { emptyRuleFormData } from "@/components/rule-form-data";
+import { getCommunity } from "@/mock";
 
 type NewCommunityRulePageProps = {
   params: Promise<{ communityId: string }>;
