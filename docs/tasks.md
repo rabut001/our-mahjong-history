@@ -892,19 +892,19 @@ UI は camelCase のドメイン型だけを見る。`database.types.ts` は `li
 - [x] プロジェクト作成（Tokyo、`our-mahjong-history`、ref `hmkyrdkqqjmomggekxbj`）
 - [x] `supabase link` と migration 適用（`db push`。schema / RLS / functions / auth の 4 本）
 - [x] メール確認を ON（既定メール）
-- [x] Google（標準）と LINE（Custom OIDC、`custom:line`。エンドポイントは [tech-stack.md](tech-stack.md#認証)）
+- [x] Google（標準）と LINE（Custom OAuth2 / Manual、`custom:line`。エンドポイントは [tech-stack.md](tech-stack.md#認証)）
 - [x] 既存クライアントのリダイレクトに `https://hmkyrdkqqjmomggekxbj.supabase.co/auth/v1/callback`
 - [x] [status.md](status.md) を更新
 
-Site URL とアプリの `/auth/callback` は Vercel URL 待ち（5-3）。
+Site URL とアプリの `/auth/callback` は 5-3。
 
 ### 5-3 Vercel
 
-- [ ] GitHub から Import。Root Directory は `web`。Framework は Next.js
-- [ ] 環境変数は Production のみ（`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`）。Preview には入れない（公開リポジトリのため）
-- [ ] デプロイが通ること
-- [ ] Supabase の Site URL を Vercel URL にする。Redirect URLs に `https://<vercel>/auth/callback` を足す
-- [ ] [status.md](status.md) / [tech-stack.md](tech-stack.md) を更新
+- [x] GitHub から Import。Root Directory は `web`。Framework Preset は Next.js。Output Directory は既定（`public` にしない）
+- [x] 環境変数は Production のみ（`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`）。Preview には入れない（公開リポジトリのため）
+- [x] デプロイが通ること（https://our-mahjong-history.vercel.app ）
+- [x] Supabase の Site URL を `https://our-mahjong-history.vercel.app` にする。Redirect URLs に `https://our-mahjong-history.vercel.app/auth/callback` を足す
+- [x] [status.md](status.md) / [tech-stack.md](tech-stack.md) を更新
 
 OAuth シークレットは Vercel に置かない（Supabase Dashboard）。
 

@@ -79,25 +79,28 @@
 
 ### OAuth（画面導線の前提。Phase 4-3 が呼ぶ）
 
-ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Supabase Cloud の Dashboard（Google は標準プロバイダ、LINE は Custom OIDC）。既存の Google / LINE クライアントのリダイレクト先は `https://hmkyrdkqqjmomggekxbj.supabase.co/auth/v1/callback`。
+ローカルでは有効化しない。クレデンシャルはコミットしない。本番は Supabase Cloud の Dashboard（Google は標準プロバイダ、LINE は Custom **OAuth2**（Manual）。Auto-discovery / OIDC は使わない。LINE の Web 用 ID トークンは HS256 で、Custom OIDC の ES256 検証に落ちる）。既存の Google / LINE クライアントのリダイレクト先は `https://hmkyrdkqqjmomggekxbj.supabase.co/auth/v1/callback`。
 
 | 項目 | Google | LINE |
 |------|--------|------|
-| 種別 | 標準プロバイダ | 標準に無い。Custom OIDC |
+| 種別 | 標準プロバイダ | 標準に無い。Custom **OAuth2**（Manual） |
 | クライアント | `signInWithOAuth({ provider: 'google' })` | `signInWithOAuth({ provider: 'custom:line' })` |
-| 設定場所 | `config.toml` の `[auth.external.google]`（`enabled = false`）。本番 Dashboard | 本番 Dashboard の Custom Identity Providers。identifier は `custom:line`。CLI 2.114.0 の `config.toml` には書けない |
+| 設定場所 | `config.toml` の `[auth.external.google]`（`enabled = false`）。本番 Dashboard | 本番 Dashboard の Custom Providers。identifier は `custom:line`。種別は OAuth2 / Manual。CLI 2.114.0 の `config.toml` には書けない |
 | シークレット | `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`（本番）。`client_id` は Google のクライアント ID | LINE チャネル ID / チャネルシークレット（Dashboard。リポジトリに置かない） |
-| メールなし | 不可（既定） | あり得る。Dashboard で email optional。表示名は `name` 必須 |
+| メールなし | 不可（既定） | あり得る。Dashboard で email optional。表示名は `name` 必須。scopes は `openid profile`（空だと LINE が `INVALID_SCOPE`） |
 
-LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard）:
+LINE の Custom OAuth2（Manual endpoints。本番 Dashboard。Auto-discovery は使わない）:
 
 | 項目 | 値 |
 |------|-----|
 | Identifier | `custom:line` |
-| Issuer | `https://access.line.me` |
+| 種別 | **Manual configuration**（Auto-discovery (OIDC) ではない） |
+| Scopes | `openid profile`（必須。空にしない。メールが要るときだけ `email` を足す） |
+| Issuer | `https://access.line.me`（Dashboard では必須。Manual なら OIDC 検証には使われない） |
 | Authorization | `https://access.line.me/oauth2/v2.1/authorize` |
 | Token | `https://api.line.me/oauth2/v2.1/token` |
 | Userinfo | `https://api.line.me/oauth2/v2.1/userinfo` |
+| JWKS URI | 空（Issuer で自動入力されたら消す） |
 
 メール登録・ログイン（パスワード）は Server Action から `signUp` / `signInWithPassword` を呼ぶ。スマホの LAN プレビューでも、ブラウザが `127.0.0.1` の Auth に直接届く必要はない。OAuth はクライアントから `signInWithOAuth`。
 
@@ -105,7 +108,7 @@ LINE の Custom OIDC（マニュアルエンドポイント。本番 Dashboard�
 
 - コールバックパス: `/auth/callback`（ページは Phase 4-3）
 - ローカル: `http://127.0.0.1:3000/auth/callback`、`http://localhost:3000/auth/callback`
-- 本番: Vercel の既定 URL（`https://<project>.vercel.app/auth/callback`）を Dashboard の Site URL / Redirect URLs に足す
+- 本番: [https://our-mahjong-history.vercel.app/auth/callback](https://our-mahjong-history.vercel.app/auth/callback) を Dashboard の Site URL / Redirect URLs に足す
 
 生成型: `supabase gen types typescript --local > web/src/lib/supabase/database.types.ts`。既存の `client.ts` / `server.ts` が `Database` を使う。
 
@@ -130,7 +133,7 @@ Phase 0 で `supabase init` まで行う。`supabase start` は Phase 3-1。本�
 
 | サービス | 役割 |
 |----------|------|
-| Vercel | Next.js アプリのホスティング（本番。コンテナ化しない） |
+| Vercel | Next.js アプリのホスティング（本番。コンテナ化しない）。[our-mahjong-history.vercel.app](https://our-mahjong-history.vercel.app) |
 | Supabase Cloud | 本番の DB・Auth・RLS。Tokyo の `our-mahjong-history`（`hmkyrdkqqjmomggekxbj`）。メール確認あり。Google / LINE |
 | GitHub | ソースコード管理。公開リポジトリ [rabut001/our-mahjong-history](https://github.com/rabut001/our-mahjong-history) |
 | Docker | ローカル開発のみ |
