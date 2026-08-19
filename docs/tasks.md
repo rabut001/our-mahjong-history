@@ -912,6 +912,6 @@ OAuth シークレットは Vercel に置かない（Supabase Dashboard）。
 
 ケース一覧は作らない。新しい機能も足さない。
 
-- [ ] ユーザーが本番 URL を動かして OK
-- [ ] [status.md](status.md) を Phase 5 完了・次は Phase 6 に更新（ユーザー確認後）
+- [x] ユーザーが本番 URL を動かして OK
+- [x] [status.md](status.md) を Phase 5 完了・次は Phase 6 に更新（ユーザー確認後）
 
