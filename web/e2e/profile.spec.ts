@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { e2eCommunityName, e2eDisplayName } from "./env";
 import { expectHeading, loginAsE2eUser, openCommunity } from "./helpers";
 
@@ -6,6 +6,7 @@ test("E-10 プロフィール編集とユーザ詳細", async ({ page }) => {
   await loginAsE2eUser(page);
   await page.getByRole("link", { name: "編集" }).click();
   await expectHeading(page, "プロフィール");
+  await expect(page.getByRole("button", { name: "ログアウト" })).toBeVisible();
 
   await page.getByRole("link", { name: "ホーム" }).click();
   await expectHeading(page, "俺たちの雀歴");

@@ -10,6 +10,7 @@ import {
   TEXTAREA_ROWS,
   blockButtonClass,
 } from "@/components/ui";
+import { signOutToLoginAction } from "@/lib/data/auth-actions";
 import type { FormState, HomeProfile } from "@/lib/data/types";
 
 type ProfileFormProps = {
@@ -62,6 +63,11 @@ export function ProfileForm({
           className={`${blockButtonClass} disabled:opacity-60`}
         >
           保存する
+        </button>
+      </form>
+      <form action={signOutToLoginAction} className="mt-8 text-center">
+        <button type="submit" className="text-sm text-muted">
+          ログアウト
         </button>
       </form>
       <DangerAction

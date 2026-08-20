@@ -21,3 +21,4 @@ Phase 0〜5 の記録は [tasks.md](../tasks.md)。以降の修正・改善は�
 | 002 | [002-match-negative-score](002-match-negative-score/) | 完了 | 試合の素点にマイナスを入力できない |
 | 003 | [003-point-placeholder](003-point-placeholder/) | 完了 | ポイント入力のプレースホルダに 0 を出す |
 | 004 | [004-tournament-remove-participant](004-tournament-remove-participant/) | 完了 | 大会の参加者とゲストの「外す」が動かない |
+| 005 | [005-profile-logout](005-profile-logout/) | 完了 | プロフィール編集にログアウト |
