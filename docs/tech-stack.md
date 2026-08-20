@@ -102,7 +102,7 @@ LINE の Custom OAuth2（Manual endpoints。本番 Dashboard。Auto-discovery �
 | Userinfo | `https://api.line.me/oauth2/v2.1/userinfo` |
 | JWKS URI | 空（Issuer で自動入力されたら消す） |
 
-メール登録・ログイン（パスワード）は Server Action から `signUp` / `signInWithPassword` を呼ぶ。スマホの LAN プレビューでも、ブラウザが `127.0.0.1` の Auth に直接届く必要はない。OAuth はクライアントから `signInWithOAuth`（共通は `web/src/lib/supabase/oauth.ts`。LINE のみ `queryParams.disable_ios_auto_login = true`）。
+メール登録・ログイン（パスワード）は Server Action から `signUp` / `signInWithPassword` を呼ぶ。スマホの LAN プレビューでも、ブラウザが `127.0.0.1` の Auth に直接届く必要はない。OAuth はクライアントから `signInWithOAuth`（共通は `web/src/lib/supabase/oauth.ts`。LINE のみ `queryParams.disable_ios_auto_login = true`）。callback の失敗は `auth` クエリでログイン／アカウント作成へ戻し、日本語メッセージを出す。ログイン済みでもホームへ落とさない。
 
 パスワード再設定は `resetPasswordForEmail`。`redirectTo` は `/auth/callback?next=/reset-password`（許可リストは既存の callback）。メールのリンクは `code` のことも、ハッシュでトークンが付くこともある。callback がセッションを付けてから `/reset-password` で `updateUser({ password })`。変更後と、再設定画面の戻るはログアウトしてからログインへ。
 

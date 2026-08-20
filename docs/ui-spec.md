@@ -301,6 +301,7 @@ flowchart TD
 - 緑の「Googleでログイン」「LINEでログイン」
 - 下部（`text-base`）: 「アカウントを持っていない方は アカウントを作成」
 - メールは `signInWithPassword`。Google / LINE は `signInWithOAuth`。戻り先は `/auth/callback`
+- OAuth / callback の失敗はログインにメッセージを出す。ログイン済みでもホームへ落とさない
 
 **アカウント作成**（`/signup`）
 
@@ -309,6 +310,7 @@ flowchart TD
 - 下部: 「すでにアカウントがある方は ログイン」
 - 確認欄が一致しないときは登録しない
 - メール登録は `signUp` の `options.data.display_name` に表示名を渡す（`handle_new_user` が `profiles` にコピーする）
+- OAuth / callback の失敗はアカウント作成にメッセージを出す。ログイン済みでもホームへ落とさない
 
 **パスワードを忘れた**（`/forgot-password`）
 

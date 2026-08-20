@@ -48,3 +48,23 @@ test("E-06 パスワードの再設定を表示する", async ({ page }) => {
   await expectHeading(page, "パスワードの再設定");
   await expect(page.getByRole("button", { name: "変更する" })).toBeVisible();
 });
+
+test("E-07 callback 失敗はログインにメッセージ", async ({ page }) => {
+  await page.goto("/login?auth=denied");
+  await expectHeading(page, "ログイン");
+  await expect(
+    page.getByText("ログインがキャンセルされました。"),
+  ).toBeVisible();
+
+  await page.getByLabel("メールアドレス").fill(e2eEmail());
+  await page.getByLabel("パスワード").fill(e2ePassword());
+  await page.getByRole("button", { name: "ログイン", exact: true }).click();
+  await expect(page).toHaveURL(/\/communities$/, { timeout: 20_000 });
+
+  await page.goto("/login?auth=denied");
+  await expect(page).toHaveURL(/\/login/);
+  await expectHeading(page, "ログイン");
+  await expect(
+    page.getByText("ログインがキャンセルされました。"),
+  ).toBeVisible();
+});

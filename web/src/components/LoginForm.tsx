@@ -15,6 +15,7 @@ import {
 
 type LoginFormProps = {
   next: string;
+  callbackError?: string;
 };
 
 function callbackUrl(next: string) {
@@ -25,7 +26,7 @@ function callbackUrl(next: string) {
   return url.toString();
 }
 
-export function LoginForm({ next }: LoginFormProps) {
+export function LoginForm({ next, callbackError }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -106,6 +107,7 @@ export function LoginForm({ next }: LoginFormProps) {
             mode="login"
             redirectTo={callbackUrl(next)}
             disabled={pending}
+            callbackError={callbackError}
           />
         </div>
         <p className="mt-6 text-center text-base">

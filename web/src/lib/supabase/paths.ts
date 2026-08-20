@@ -5,6 +5,8 @@ export const CALLBACK_PATH = "/auth/callback";
 export const FORGOT_PASSWORD_PATH = "/forgot-password";
 export const FORGOT_PASSWORD_SENT_PATH = "/forgot-password/sent";
 export const RESET_PASSWORD_PATH = "/reset-password";
+export const AUTH_ERROR_PARAM = "auth";
+export const OAUTH_FROM_COOKIE = "omh_oauth_from";
 
 export function isPublicPath(pathname: string) {
   return (
@@ -15,6 +17,25 @@ export function isPublicPath(pathname: string) {
     pathname === RESET_PASSWORD_PATH ||
     pathname.startsWith("/auth/")
   );
+}
+
+export function oauthReturnPath(from: string | null | undefined) {
+  return from === "signup" ? SIGNUP_PATH : LOGIN_PATH;
+}
+
+export function authErrorUrl(
+  origin: string,
+  key: string,
+  from: string | null | undefined,
+  next: string,
+) {
+  const path = oauthReturnPath(from);
+  const url = new URL(path, origin);
+  url.searchParams.set(AUTH_ERROR_PARAM, key);
+  if (path === LOGIN_PATH && next !== HOME_PATH) {
+    url.searchParams.set("next", next);
+  }
+  return url;
 }
 
 export function recoveryCallbackUrl(origin: string) {

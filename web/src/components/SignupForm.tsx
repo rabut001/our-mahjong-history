@@ -13,7 +13,7 @@ function callbackUrl() {
   return new URL(CALLBACK_PATH, window.location.origin).toString();
 }
 
-export function SignupForm() {
+export function SignupForm({ callbackError }: { callbackError?: string }) {
   const [view, setView] = useState<"oauth" | "email">("oauth");
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -165,6 +165,7 @@ export function SignupForm() {
           mode="signup"
           redirectTo={callbackUrl()}
           disabled={pending}
+          callbackError={callbackError}
         />
         <p className="mt-6 text-center text-base">
           <button

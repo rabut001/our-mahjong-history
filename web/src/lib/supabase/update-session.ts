@@ -6,6 +6,7 @@ import {
   HOME_PATH,
   LOGIN_PATH,
   SIGNUP_PATH,
+  AUTH_ERROR_PARAM,
   isPublicPath,
   safeNextPath,
 } from "@/lib/supabase/paths";
@@ -54,10 +55,12 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && (pathname === LOGIN_PATH || pathname === SIGNUP_PATH)) {
-    const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = HOME_PATH;
-    homeUrl.search = "";
-    return NextResponse.redirect(homeUrl);
+    if (!request.nextUrl.searchParams.get(AUTH_ERROR_PARAM)) {
+      const homeUrl = request.nextUrl.clone();
+      homeUrl.pathname = HOME_PATH;
+      homeUrl.search = "";
+      return NextResponse.redirect(homeUrl);
+    }
   }
 
   return supabaseResponse;

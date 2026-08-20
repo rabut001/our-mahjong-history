@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { blockButtonClass } from "@/components/ui";
 import { startOAuthRedirect, type OAuthProvider } from "@/lib/supabase/oauth";
+import { OAUTH_FROM_COOKIE } from "@/lib/supabase/paths";
 
 export function OrDivider() {
   return (
@@ -18,14 +19,16 @@ type OAuthButtonsProps = {
   mode: "login" | "signup";
   redirectTo: string;
   disabled?: boolean;
+  callbackError?: string;
 };
 
 export function OAuthButtons({
   mode,
   redirectTo,
   disabled,
+  callbackError,
 }: OAuthButtonsProps) {
-  const [error, setError] = useState("");
+  const [error, setError] = useState(callbackError ?? "");
   const [busy, setBusy] = useState(false);
   const google = mode === "login" ? "Googleでログイン" : "Googleで登録";
   const line = mode === "login" ? "LINEでログイン" : "LINEで登録";
@@ -33,6 +36,7 @@ export function OAuthButtons({
   async function startOAuth(provider: OAuthProvider) {
     setError("");
     setBusy(true);
+    document.cookie = `${OAUTH_FROM_COOKIE}=${mode}; Path=/; Max-Age=600; SameSite=Lax`;
     const result = await startOAuthRedirect(provider, redirectTo);
     if (!result.ok) {
       setError(result.message);
