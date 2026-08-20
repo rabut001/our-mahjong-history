@@ -25,6 +25,7 @@ export function AmountCell({
       step="0.1"
       disabled={disabled}
       aria-label={ariaLabel}
+      placeholder={disabled ? undefined : "0"}
       value={draft ?? (amount === 0 ? "" : String(amount))}
       onChange={(event) => {
         const raw = event.target.value;

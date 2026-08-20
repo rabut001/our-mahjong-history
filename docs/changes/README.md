@@ -19,3 +19,4 @@ Phase 0〜5 の記録は [tasks.md](../tasks.md)。以降の修正・改善は�
 |------|----------|------|------|
 | 001 | [001-login-signup](001-login-signup/) | 完了 | ログイン・アカウント作成の修正・改善 |
 | 002 | [002-match-negative-score](002-match-negative-score/) | 完了 | 試合の素点にマイナスを入力できない |
+| 003 | [003-point-placeholder](003-point-placeholder/) | 完了 | ポイント入力のプレースホルダに 0 を出す |

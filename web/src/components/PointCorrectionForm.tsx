@@ -204,6 +204,7 @@ export function PointCorrectionForm({
                       <input
                         type="number"
                         step="0.1"
+                        placeholder="0"
                         value={row.amounts[participantIndex] ?? ""}
                         aria-label={`${participant.name}の${row.title || `補正${rowIndex + 1}`}`}
                         onChange={(event) =>
