@@ -2,17 +2,16 @@
 
 import { useActionState, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { AppHeader, HeaderIconButton } from "@/components/AppHeader";
-import { ChevronLeftIcon } from "@/components/NavIcons";
-import {
-  blockButtonClass,
-  Field,
-  fieldClass,
-  outlineBlockButtonClass,
-} from "@/components/ui";
+import { AppHeader } from "@/components/AppHeader";
+import { OAuthButtons, OrDivider } from "@/components/OAuthButtons";
+import { Field, fieldClass, outlineBlockButtonClass } from "@/components/ui";
 import { signInWithEmailAction } from "@/lib/data/auth-actions";
-import { startOAuthRedirect, type OAuthProvider } from "@/lib/supabase/oauth";
-import { CALLBACK_PATH, HOME_PATH, SIGNUP_PATH } from "@/lib/supabase/paths";
+import {
+  CALLBACK_PATH,
+  FORGOT_PASSWORD_PATH,
+  HOME_PATH,
+  SIGNUP_PATH,
+} from "@/lib/supabase/paths";
 
 type LoginFormProps = {
   next: string;
@@ -27,65 +26,51 @@ function callbackUrl(next: string) {
 }
 
 export function LoginForm({ next }: LoginFormProps) {
-  const [step, setStep] = useState<"email" | "password">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [oauthError, setOauthError] = useState("");
-  const [oauthBusy, setOauthBusy] = useState(false);
   const [state, formAction, pending] = useActionState(
     signInWithEmailAction,
     {},
   );
 
-  async function startOAuth(provider: OAuthProvider) {
-    setOauthError("");
-    setOauthBusy(true);
-    const result = await startOAuthRedirect(provider, callbackUrl(next));
-    if (!result.ok) {
-      setOauthError(result.message);
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    let hasError = false;
+    if (!email.trim()) {
+      setEmailError("メールアドレスを入力してください。");
+      hasError = true;
+    } else {
+      setEmailError("");
     }
-    setOauthBusy(false);
-  }
-
-  function handlePasswordLogin(event: FormEvent<HTMLFormElement>) {
     if (!password.trim()) {
-      event.preventDefault();
       setPasswordError("パスワードを入力してください。");
+      hasError = true;
+    } else {
+      setPasswordError("");
+    }
+    if (hasError) {
+      event.preventDefault();
     }
   }
 
-  const formError = state.formError;
-  const busy = oauthBusy || pending;
-
-  if (step === "password") {
-    return (
-      <>
-        <AppHeader
-          title="ログイン"
-          back={
-            <HeaderIconButton
-              label="戻る"
-              onClick={() => {
-                setStep("email");
-                setPassword("");
-                setPasswordError("");
-              }}
-            >
-              <ChevronLeftIcon />
-            </HeaderIconButton>
-          }
-        />
-        <main className="px-4 py-4">
-          <p className="text-sm text-muted">{email || "メール"}</p>
-          <form
-            className="mt-6 space-y-6"
-            action={formAction}
-            onSubmit={handlePasswordLogin}
-          >
-            <input type="hidden" name="email" value={email} />
-            <input type="hidden" name="next" value={next} />
+  return (
+    <>
+      <AppHeader title="ログイン" />
+      <main className="px-4 py-4">
+        <form className="space-y-6" action={formAction} onSubmit={handleSubmit}>
+          <input type="hidden" name="next" value={next} />
+          <Field label="メールアドレス" error={emailError}>
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className={fieldClass}
+            />
+          </Field>
+          <div>
             <Field label="パスワード" error={passwordError}>
               <input
                 type="password"
@@ -96,76 +81,35 @@ export function LoginForm({ next }: LoginFormProps) {
                 className={fieldClass}
               />
             </Field>
-            <button
-              type="submit"
-              disabled={busy}
-              className={`${blockButtonClass} disabled:opacity-60`}
-            >
-              ログイン
-            </button>
-            {formError ? (
-              <p className="text-sm text-muted">{formError}</p>
-            ) : null}
-          </form>
-        </main>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <AppHeader title="ログイン" />
-      <main className="px-4 py-4">
-        <div className="space-y-6">
-          <Field label="メール" error={emailError}>
-            <input
-              type="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className={fieldClass}
-            />
-          </Field>
+            <p className="mt-2 text-right text-sm">
+              <Link href={FORGOT_PASSWORD_PATH} className="underline">
+                パスワードを忘れた
+              </Link>
+            </p>
+          </div>
           <button
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              if (!email.trim()) {
-                setEmailError("メールを入力してください。");
-                return;
-              }
-              setEmailError("");
-              setOauthError("");
-              setStep("password");
-            }}
-            className={`${blockButtonClass} disabled:opacity-60`}
-          >
-            次へ
-          </button>
-        </div>
-        <div className="mt-6 space-y-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => startOAuth("google")}
+            type="submit"
+            disabled={pending}
             className={`${outlineBlockButtonClass} disabled:opacity-60`}
           >
-            Googleでログイン
+            ログイン
           </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => startOAuth("custom:line")}
-            className={`${outlineBlockButtonClass} disabled:opacity-60`}
-          >
-            LINEでログイン
-          </button>
+          {state.formError ? (
+            <p className="text-sm text-muted">{state.formError}</p>
+          ) : null}
+        </form>
+        <div className="mt-6">
+          <OrDivider />
         </div>
-        {oauthError ? (
-          <p className="mt-3 text-sm text-muted">{oauthError}</p>
-        ) : null}
-        <p className="mt-6 text-center text-sm">
+        <div className="mt-6">
+          <OAuthButtons
+            mode="login"
+            redirectTo={callbackUrl(next)}
+            disabled={pending}
+          />
+        </div>
+        <p className="mt-6 text-center text-base">
+          アカウントを持っていない方は{" "}
           <Link href={SIGNUP_PATH} className="underline">
             アカウントを作成
           </Link>

@@ -115,10 +115,10 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 
 **戻る＋タイトルを本採用**（戻るとホームはアイコン）。タブもハンバーガーも持たない。
 
-- 左: 「戻る」アイコン（直前の一覧・詳細へ）。トップとログイン初画面は戻るなし。戻るがあるログイン中の画面は、その右に「ホーム」アイコン（トップ `/communities` へ。未保存の確認は出さない）
+- 左: 「戻る」アイコン（直前の一覧・詳細へ）。トップとログインは戻るなし。戻るがあるログイン中の画面は、その右に「ホーム」アイコン（トップ `/communities` へ。未保存の確認は出さない）
 - 中央: 画面タイトル（長いときは truncate）
 - 右: その画面の主アクション（編集、修正）。無いときは空
-- 戻るとホームはアイコンのみ（`aria-label` は「戻る」「ホーム」）。ログイン／アカウント作成にはホームを出さない
+- 戻るとホームはアイコンのみ（`aria-label` は「戻る」「ホーム」）。ログイン／アカウント作成／パスワード再設定にはホームを出さない
 
 ブラウザの履歴バックに頼らない。`backHref` を明示する。
 
@@ -215,6 +215,9 @@ Phase 4 の見た目はモックと本ファイルを正とする。コンポー
 |------|--------|----------|
 | ログイン | `/login` | ログイン |
 | アカウント作成 | `/signup` | アカウント作成 |
+| パスワードを忘れた | `/forgot-password` | パスワードを忘れた |
+| 再設定メール送信後 | `/forgot-password/sent` | パスワードを忘れた |
+| パスワードの再設定 | `/reset-password` | パスワードの再設定 |
 | トップ | `/communities` | 俺たちの雀歴 |
 | プロフィール編集 | `/profile` | プロフィール |
 | ユーザ詳細 | `/profiles/[userId]` | 表示名 |
@@ -253,6 +256,10 @@ flowchart TD
   login["/login"] --> top["/communities トップ"]
   signup["/signup"] --> top
   login --- signup
+  login --> forgot["/forgot-password"]
+  forgot --> sent["/forgot-password/sent"]
+  sent --> login
+  reset["/reset-password"] --> login
   top --> profile["/profile"]
   top --> newGroup["グループ作成"]
   top --> join["招待コードで参加"]
@@ -288,18 +295,37 @@ flowchart TD
 
 **ログイン**（`/login`）
 
-- 初画面: メール → 「次へ」／「Googleでログイン」／「LINEでログイン」
-- 次画面: パスワード → 「ログイン」。戻るは初画面へ
-- 下部に「アカウントを作成」
-- メールは `signInWithPassword`（パスワードは 2 画面目）。Google / LINE は初画面から OAuth
-- Phase 4-3 が呼ぶ API: Google は `signInWithOAuth({ provider: 'google' })`。LINE は `signInWithOAuth({ provider: 'custom:line' })`。戻り先は `/auth/callback`（ページも 4-3）
+- 1 画面。戻るなし
+- 上: メールアドレス、パスワード、「パスワードを忘れた」、枠線の「ログイン」
+- 「または」
+- 緑の「Googleでログイン」「LINEでログイン」
+- 下部（`text-base`）: 「アカウントを持っていない方は アカウントを作成」
+- メールは `signInWithPassword`。Google / LINE は `signInWithOAuth`。戻り先は `/auth/callback`
 
 **アカウント作成**（`/signup`）
 
-- 初画面はログインと同じ三択（「Googleで登録」「LINEで登録」）。メール欄のラベルは「メールアドレスで登録」
-- 次画面: 表示名とパスワード → 「登録する」
-- 下部に「ログイン」
+- 初画面: 緑の「Googleで登録」「LINEで登録」。戻るはログインへ。ホームなし
+- 「メールアドレスで登録」（`text-base`）の先: 表示名、メールアドレス、パスワード、パスワード（確認）、「登録する」。戻るは初画面へ
+- 下部: 「すでにアカウントがある方は ログイン」
+- 確認欄が一致しないときは登録しない
 - メール登録は `signUp` の `options.data.display_name` に表示名を渡す（`handle_new_user` が `profiles` にコピーする）
+
+**パスワードを忘れた**（`/forgot-password`）
+
+- 戻るはログインへ。ホームなし
+- メールアドレス、「送信する」
+- 送信後は `/forgot-password/sent`（メールの有無は出さない）
+
+**再設定メール送信後**（`/forgot-password/sent`）
+
+- 見出しは「パスワードを忘れた」。戻るはログインへ
+- 「入力したメールアドレスに、再設定用のリンクを送りました。」
+
+**パスワードの再設定**（`/reset-password`）
+
+- メールのリンクは `/auth/callback?next=/reset-password` を経て着く
+- 新しいパスワード、「変更する」。戻るはログアウトしてからログインへ（recovery セッションのままログインへ行くとホームへ飛ばされるため）
+- 変更後はログアウトし、ログインへ
 
 ### トップ（俺たちの雀歴）
 

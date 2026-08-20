@@ -46,7 +46,8 @@
 | ER（属性・制約・Mermaid） | [docs/er.md](docs/er.md) |
 | 開発フェーズの定義・進め方 | [docs/development.md](docs/development.md) |
 | 技術スタック・言語・プラットフォーム | [docs/tech-stack.md](docs/tech-stack.md) |
-| 具体タスク（Phase 0 以降） | [docs/tasks.md](docs/tasks.md) |
+| 具体タスク（Phase 0〜5） | [docs/tasks.md](docs/tasks.md)（完了記録） |
+| MVP 後の修正・改善 | [docs/changes/](docs/changes/) |
 | DB / RLS テストケース | [docs/test-cases.md](docs/test-cases.md)（Phase 3-3 で作成） |
 | ポイント計算ケース | [docs/calc-cases.md](docs/calc-cases.md)（Phase 4-1 で作成） |
 | 画面 E2E テストケース | [docs/e2e-cases.md](docs/e2e-cases.md) |
@@ -77,6 +78,7 @@
 - 日本語のドメイン用語は [docs/overview.md](docs/overview.md)。麻雀グループの表名・パス・カラムは `community` のまま（`communities` / `community_id`）。英語識別子は変えない
 - 「金額」「賭け」「精算」「支払い」「円」などの語を UI・コード・提案に使わない。値は点数・基本ポイント・ポイントで話す
 - フェーズを飛ばさず、[docs/development.md](docs/development.md) の順序に従う
+- Phase 0〜5 のあと、具体タスクは [docs/changes/](docs/changes/)（1 変更 = 1 フォルダ）。`docs/tasks.md` には追記しない。Phase 6（写真・統計等）とは混ぜない
 - DB 変更は migration SQL として管理する
 - RLS の権限テストは `supabase test db`（pgTAP）。画面やモッククライアントでは代替しない
 - テストケースの正は [docs/test-cases.md](docs/test-cases.md)（Phase 3-3 で作成。実装より前）

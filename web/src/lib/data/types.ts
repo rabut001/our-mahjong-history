@@ -70,4 +70,5 @@ export type FormState = {
     rate?: string;
   };
   formError?: string;
+  ok?: boolean;
 };

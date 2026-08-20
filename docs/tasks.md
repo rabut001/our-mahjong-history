@@ -1,6 +1,6 @@
 # 詳細タスク
 
-進捗の正は [status.md](status.md)。本ファイルは現フェーズの具体タスク。
+進捗の正は [status.md](status.md)。本ファイルは **Phase 0〜5** の具体タスク（完了記録）。以降は [changes/](changes/) に書く。
 
 ## Phase 0: プロジェクト土台
 
@@ -914,4 +914,8 @@ OAuth シークレットは Vercel に置かない（Supabase Dashboard）。
 
 - [x] ユーザーが本番 URL を動かして OK
 - [x] [status.md](status.md) を Phase 5 完了・次は Phase 6 に更新（ユーザー確認後）
+
+---
+
+Phase 5 まで完了。以降の修正は [changes/](changes/)。本ファイルには追記しない。
 

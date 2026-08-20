@@ -4,14 +4,9 @@ import Link from "next/link";
 import { useActionState, useState, type FormEvent } from "react";
 import { AppHeader, HeaderIconButton } from "@/components/AppHeader";
 import { ChevronLeftIcon } from "@/components/NavIcons";
-import {
-  blockButtonClass,
-  Field,
-  fieldClass,
-  outlineBlockButtonClass,
-} from "@/components/ui";
+import { OAuthButtons } from "@/components/OAuthButtons";
+import { Field, blockButtonClass, fieldClass } from "@/components/ui";
 import { signUpWithEmailAction } from "@/lib/data/auth-actions";
-import { startOAuthRedirect, type OAuthProvider } from "@/lib/supabase/oauth";
 import { CALLBACK_PATH, LOGIN_PATH } from "@/lib/supabase/paths";
 
 function callbackUrl() {
@@ -19,29 +14,19 @@ function callbackUrl() {
 }
 
 export function SignupForm() {
-  const [step, setStep] = useState<"method" | "password">("method");
+  const [view, setView] = useState<"oauth" | "email">("oauth");
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [emailError, setEmailError] = useState("");
   const [displayNameError, setDisplayNameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [oauthError, setOauthError] = useState("");
-  const [oauthBusy, setOauthBusy] = useState(false);
+  const [passwordConfirmError, setPasswordConfirmError] = useState("");
   const [state, formAction, pending] = useActionState(
     signUpWithEmailAction,
     {},
   );
-
-  async function startOAuth(provider: OAuthProvider) {
-    setOauthError("");
-    setOauthBusy(true);
-    const result = await startOAuthRedirect(provider, callbackUrl());
-    if (!result.ok) {
-      setOauthError(result.message);
-    }
-    setOauthBusy(false);
-  }
 
   function handleSignup(event: FormEvent<HTMLFormElement>) {
     let hasError = false;
@@ -51,20 +36,30 @@ export function SignupForm() {
     } else {
       setDisplayNameError("");
     }
+    if (!email.trim()) {
+      setEmailError("メールアドレスを入力してください。");
+      hasError = true;
+    } else {
+      setEmailError("");
+    }
     if (!password.trim()) {
       setPasswordError("パスワードを入力してください。");
       hasError = true;
     } else {
       setPasswordError("");
     }
+    if (password !== passwordConfirm) {
+      setPasswordConfirmError("パスワードが一致しません。");
+      hasError = true;
+    } else {
+      setPasswordConfirmError("");
+    }
     if (hasError) {
       event.preventDefault();
     }
   }
 
-  const busy = oauthBusy || pending;
-
-  if (step === "password") {
+  if (view === "email") {
     return (
       <>
         <AppHeader
@@ -73,25 +68,27 @@ export function SignupForm() {
             <HeaderIconButton
               label="戻る"
               onClick={() => {
-                setStep("method");
+                setView("oauth");
                 setDisplayName("");
                 setPassword("");
+                setPasswordConfirm("");
                 setDisplayNameError("");
                 setPasswordError("");
+                setPasswordConfirmError("");
+                setEmailError("");
               }}
             >
               <ChevronLeftIcon />
             </HeaderIconButton>
           }
+          showHome={false}
         />
         <main className="px-4 py-4">
-          <p className="text-sm text-muted">{email || "メール"}</p>
           <form
-            className="mt-6 space-y-6"
+            className="space-y-6"
             action={formAction}
             onSubmit={handleSignup}
           >
-            <input type="hidden" name="email" value={email} />
             <Field
               label="表示名"
               error={displayNameError || state.fieldErrors?.displayName}
@@ -101,6 +98,16 @@ export function SignupForm() {
                 name="displayName"
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
+                className={fieldClass}
+              />
+            </Field>
+            <Field label="メールアドレス" error={emailError}>
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 className={fieldClass}
               />
             </Field>
@@ -114,9 +121,19 @@ export function SignupForm() {
                 className={fieldClass}
               />
             </Field>
+            <Field label="パスワード（確認）" error={passwordConfirmError}>
+              <input
+                type="password"
+                name="passwordConfirm"
+                autoComplete="new-password"
+                value={passwordConfirm}
+                onChange={(event) => setPasswordConfirm(event.target.value)}
+                className={fieldClass}
+              />
+            </Field>
             <button
               type="submit"
-              disabled={busy}
+              disabled={pending}
               className={`${blockButtonClass} disabled:opacity-60`}
             >
               登録する
@@ -125,6 +142,12 @@ export function SignupForm() {
               <p className="text-sm text-muted">{state.formError}</p>
             ) : null}
           </form>
+          <p className="mt-6 text-center text-sm">
+            すでにアカウントがある方は{" "}
+            <Link href={LOGIN_PATH} className="underline">
+              ログイン
+            </Link>
+          </p>
         </main>
       </>
     );
@@ -138,56 +161,22 @@ export function SignupForm() {
         showHome={false}
       />
       <main className="px-4 py-4">
-        <div className="space-y-6">
-          <Field label="メールアドレスで登録" error={emailError}>
-            <input
-              type="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className={fieldClass}
-            />
-          </Field>
+        <OAuthButtons
+          mode="signup"
+          redirectTo={callbackUrl()}
+          disabled={pending}
+        />
+        <p className="mt-6 text-center text-base">
           <button
             type="button"
-            disabled={busy}
-            onClick={() => {
-              if (!email.trim()) {
-                setEmailError("メールを入力してください。");
-                return;
-              }
-              setEmailError("");
-              setOauthError("");
-              setStep("password");
-            }}
-            className={`${blockButtonClass} disabled:opacity-60`}
+            className="bg-transparent p-0 text-base underline"
+            onClick={() => setView("email")}
           >
-            次へ
+            メールアドレスで登録
           </button>
-        </div>
-        <div className="mt-6 space-y-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => startOAuth("google")}
-            className={`${outlineBlockButtonClass} disabled:opacity-60`}
-          >
-            Googleで登録
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => startOAuth("custom:line")}
-            className={`${outlineBlockButtonClass} disabled:opacity-60`}
-          >
-            LINEで登録
-          </button>
-        </div>
-        {oauthError ? (
-          <p className="mt-3 text-sm text-muted">{oauthError}</p>
-        ) : null}
+        </p>
         <p className="mt-6 text-center text-sm">
+          すでにアカウントがある方は{" "}
           <Link href={LOGIN_PATH} className="underline">
             ログイン
           </Link>

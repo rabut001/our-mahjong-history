@@ -1,4 +1,4 @@
-type AuthKind = "login" | "signup" | "oauth";
+type AuthKind = "login" | "signup" | "oauth" | "reset";
 
 export function authErrorMessage(
   error: { message: string; code?: string } | null,
@@ -21,6 +21,9 @@ export function authErrorMessage(
   }
   if (kind === "oauth") {
     return "この方法ではログインできませんでした。";
+  }
+  if (kind === "reset") {
+    return "パスワードを変更できませんでした。";
   }
   if (kind === "signup") {
     return "登録できませんでした。";

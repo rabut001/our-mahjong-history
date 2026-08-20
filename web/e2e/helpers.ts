@@ -22,10 +22,9 @@ export function sectionLink(page: Page, section: string, linkName: string) {
 
 export async function loginAsE2eUser(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("メール").fill(e2eEmail());
-  await page.getByRole("button", { name: "次へ" }).click();
+  await page.getByLabel("メールアドレス").fill(e2eEmail());
   await page.getByLabel("パスワード").fill(e2ePassword());
-  await page.getByRole("button", { name: "ログイン" }).click();
+  await page.getByRole("button", { name: "ログイン", exact: true }).click();
   await expect(page).toHaveURL(/\/communities$/, { timeout: headingTimeout });
 }
 

@@ -104,11 +104,13 @@ LINE の Custom OAuth2（Manual endpoints。本番 Dashboard。Auto-discovery �
 
 メール登録・ログイン（パスワード）は Server Action から `signUp` / `signInWithPassword` を呼ぶ。スマホの LAN プレビューでも、ブラウザが `127.0.0.1` の Auth に直接届く必要はない。OAuth はクライアントから `signInWithOAuth`（共通は `web/src/lib/supabase/oauth.ts`。LINE のみ `queryParams.disable_ios_auto_login = true`）。
 
+パスワード再設定は `resetPasswordForEmail`。`redirectTo` は `/auth/callback?next=/reset-password`（許可リストは既存の callback）。メールのリンクは `code` のことも、ハッシュでトークンが付くこともある。callback がセッションを付けてから `/reset-password` で `updateUser({ password })`。変更後と、再設定画面の戻るはログアウトしてからログインへ。
+
 リダイレクト（許可リストは `config.toml` の `additional_redirect_urls`）:
 
-- コールバックパス: `/auth/callback`（ページは Phase 4-3）
-- ローカル: `http://127.0.0.1:3000/auth/callback`、`http://localhost:3000/auth/callback`
-- 本番: [https://our-mahjong-history.vercel.app/auth/callback](https://our-mahjong-history.vercel.app/auth/callback) を Dashboard の Site URL / Redirect URLs に足す
+- コールバックパス: `/auth/callback`
+- ローカル: `http://127.0.0.1:3000/auth/callback`、`http://localhost:3000/auth/callback`（再設定は `?next=/reset-password` を付ける）
+- 本番: [https://our-mahjong-history.vercel.app/auth/callback](https://our-mahjong-history.vercel.app/auth/callback) を Dashboard の Site URL / Redirect URLs に足す。再設定も同じ callback（クエリ付きが弾かれるときだけ足す）
 
 生成型: `supabase gen types typescript --local > web/src/lib/supabase/database.types.ts`。既存の `client.ts` / `server.ts` が `Database` を使う。
 

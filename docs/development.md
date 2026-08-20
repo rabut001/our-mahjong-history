@@ -190,6 +190,8 @@ Phase 6: 拡張（MVP 後）
 - PC レイアウト改善
 - 通知、エクスポート等
 
+明示依頼まで着手しない。画面の修正・不具合対応は Phase 6 に載せない。作業文書は [docs/changes/](changes/)。
+
 ---
 
 ## セッション例
@@ -223,7 +225,8 @@ Phase 6: 拡張（MVP 後）
 | タイミング | 更新対象 |
 |------------|----------|
 | フェーズ開始・完了時 | [docs/status.md](status.md) |
-| 具体タスクの追加・完了時 | `docs/tasks.md`（Phase 0 以降） |
+| 具体タスク（Phase 0〜5） | `docs/tasks.md`（完了記録。追記しない） |
+| MVP 後の修正・改善 | `docs/changes/<NNN-slug>/`。一覧は [changes/README.md](changes/README.md) |
 | ドメイン変更時 | [docs/overview.md](overview.md) |
 | ER 変更時 | [docs/er.md](er.md) |
 | DB / RLS のテストケース変更時 | [docs/test-cases.md](test-cases.md)（Phase 3-3 で作成） |
