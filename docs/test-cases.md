@@ -196,7 +196,7 @@ Phase 3 の DB（CHECK / UNIQUE / FK / trigger）で落とすもの。アプリ�
 | C-participants-05 | `user_id` にグループ非メンバー（B や L）を付けて INSERT / UPDATE | 失敗（trigger） | 新たに載せるときは現メンバー |
 | C-participants-06 | `user_id` に墓石 T を付けて INSERT | 失敗 | 墓石不可 |
 | C-participants-07 | 既存行の `user_id`（離脱した L）は残ったまま UPDATE しない | 行は残ってよい | 既存行は離脱後も user_id を残す |
-| C-participants-08 | 試合結果がある参加者を DELETE | FK RESTRICT | 試合結果がある間は RESTRICT |
+| C-participants-08 | 試合結果がある参加者を DELETE | 成功。試合結果は CASCADE。試合の行は残る | 参加者を消す |
 | C-participants-09 | 試合結果がない参加者を DELETE | 成功。修正ポイント行は CASCADE | 修正ポイントは CASCADE |
 
 ### 大会修正ポイント `tournament_point_adjustments`
@@ -253,7 +253,7 @@ Phase 3 の DB（CHECK / UNIQUE / FK / trigger）で落とすもの。アプリ�
 
 | ID | 操作 | 期待 | 根拠 |
 |----|------|------|------|
-| C-fk-01 | 試合結果があるのに大会参加者を消す | RESTRICT | [削除方針](er.md#削除方針phase-3-の-fk-用) |
+| C-fk-01 | 試合結果がある大会参加者を消す | CASCADE（試合結果が消える。試合の行は残る） | [削除方針](er.md#削除方針phase-3-の-fk-用) |
 | C-fk-02 | 試合があるのに大会ルールを消す | RESTRICT | 同上 |
 | C-fk-03 | 試合または参加者が残っている大会を消す | RESTRICT | 同上 |
 | C-fk-04 | 空でない麻雀グループを直接 DELETE | RESTRICT | 明示削除は空のときだけ |

@@ -309,14 +309,11 @@ export async function removeParticipantAction(
     .eq("tournament_id", tournamentId);
   if (error) {
     return {
-      formError: publicErrorMessage(
-        error,
-        "試合に出ている参加者は外せません。",
-      ),
+      formError: publicErrorMessage(error, "参加者を外せませんでした。"),
     };
   }
 
   revalidatePath(`/tournaments/${tournamentId}`);
   revalidatePath(`/tournaments/${tournamentId}/edit`);
-  redirect(`/tournaments/${tournamentId}/edit`);
+  return { ok: true };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { NavButton } from "@/components/NavButton";
 import {
   compactButtonClass,
@@ -41,31 +41,6 @@ type ParticipantPickerProps = {
   }) => void;
 };
 
-function RemoveButton({
-  action,
-  tournamentId,
-  participantId,
-}: {
-  action: (prev: FormState, formData: FormData) => Promise<FormState>;
-  tournamentId: string;
-  participantId: string;
-}) {
-  const [, formAction, pending] = useActionState(action, {});
-  return (
-    <form action={formAction}>
-      <input type="hidden" name="tournamentId" value={tournamentId} />
-      <input type="hidden" name="participantId" value={participantId} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="shrink-0 text-sm text-muted disabled:text-line"
-      >
-        外す
-      </button>
-    </form>
-  );
-}
-
 export function ParticipantPicker({
   members,
   initialSelectedUserIds,
@@ -80,6 +55,10 @@ export function ParticipantPicker({
 }: ParticipantPickerProps) {
   const [selectedIds, setSelectedIds] = useState(initialSelectedUserIds);
   const [guests, setGuests] = useState(initialGuests);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    removeAction ?? (async () => ({})),
+    {},
+  );
 
   function notify(nextIds: string[], nextGuests: GuestRow[]) {
     onDraftPeopleChange?.({
@@ -114,6 +93,26 @@ export function ParticipantPicker({
     notify(next, guests);
   }
 
+  function removeGuest(participantId: string | undefined, index: number) {
+    const next = participantId
+      ? guests.filter((guest) => guest.participantId !== participantId)
+      : guests.filter((_, guestIndex) => guestIndex !== index);
+    setGuests(next);
+    notify(selectedIds, next);
+  }
+
+  function persistRemove(participantId: string | undefined) {
+    if (!removeAction || !tournamentId || !participantId) {
+      return;
+    }
+    startTransition(() => {
+      const formData = new FormData();
+      formData.set("tournamentId", tournamentId);
+      formData.set("participantId", participantId);
+      formAction(formData);
+    });
+  }
+
   return (
     <>
       <div>
@@ -142,21 +141,17 @@ export function ParticipantPicker({
                   <span className={`min-w-0 truncate ${rowTitleClass}`}>
                     {member.displayName}
                   </span>
-                  {removeAction && tournamentId && member.participantId ? (
-                    <RemoveButton
-                      action={removeAction}
-                      tournamentId={tournamentId}
-                      participantId={member.participantId}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => removeMember(member.userId)}
-                      className="shrink-0 text-sm text-muted"
-                    >
-                      外す
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => {
+                      removeMember(member.userId);
+                      persistRemove(member.participantId);
+                    }}
+                    className="shrink-0 text-sm text-muted disabled:text-line"
+                  >
+                    外す
+                  </button>
                 </li>
               ))}
             </ul>
@@ -197,27 +192,17 @@ export function ParticipantPicker({
                   <span className={`min-w-0 truncate ${rowTitleClass}`}>
                     {guest.displayName || "（未入力）"}
                   </span>
-                  {removeAction && tournamentId && guest.participantId ? (
-                    <RemoveButton
-                      action={removeAction}
-                      tournamentId={tournamentId}
-                      participantId={guest.participantId}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = guests.filter(
-                          (_, guestIndex) => guestIndex !== index,
-                        );
-                        setGuests(next);
-                        notify(selectedIds, next);
-                      }}
-                      className="shrink-0 text-sm text-muted"
-                    >
-                      外す
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => {
+                      removeGuest(guest.participantId, index);
+                      persistRemove(guest.participantId);
+                    }}
+                    className="shrink-0 text-sm text-muted disabled:text-line"
+                  >
+                    外す
+                  </button>
                 </li>
               ))}
             </ul>
@@ -227,6 +212,9 @@ export function ParticipantPicker({
           アカウントを持っていない人を、名前だけで追加します。
         </p>
       </div>
+      {state.formError ? (
+        <p className="text-sm text-muted">{state.formError}</p>
+      ) : null}
     </>
   );
 }

@@ -594,17 +594,33 @@ SELECT isnt(
   NULL,
   'C-participants-07'
 );
-SELECT throws_ok(
-  format($q$DELETE FROM public.tournament_participants WHERE id = %L$q$, omh_test.part_a()),
-  '23503',
-  NULL,
+INSERT INTO public.tournament_participants (id, tournament_id, guest_display_name)
+VALUES ('11000000-0000-4000-8000-0000000000c8', omh_test.tournament_1(), '外すゲスト');
+INSERT INTO public.matches (id, tournament_id, tournament_rule_id)
+VALUES ('12000000-0000-4000-8000-0000000000c8', omh_test.tournament_1(), omh_test.t_rule_used());
+SELECT omh_test.insert_match_result(
+  '13000000-0000-4000-8000-0000000000c8',
+  '12000000-0000-4000-8000-0000000000c8',
+  '11000000-0000-4000-8000-0000000000c8',
+  'east',
+  25000,
+  1
+);
+SELECT lives_ok(
+  $q$DELETE FROM public.tournament_participants WHERE id = '11000000-0000-4000-8000-0000000000c8'$q$,
   'C-participants-08'
 );
-SELECT throws_ok(
-  format($q$DELETE FROM public.tournament_participants WHERE id = %L$q$, omh_test.part_a()),
-  '23503',
-  NULL,
+SELECT is(
+  (SELECT count(*)::int FROM public.match_results
+   WHERE id = '13000000-0000-4000-8000-0000000000c8'),
+  0,
   'C-fk-01'
+);
+SELECT is(
+  (SELECT count(*)::int FROM public.matches
+   WHERE id = '12000000-0000-4000-8000-0000000000c8'),
+  1,
+  'C-participants-08 match remains'
 );
 INSERT INTO public.tournament_participants (id, tournament_id, guest_display_name)
 VALUES ('11000000-0000-4000-8000-0000000000dd', omh_test.tournament_1(), '消すゲスト');

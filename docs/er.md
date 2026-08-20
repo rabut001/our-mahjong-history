@@ -272,7 +272,7 @@ erDiagram
 | 操作 | 方針 |
 |------|------|
 | 試合を消す | 試合結果は CASCADE |
-| 大会参加者を消す | 試合結果がある間は RESTRICT。修正ポイント行は CASCADE |
+| 大会参加者を消す | 試合結果と修正ポイント行は CASCADE。試合の行は残る |
 | 大会ルールを消す | 試合が紐づいている間は RESTRICT |
 | 大会を消す | 試合・参加者が残っている間は RESTRICT。アプリが子から消す |
 | 麻雀グループの明示削除 | **空のときだけ**（大会 0 件かつ既定ルール 0 件）。そうでなければ RESTRICT。メンバーシップ・招待コードは CASCADE。操作ログは残す |
@@ -302,7 +302,7 @@ Phase 3 の policy SQL の前提。要約は [overview.md の権限モデル](ov
 | `community_invite_codes` | `community_memberships`（この行の `community_id`） | 可。**未所属者は不可**（参加はコードを渡す関数） | 可 | 可（実装都合。業務操作の再発行は差し替え） | 可 |
 | `tournaments` | `community_memberships`（この行の `community_id`） | 可 | 可 | 可 | 可。試合・参加者が残っている間は FK で RESTRICT（子から消す） |
 | `tournament_rules` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可 | 可。**試合が 1 件でも紐づいていれば不可**（trigger 等） | 可。試合が紐づいている間は RESTRICT |
-| `tournament_participants` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可。`user_id` を付けるならその人は当該麻雀グループの **現メンバー**（墓石不可）。ゲストは表示名 | 可。`user_id` を付ける／変える場合も現メンバーであること | 可。試合結果がある間は RESTRICT |
+| `tournament_participants` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可。`user_id` を付けるならその人は当該麻雀グループの **現メンバー**（墓石不可）。ゲストは表示名 | 可。`user_id` を付ける／変える場合も現メンバーであること | 可。試合結果と修正ポイントは CASCADE |
 | `tournament_point_adjustments` | `tournament_participants` → `tournaments` → `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可 |
 | `matches` | `tournaments`（`tournament_id`）→ `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可（試合結果は CASCADE） |
 | `match_results` | `matches` → `tournaments` → `community_memberships`（大会の `community_id`） | 可 | 可 | 可 | 可 |
