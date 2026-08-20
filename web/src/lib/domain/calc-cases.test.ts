@@ -107,6 +107,13 @@ describe("P-rank-06", () => {
   });
 });
 
+describe("P-rank-07", () => {
+  it("負の素点も素点順", () => {
+    const rows = calc([50000, 30000, 25000, -5000]);
+    expect(rows.map((row) => row.rank)).toEqual([1, 2, 3, 4]);
+  });
+});
+
 describe("P-oka-01", () => {
   it("1 位が 1 人ならオカ 20 を東へ", () => {
     const rows = calc([40000, 30000, 20000, 10000]);
@@ -194,6 +201,13 @@ describe("P-oka-08", () => {
       ],
     );
     expect(tenths(rows.map((row) => row.basePoints))).toEqual([12, 8, -5, -15]);
+  });
+});
+
+describe("P-oka-09", () => {
+  it("負の素点でも (素点−返し)/1000＋オカ", () => {
+    const rows = calc([50000, 30000, 25000, -5000]);
+    expect(tenths(rows.map((row) => row.basePoints))).toEqual([40, 0, -5, -35]);
   });
 });
 
@@ -346,6 +360,16 @@ describe("P-sum-04", () => {
   });
 });
 
+describe("P-sum-05", () => {
+  it("負の素点でも基本+ウマが合計・反映 pt", () => {
+    const rows = calc([50000, 30000, 25000, -5000]);
+    expect(tenths(rows.map((row) => row.totalPoints))).toEqual([
+      70, 10, -15, -65,
+    ]);
+    expect(tenths(rows.map((row) => row.points))).toEqual([70, 10, -15, -65]);
+  });
+});
+
 describe("P-int-01", () => {
   it("オカとウマを分けて折半すると順位点按分と一致", () => {
     const rows = calc([30000, 30000, 30000, 10000], {
@@ -382,6 +406,14 @@ describe("P-warn-02", () => {
 describe("P-warn-03", () => {
   it("三麻で合計が一致なら警告しない", () => {
     expect(isScoreTotalMismatched([50000, 40000, 15000], 35000, 3)).toBe(false);
+  });
+});
+
+describe("P-warn-04", () => {
+  it("負の素点を含んでも合計が一致なら警告しない", () => {
+    expect(isScoreTotalMismatched([50000, 30000, 25000, -5000], 25000, 4)).toBe(
+      false,
+    );
   });
 });
 

@@ -142,7 +142,11 @@ test.describe.serial("E-12〜E-18 麻雀グループから試合まで", () => {
     await page.getByLabel(`${e2eDisplayName()}の素点`).fill("35000");
     await page.getByLabel("ゲスト南の素点").fill("25000");
     await page.getByLabel("ゲスト西の素点").fill("25000");
-    await page.getByLabel("ゲスト北の素点").fill("15000");
+    const northScore = page.getByLabel("ゲスト北の素点");
+    await northScore.click();
+    await northScore.pressSequentially("-5000");
+    await expect(northScore).toHaveValue("-5000");
+    await northScore.fill("15000");
 
     await page.getByRole("button", { name: "追加する" }).click();
     await expect(page).toHaveURL(/\/matches\//, { timeout: 20_000 });
@@ -153,6 +157,10 @@ test.describe.serial("E-12〜E-18 麻雀グループから試合まで", () => {
 
     await page.getByRole("link", { name: "修正" }).click();
     await expectHeading(page, "試合を編集");
+    const editNorthScore = page.getByLabel("ゲスト北の素点");
+    await editNorthScore.fill("");
+    await editNorthScore.pressSequentially("-8000");
+    await expect(editNorthScore).toHaveValue("-8000");
   });
 
   test("E-18 ポイントを補正する", async ({ page }) => {

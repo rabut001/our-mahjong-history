@@ -18,3 +18,4 @@ Phase 0〜5 の記録は [tasks.md](../tasks.md)。以降の修正・改善は�
 | 番号 | フォルダ | 状態 | 概要 |
 |------|----------|------|------|
 | 001 | [001-login-signup](001-login-signup/) | 完了 | ログイン・アカウント作成の修正・改善 |
+| 002 | [002-match-negative-score](002-match-negative-score/) | 完了 | 試合の素点にマイナスを入力できない |

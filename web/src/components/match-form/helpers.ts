@@ -58,3 +58,13 @@ export function parseAmount(value: string): number {
   const amount = Number(value);
   return Number.isFinite(amount) ? amount : 0;
 }
+
+export const SCORE_DRAFT = /^-?\d*$/;
+
+export function parseScoreDraft(value: string): number | null {
+  if (value === "" || value === "-") {
+    return null;
+  }
+  const score = Number(value);
+  return Number.isFinite(score) ? score : null;
+}
