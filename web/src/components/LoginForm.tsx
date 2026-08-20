@@ -11,8 +11,7 @@ import {
   outlineBlockButtonClass,
 } from "@/components/ui";
 import { signInWithEmailAction } from "@/lib/data/auth-actions";
-import { createClient } from "@/lib/supabase/client";
-import { authErrorMessage } from "@/lib/supabase/auth-errors";
+import { startOAuthRedirect, type OAuthProvider } from "@/lib/supabase/oauth";
 import { CALLBACK_PATH, HOME_PATH, SIGNUP_PATH } from "@/lib/supabase/paths";
 
 type LoginFormProps = {
@@ -40,27 +39,14 @@ export function LoginForm({ next }: LoginFormProps) {
     {},
   );
 
-  async function startOAuth(provider: "google" | "custom:line") {
+  async function startOAuth(provider: OAuthProvider) {
     setOauthError("");
     setOauthBusy(true);
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: callbackUrl(next),
-        },
-      });
-      if (error || !data.url) {
-        setOauthError(authErrorMessage(error, "oauth"));
-        return;
-      }
-      window.location.assign(data.url);
-    } catch {
-      setOauthError(authErrorMessage(null, "oauth"));
-    } finally {
-      setOauthBusy(false);
+    const result = await startOAuthRedirect(provider, callbackUrl(next));
+    if (!result.ok) {
+      setOauthError(result.message);
     }
+    setOauthBusy(false);
   }
 
   function handlePasswordLogin(event: FormEvent<HTMLFormElement>) {

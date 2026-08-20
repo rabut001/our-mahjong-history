@@ -84,7 +84,7 @@
 | 項目 | Google | LINE |
 |------|--------|------|
 | 種別 | 標準プロバイダ | 標準に無い。Custom **OAuth2**（Manual） |
-| クライアント | `signInWithOAuth({ provider: 'google' })` | `signInWithOAuth({ provider: 'custom:line' })` |
+| クライアント | `signInWithOAuth({ provider: 'google' })` | `signInWithOAuth({ provider: 'custom:line' })`。iPhone の自動ログイン失敗を避けるため、認可 URL に `disable_ios_auto_login=true` を付ける（Google には付けない） |
 | 設定場所 | `config.toml` の `[auth.external.google]`（`enabled = false`）。本番 Dashboard | 本番 Dashboard の Custom Providers。identifier は `custom:line`。種別は OAuth2 / Manual。CLI 2.114.0 の `config.toml` には書けない |
 | シークレット | `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`（本番）。`client_id` は Google のクライアント ID | LINE チャネル ID / チャネルシークレット（Dashboard。リポジトリに置かない） |
 | メールなし | 不可（既定） | あり得る。Dashboard で email optional。表示名は `name` 必須。scopes は `openid profile`（空だと LINE が `INVALID_SCOPE`） |
@@ -102,7 +102,7 @@ LINE の Custom OAuth2（Manual endpoints。本番 Dashboard。Auto-discovery �
 | Userinfo | `https://api.line.me/oauth2/v2.1/userinfo` |
 | JWKS URI | 空（Issuer で自動入力されたら消す） |
 
-メール登録・ログイン（パスワード）は Server Action から `signUp` / `signInWithPassword` を呼ぶ。スマホの LAN プレビューでも、ブラウザが `127.0.0.1` の Auth に直接届く必要はない。OAuth はクライアントから `signInWithOAuth`。
+メール登録・ログイン（パスワード）は Server Action から `signUp` / `signInWithPassword` を呼ぶ。スマホの LAN プレビューでも、ブラウザが `127.0.0.1` の Auth に直接届く必要はない。OAuth はクライアントから `signInWithOAuth`（共通は `web/src/lib/supabase/oauth.ts`。LINE のみ `queryParams.disable_ios_auto_login = true`）。
 
 リダイレクト（許可リストは `config.toml` の `additional_redirect_urls`）:
 
